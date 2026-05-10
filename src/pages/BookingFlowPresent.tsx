@@ -30,11 +30,11 @@ export default function BookingFlowPresent({ onDeploy }: Props) {
         </p>
       </div>
 
-      {/* MIDDLE — fixed height so both columns are locked */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 16, marginBottom: 40, height: 426 }}>
+      {/* MIDDLE */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 16, marginBottom: 40, alignItems: 'start' }}>
 
         {/* Left: 3 stacked cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {[
             {
               icon: 'ti-message-chatbot',
@@ -55,7 +55,7 @@ export default function BookingFlowPresent({ onDeploy }: Props) {
             <div
               key={i}
               className="glass"
-              style={{ borderRadius: 18, padding: '22px 20px', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'default', flex: 1 }}
+              style={{ borderRadius: 18, padding: '22px 20px', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'default' }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'
                 ;(e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.10)'
@@ -85,7 +85,7 @@ export default function BookingFlowPresent({ onDeploy }: Props) {
       </div>
 
       {/* BOTTOM */}
-<div style={{ textAlign: 'center', marginTop: 40 }}>
+      <div style={{ textAlign: 'center' }}>
         <button
           onClick={onDeploy}
           style={{
@@ -174,7 +174,8 @@ function WhatsAppMockup() {
   return (
     <div style={{
       width: '100%',
-      height: '100%',
+      height: 420,
+      maxHeight: 420,
       borderRadius: 24,
       overflow: 'hidden',
       border: '1px solid rgba(0,0,0,0.08)',
