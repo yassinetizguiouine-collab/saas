@@ -85,7 +85,7 @@ export default function BookingFlowPresent({ onDeploy }: Props) {
       </div>
 
       {/* BOTTOM */}
-      <div style={{ textAlign: 'center' }}>
+<div style={{ textAlign: 'center', marginTop: 40 }}>
         <button
           onClick={onDeploy}
           style={{
