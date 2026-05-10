@@ -295,7 +295,7 @@ Ah and ${teaserLine}`
                   rel="noopener noreferrer"
                   style={{ fontSize: 12, color: '#111', textDecoration: 'underline', fontWeight: 500 }}
                 >
-                  How to write my welcome script?
+                  {'How to write my welcome script?'}
                 </a>
               </div>
               <textarea
