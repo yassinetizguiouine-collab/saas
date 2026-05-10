@@ -31,7 +31,7 @@ export default function BookingFlowPresent({ onDeploy }: Props) {
       </div>
 
       {/* MIDDLE */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 16, marginBottom: 40, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 16, marginBottom: 40, alignItems: 'stretch' }}>
 
         {/* Left: 3 stacked cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -55,7 +55,7 @@ export default function BookingFlowPresent({ onDeploy }: Props) {
             <div
               key={i}
               className="glass"
-              style={{ borderRadius: 18, padding: '22px 20px', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'default' }}
+              style={{ borderRadius: 18, padding: '22px 20px', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'default', flex: 1 }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'
                 ;(e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.10)'
@@ -180,7 +180,7 @@ function WhatsAppMockup() {
       fontFamily: 'inherit',
       display: 'flex',
       flexDirection: 'column',
-      height: 420,
+      height: '100%',
     }}>
       {/* Header */}
       <div style={{
