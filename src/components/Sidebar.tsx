@@ -25,7 +25,7 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
         <img
           src="/logonew.png"
           alt="LeadFlow"
-          style={{ height: 62, objectFit: 'contain' }}
+          style={{ height: 76, objectFit: 'contain' }}
         />
       </div>
 
