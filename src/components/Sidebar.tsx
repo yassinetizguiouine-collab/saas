@@ -10,17 +10,13 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
     <aside
       className="glass-strong"
       style={{
-        width: 280,
-        minWidth: 280,
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
+        width: 280, minWidth: 280, height: '100vh',
+        display: 'flex', flexDirection: 'column',
         padding: '24px 16px',
         borderRight: '0.5px solid rgba(0,0,0,0.08)',
         borderRadius: 0,
       }}
     >
-      {/* Logo only - no text */}
       <div style={{ padding: '4px 8px', marginBottom: 32 }}>
         <img
           src="/ChatGPT Image 10 mai 2026, 15_35_52.png"
@@ -29,8 +25,13 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
         />
       </div>
 
-      {/* Nav */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <NavItem
+          icon="ti-layout-grid"
+          label="Templates"
+          active={activePage === 'gallery'}
+          onClick={() => onNavigate('gallery')}
+        />
         <NavItem
           icon="ti-bolt"
           label="Booking Flow"
@@ -39,14 +40,11 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
         />
       </nav>
 
-      {/* Bottom */}
       <div style={{
         marginTop: 'auto',
         borderTop: '0.5px solid rgba(0,0,0,0.07)',
         paddingTop: 12,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
+        display: 'flex', flexDirection: 'column', gap: 2,
       }}>
         <NavItem icon="ti-settings" label="Settings" active={false} onClick={() => {}} />
         <NavItem icon="ti-logout" label="Sign out" active={false} onClick={() => {}} />
@@ -56,30 +54,21 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
 }
 
 function NavItem({ icon, label, active, onClick }: {
-  icon: string
-  label: string
-  active: boolean
-  onClick: () => void
+  icon: string; label: string; active: boolean; onClick: () => void
 }) {
   return (
     <button
       onClick={onClick}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '10px 12px',
-        borderRadius: 10,
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '10px 12px', borderRadius: 10,
         border: 'none',
         background: active ? 'rgba(0,0,0,0.06)' : 'transparent',
         color: active ? '#111' : '#777',
         fontWeight: active ? 500 : 400,
-        fontSize: 14,
-        cursor: 'pointer',
-        width: '100%',
-        textAlign: 'left',
-        fontFamily: 'inherit',
-        transition: 'all 0.15s',
+        fontSize: 14, cursor: 'pointer',
+        width: '100%', textAlign: 'left',
+        fontFamily: 'inherit', transition: 'all 0.15s',
       }}
       onMouseEnter={e => {
         if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,0.04)'
