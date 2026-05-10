@@ -25,7 +25,7 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
         <img
           src="/ChatGPT Image 10 mai 2026, 15_35_52.png"
           alt="LeadFlow"
-          style={{ height: 76, objectFit: 'contain' }}
+          style={{ height: 94, objectFit: 'contain' }}
         />
       </div>
 
