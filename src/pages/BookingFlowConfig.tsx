@@ -294,7 +294,7 @@ Ah and ${teaserLine}`
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ fontSize: 12, color: '#111', textDecoration: 'underline', fontWeight: 500 }}
-                >
+                
                   {'How to write my welcome script?'}
                 </a>
               </div>
