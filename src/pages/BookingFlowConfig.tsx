@@ -288,7 +288,7 @@ Ah and ${teaserLine}`
               <button onClick={() => setScriptMode(null)} style={{ fontSize: 11, color: '#aaa', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16, padding: 0 }}>
                 ← Change mode
               </button>
-              <div style={{ marginBottom: 14 }}>
+             <div style={{ marginBottom: 14 }}>
   
     href={'https://hollmann.international/vehicle/26G0794/'}
     target={'_blank'}
