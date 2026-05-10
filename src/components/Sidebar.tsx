@@ -23,7 +23,7 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
       {/* Logo only - no text */}
       <div style={{ padding: '4px 8px', marginBottom: 32 }}>
         <img
-          src="/logonewly.png"
+          src="/ChatGPT Image 10 mai 2026, 15_35_52.png"
           alt="LeadFlow"
           style={{ height: 76, objectFit: 'contain' }}
         />
