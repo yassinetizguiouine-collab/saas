@@ -23,7 +23,7 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
       {/* Logo only - no text */}
       <div style={{ padding: '4px 8px', marginBottom: 32 }}>
         <img
-          src="/logo.png"
+          src="/logonew.png"
           alt="LeadFlow"
           style={{ height: 40, objectFit: 'contain' }}
         />
