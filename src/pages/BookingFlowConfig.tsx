@@ -289,15 +289,13 @@ Ah and ${teaserLine}`
                 ← Change mode
               </button>
               <div style={{ marginBottom: 14 }}>
-                
-                  href="https://hollmann.international/vehicle/26G0794/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ fontSize: 12, color: '#111', textDecoration: 'underline', fontWeight: 500 }}
-                
-                  {'How to write my welcome script?'}
-                </a>
-              </div>
+  
+    href={'https://hollmann.international/vehicle/26G0794/'}
+    target={'_blank'}
+    rel={'noopener noreferrer'}
+    style={{ fontSize: 12, color: '#111', textDecoration: 'underline', fontWeight: 500 }}
+  >{'How to write my welcome script?'}</a>
+</div>
               <textarea
                 placeholder="Write your welcome script here..."
                 value={scratchText}
