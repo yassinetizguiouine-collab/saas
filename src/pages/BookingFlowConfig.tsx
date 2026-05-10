@@ -108,7 +108,6 @@ export default function BookingFlowConfig({ onBack }: Props) {
   const [agentPersonality, setAgentPersonality] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
 
-  // Script 1 mode: null = not chosen yet, 'proven' = customize, 'scratch' = blank
   const [scriptMode, setScriptMode] = useState<null | 'proven' | 'scratch'>(null)
   const [scratchText, setScratchText] = useState('')
 
@@ -163,7 +162,6 @@ Ah and ${teaserLine}`
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* Integrations — open by default */}
         <GlassSection icon="ti-plug" title="Integrations" defaultOpen={true}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }}>
             <div className="glass" style={{ borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -193,7 +191,6 @@ Ah and ${teaserLine}`
           </div>
         </GlassSection>
 
-        {/* AI Agent Tone — closed by default */}
         <GlassSection icon="ti-mood-smile" title="AI Agent Tone" defaultOpen={false}>
           <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 14 }}>Choose how your agent speaks to leads.</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -206,7 +203,6 @@ Ah and ${teaserLine}`
           </div>
         </GlassSection>
 
-        {/* AI Agent Personality — closed by default */}
         <GlassSection icon="ti-user-circle" title="AI Agent Personality" defaultOpen={false}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 }}>
             <Field label="Agent name" placeholder="e.g. Sofia, Max, Alex..." value={agentName} onChange={setAgentName} />
@@ -214,10 +210,8 @@ Ah and ${teaserLine}`
           </div>
         </GlassSection>
 
-        {/* Script 1 — closed by default, with mode selector */}
         <GlassSection icon="ti-script" title="Script 1 — Lead Qualification" defaultOpen={false}>
 
-          {/* Mode not chosen yet */}
           {scriptMode === null && (
             <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div
@@ -249,7 +243,6 @@ Ah and ${teaserLine}`
             </div>
           )}
 
-          {/* Proven script */}
           {scriptMode === 'proven' && (
             <div style={{ marginTop: 16 }}>
               <button onClick={() => setScriptMode(null)} style={{ fontSize: 11, color: '#aaa', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16, padding: 0 }}>
@@ -282,20 +275,19 @@ Ah and ${teaserLine}`
             </div>
           )}
 
-          {/* Scratch */}
           {scriptMode === 'scratch' && (
             <div style={{ marginTop: 16 }}>
               <button onClick={() => setScriptMode(null)} style={{ fontSize: 11, color: '#aaa', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16, padding: 0 }}>
                 ← Change mode
               </button>
-             <div style={{ marginBottom: 14 }}>
-  
-    href={'https://hollmann.international/vehicle/26G0794/'}
-    target={'_blank'}
-    rel={'noopener noreferrer'}
-    style={{ fontSize: 12, color: '#111', textDecoration: 'underline', fontWeight: 500 }}
-  >{'How to write my welcome script?'}</a>
-</div>
+              <div style={{ marginBottom: 14 }}>
+                <a
+                  href="https://hollmann.international/vehicle/26G0794/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 12, color: '#111', textDecoration: 'underline', fontWeight: 500 }}
+                >How to write my welcome script?</a>
+              </div>
               <textarea
                 placeholder="Write your welcome script here..."
                 value={scratchText}
@@ -313,7 +305,6 @@ Ah and ${teaserLine}`
 
         </GlassSection>
 
-        {/* Save */}
         <button
           onClick={() => setShowSuccess(true)}
           style={{ width: '100%', background: '#111', color: '#fff', border: 'none', borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.15s' }}
@@ -325,7 +316,6 @@ Ah and ${teaserLine}`
         </button>
       </div>
 
-      {/* Receive Modal */}
       {receiveModal && (
         <Modal onClose={() => setReceiveModal(false)}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111', marginBottom: 4 }}>WhatsApp Receive</h2>
@@ -340,7 +330,6 @@ Ah and ${teaserLine}`
         </Modal>
       )}
 
-      {/* Send Modal */}
       {sendModal && (
         <Modal onClose={() => setSendModal(false)}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111', marginBottom: 4 }}>WhatsApp Send</h2>
@@ -355,7 +344,6 @@ Ah and ${teaserLine}`
         </Modal>
       )}
 
-      {/* Success Modal */}
       {showSuccess && (
         <Modal onClose={() => setShowSuccess(false)}>
           <div style={{ textAlign: 'center', padding: '8px 0' }}>
