@@ -11,7 +11,6 @@ const TONES = [
   { id: 'warm', name: '🤗 Warm', preview: "Hi sweetheart! Before I send this over, can I get your name? 😊" },
 ]
 
-// ─── Glass Modal ───────────────────────────────────────────────────────────────
 function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div
@@ -44,9 +43,10 @@ function Modal({ onClose, children }: { onClose: () => void; children: React.Rea
   )
 }
 
-// ─── Glass Section ─────────────────────────────────────────────────────────────
-function GlassSection({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(true)
+function GlassSection({ icon, title, children, defaultOpen = false }: {
+  icon: string; title: string; children: React.ReactNode; defaultOpen?: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="glass" style={{ borderRadius: 18, overflow: 'hidden' }}>
       <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', cursor: 'pointer' }}>
@@ -63,7 +63,6 @@ function GlassSection({ icon, title, children }: { icon: string; title: string; 
   )
 }
 
-// ─── Field ─────────────────────────────────────────────────────────────────────
 function Field({ label, placeholder, type = 'text', hint, value, onChange }: {
   label: string; placeholder: string; type?: string; hint?: string
   value?: string; onChange?: (v: string) => void
@@ -88,11 +87,9 @@ function Field({ label, placeholder, type = 'text', hint, value, onChange }: {
   )
 }
 
-// ─── Main Component ────────────────────────────────────────────────────────────
 export default function BookingFlowConfig({ onBack }: Props) {
   const [selectedTone, setSelectedTone] = useState('friendly')
 
-  // WhatsApp modals
   const [receiveModal, setReceiveModal] = useState(false)
   const [sendModal, setSendModal] = useState(false)
   const [receiveConnected, setReceiveConnected] = useState(false)
@@ -100,7 +97,6 @@ export default function BookingFlowConfig({ onBack }: Props) {
   const [receiveForm, setReceiveForm] = useState({ clientId: '', clientSecret: '' })
   const [sendForm, setSendForm] = useState({ accessToken: '', businessId: '' })
 
-  // Script 1 fields
   const [greeting, setGreeting] = useState('')
   const [source, setSource] = useState('')
   const [niche, setNiche] = useState('')
@@ -108,22 +104,20 @@ export default function BookingFlowConfig({ onBack }: Props) {
   const [magnetLink, setMagnetLink] = useState('')
   const [promise, setPromise] = useState('')
   const [teaser, setTeaser] = useState('')
-
-  // Agent
   const [agentName, setAgentName] = useState('')
   const [agentPersonality, setAgentPersonality] = useState('')
-
-  // Success popup
   const [showSuccess, setShowSuccess] = useState(false)
 
-  // Live script preview
+  // Script 1 mode: null = not chosen yet, 'proven' = customize, 'scratch' = blank
+  const [scriptMode, setScriptMode] = useState<null | 'proven' | 'scratch'>(null)
+  const [scratchText, setScratchText] = useState('')
+
   const greetingText = greeting || 'Wa alaykoum salam'
   const sourceLine = source ? `you came from ${source}` : 'you came from TikTok'
   const nicheLine = niche ? `because you want to ${niche}` : 'because you want to start making money from home'
   const magnetLine = magnetType || 'guide'
   const promiseLine = promise || "In 4 minutes, you'll understand how simple it is to get paid online"
   const teaserLine = teaser || "don't skip page 14…👀"
-  const agentLine = agentName || 'your agent'
 
   const scriptPreview = `${greetingText} 👋 Just to confirm — ${sourceLine} ${nicheLine}, right?
 
@@ -157,7 +151,6 @@ Ah and ${teaserLine}`
   return (
     <div style={{ padding: '32px 48px', maxWidth: 860, margin: '0 auto' }}>
 
-      {/* Back */}
       <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#888', fontSize: 13, cursor: 'pointer', border: 'none', background: 'none', fontFamily: 'inherit', marginBottom: 24, padding: 0 }}
         onMouseEnter={e => (e.currentTarget.style.color = '#111')}
         onMouseLeave={e => (e.currentTarget.style.color = '#888')}>
@@ -170,10 +163,9 @@ Ah and ${teaserLine}`
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* ── Integrations ── */}
-        <GlassSection icon="ti-plug" title="Integrations">
+        {/* Integrations — open by default */}
+        <GlassSection icon="ti-plug" title="Integrations" defaultOpen={true}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }}>
-            {/* Receive */}
             <div className="glass" style={{ borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <i className="ti ti-brand-whatsapp" style={{ fontSize: 20, color: '#25D366' }} aria-hidden="true" />
@@ -186,7 +178,6 @@ Ah and ${teaserLine}`
                 {receiveConnected ? 'Reconnect' : 'Connect'}
               </button>
             </div>
-            {/* Send */}
             <div className="glass" style={{ borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <i className="ti ti-brand-whatsapp" style={{ fontSize: 20, color: '#25D366' }} aria-hidden="true" />
@@ -202,9 +193,9 @@ Ah and ${teaserLine}`
           </div>
         </GlassSection>
 
-        {/* ── AI Agent Tone ── */}
-        <GlassSection icon="ti-mood-smile" title="AI Agent Tone">
-          <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 14 }}>Choose how your agent speaks to leads. Each tone sends the same message, just differently.</p>
+        {/* AI Agent Tone — closed by default */}
+        <GlassSection icon="ti-mood-smile" title="AI Agent Tone" defaultOpen={false}>
+          <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 14 }}>Choose how your agent speaks to leads.</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {TONES.map(tone => (
               <div key={tone.id} onClick={() => setSelectedTone(tone.id)} style={{ background: 'rgba(255,255,255,0.6)', border: selectedTone === tone.id ? '1.5px solid #111' : '0.5px solid rgba(0,0,0,0.10)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}>
@@ -215,45 +206,116 @@ Ah and ${teaserLine}`
           </div>
         </GlassSection>
 
-        {/* ── AI Agent Personality ── */}
-        <GlassSection icon="ti-user-circle" title="AI Agent Personality">
+        {/* AI Agent Personality — closed by default */}
+        <GlassSection icon="ti-user-circle" title="AI Agent Personality" defaultOpen={false}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 }}>
             <Field label="Agent name" placeholder="e.g. Sofia, Max, Alex..." value={agentName} onChange={setAgentName} />
             <Field label="Personality description" placeholder="e.g. Energetic, empathetic, speaks simply and directly. Never salesy." type="textarea" hint="Describe how your agent should behave and feel to leads." value={agentPersonality} onChange={setAgentPersonality} />
           </div>
         </GlassSection>
 
-        {/* ── Script 1 ── */}
-        <GlassSection icon="ti-script" title="Script 1 — Lead Qualification">
-          <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 16 }}>Fill in the fields and watch your script update live below.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Traffic source" placeholder="e.g. TikTok, Instagram..." hint="Where are your leads coming from?" value={source} onChange={setSource} />
-              <Field label="Niche / pain point" placeholder="e.g. start making money from home" hint="What does your audience want?" value={niche} onChange={setNiche} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Lead magnet type" placeholder="e.g. guide, ebook, video..." value={magnetType} onChange={setMagnetType} />
-              <Field label="Lead magnet link" placeholder="https://..." type="url" value={magnetLink} onChange={setMagnetLink} />
-            </div>
-            <Field label="Outcome promise" placeholder="e.g. In 4 minutes, you'll understand how simple it is to get paid online" hint="What will they get after consuming the lead magnet?" value={promise} onChange={setPromise} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Page teaser (optional)" placeholder="e.g. don't skip page 14..." hint="A curiosity hook." value={teaser} onChange={setTeaser} />
-              <Field label="Custom greeting (optional)" placeholder="e.g. Wa alaykoum salam, Hey..." value={greeting} onChange={setGreeting} />
-            </div>
+        {/* Script 1 — closed by default, with mode selector */}
+        <GlassSection icon="ti-script" title="Script 1 — Lead Qualification" defaultOpen={false}>
 
-            {/* Live Script Preview */}
-            <div style={{ marginTop: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 8 }}>Live script preview</div>
-              <div className="glass" style={{ borderRadius: 14, padding: '16px 18px' }}>
-                <pre style={{ fontSize: 12, color: '#444', lineHeight: 1.75, whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>
-                  {scriptPreview}
-                </pre>
+          {/* Mode not chosen yet */}
+          {scriptMode === null && (
+            <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div
+                onClick={() => setScriptMode('proven')}
+                className="glass"
+                style={{ borderRadius: 14, padding: '20px', cursor: 'pointer', transition: 'all 0.15s', border: '0.5px solid rgba(0,0,0,0.08)' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = ''}
+              >
+                <div style={{ width: 36, height: 36, background: 'rgba(0,0,0,0.05)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                  <i className="ti ti-wand" style={{ fontSize: 18, color: '#333' }} aria-hidden="true" />
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#111', marginBottom: 5 }}>Customize the proven script</div>
+                <div style={{ fontSize: 11, color: '#888', lineHeight: 1.55 }}>Start from our battle-tested template and fill in your details.</div>
+              </div>
+              <div
+                onClick={() => setScriptMode('scratch')}
+                className="glass"
+                style={{ borderRadius: 14, padding: '20px', cursor: 'pointer', transition: 'all 0.15s', border: '0.5px solid rgba(0,0,0,0.08)' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = ''}
+              >
+                <div style={{ width: 36, height: 36, background: 'rgba(0,0,0,0.05)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                  <i className="ti ti-pencil" style={{ fontSize: 18, color: '#333' }} aria-hidden="true" />
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#111', marginBottom: 5 }}>Start from scratch</div>
+                <div style={{ fontSize: 11, color: '#888', lineHeight: 1.55 }}>Write your own custom welcome script from a blank page.</div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Proven script */}
+          {scriptMode === 'proven' && (
+            <div style={{ marginTop: 16 }}>
+              <button onClick={() => setScriptMode(null)} style={{ fontSize: 11, color: '#aaa', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16, padding: 0 }}>
+                ← Change mode
+              </button>
+              <p style={{ fontSize: 12, color: '#999', marginBottom: 16 }}>Fill in the fields and watch your script update live below.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="Traffic source" placeholder="e.g. TikTok, Instagram..." hint="Where are your leads coming from?" value={source} onChange={setSource} />
+                  <Field label="Niche / pain point" placeholder="e.g. start making money from home" hint="What does your audience want?" value={niche} onChange={setNiche} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="Lead magnet type" placeholder="e.g. guide, ebook, video..." value={magnetType} onChange={setMagnetType} />
+                  <Field label="Lead magnet link" placeholder="https://..." type="url" value={magnetLink} onChange={setMagnetLink} />
+                </div>
+                <Field label="Outcome promise" placeholder="e.g. In 4 minutes, you'll understand how simple it is to get paid online" hint="What will they get after consuming the lead magnet?" value={promise} onChange={setPromise} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="Page teaser (optional)" placeholder="e.g. don't skip page 14..." hint="A curiosity hook." value={teaser} onChange={setTeaser} />
+                  <Field label="Custom greeting (optional)" placeholder="e.g. Wa alaykoum salam, Hey..." value={greeting} onChange={setGreeting} />
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 8 }}>Live script preview</div>
+                  <div className="glass" style={{ borderRadius: 14, padding: '16px 18px' }}>
+                    <pre style={{ fontSize: 12, color: '#444', lineHeight: 1.75, whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>
+                      {scriptPreview}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Scratch */}
+          {scriptMode === 'scratch' && (
+            <div style={{ marginTop: 16 }}>
+              <button onClick={() => setScriptMode(null)} style={{ fontSize: 11, color: '#aaa', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16, padding: 0 }}>
+                ← Change mode
+              </button>
+              <div style={{ marginBottom: 14 }}>
+                
+                  href="https://hollmann.international/vehicle/26G0794/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 12, color: '#111', textDecoration: 'underline', fontWeight: 500 }}
+                >
+                  How to write my welcome script?
+                </a>
+              </div>
+              <textarea
+                placeholder="Write your welcome script here..."
+                value={scratchText}
+                onChange={e => setScratchText(e.target.value)}
+                rows={16}
+                style={{
+                  width: '100%', background: 'rgba(255,255,255,0.7)',
+                  border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 12,
+                  padding: '14px', fontSize: 13, color: '#111',
+                  outline: 'none', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.7,
+                }}
+              />
+            </div>
+          )}
+
         </GlassSection>
 
-        {/* ── Save ── */}
+        {/* Save */}
         <button
           onClick={() => setShowSuccess(true)}
           style={{ width: '100%', background: '#111', color: '#fff', border: 'none', borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.15s' }}
@@ -265,7 +327,7 @@ Ah and ${teaserLine}`
         </button>
       </div>
 
-      {/* ── Receive Modal ── */}
+      {/* Receive Modal */}
       {receiveModal && (
         <Modal onClose={() => setReceiveModal(false)}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111', marginBottom: 4 }}>WhatsApp Receive</h2>
@@ -274,16 +336,13 @@ Ah and ${teaserLine}`
             <Field label="Client ID" placeholder="Your WhatsApp Client ID" value={receiveForm.clientId} onChange={v => setReceiveForm(f => ({ ...f, clientId: v }))} />
             <Field label="Client Secret" placeholder="Your WhatsApp Client Secret" type="password" value={receiveForm.clientSecret} onChange={v => setReceiveForm(f => ({ ...f, clientSecret: v }))} />
           </div>
-          <button
-            onClick={() => { setReceiveConnected(true); setReceiveModal(false) }}
-            style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
+          <button onClick={() => { setReceiveConnected(true); setReceiveModal(false) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
             Connect
           </button>
         </Modal>
       )}
 
-      {/* ── Send Modal ── */}
+      {/* Send Modal */}
       {sendModal && (
         <Modal onClose={() => setSendModal(false)}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111', marginBottom: 4 }}>WhatsApp Send</h2>
@@ -292,16 +351,13 @@ Ah and ${teaserLine}`
             <Field label="Access Token" placeholder="Your WhatsApp Access Token" type="password" value={sendForm.accessToken} onChange={v => setSendForm(f => ({ ...f, accessToken: v }))} />
             <Field label="Business Account ID" placeholder="Your Business Account ID" value={sendForm.businessId} onChange={v => setSendForm(f => ({ ...f, businessId: v }))} />
           </div>
-          <button
-            onClick={() => { setSendConnected(true); setSendModal(false) }}
-            style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
+          <button onClick={() => { setSendConnected(true); setSendModal(false) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
             Connect
           </button>
         </Modal>
       )}
 
-      {/* ── Success Modal ── */}
+      {/* Success Modal */}
       {showSuccess && (
         <Modal onClose={() => setShowSuccess(false)}>
           <div style={{ textAlign: 'center', padding: '8px 0' }}>
@@ -312,10 +368,7 @@ Ah and ${teaserLine}`
             <p style={{ fontSize: 13, color: '#888', lineHeight: 1.6, marginBottom: 24 }}>
               Your booking flow configuration has been saved. Your WhatsApp agent will be activated shortly.
             </p>
-            <button
-              onClick={() => setShowSuccess(false)}
-              style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-            >
+            <button onClick={() => setShowSuccess(false)} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               Done
             </button>
           </div>
