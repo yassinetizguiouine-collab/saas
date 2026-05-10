@@ -9,6 +9,7 @@ export default function BookingFlowPresent({ onDeploy }: Props) {
         <span style={{ fontSize: 13, color: '#999' }}>Booking Flow</span>
       </div>
 
+      {/* TOP — same as now */}
       <div style={{ textAlign: 'center', marginBottom: 48, paddingTop: 24 }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -27,52 +28,72 @@ export default function BookingFlowPresent({ onDeploy }: Props) {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 40 }}>
-        {[
-          {
-            icon: 'ti-message-chatbot',
-            title: 'Qualify leads automatically',
-            desc: 'The agent asks the right questions to understand where your lead is and what they need.',
-          },
-          {
-            icon: 'ti-send',
-            title: 'Send your lead magnet',
-            desc: 'Automatically delivers your guide or video link at the right moment in the conversation.',
-          },
-          {
-            icon: 'ti-calendar-check',
-            title: 'Book calls on autopilot',
-            desc: 'Converts warm leads into booked calls without you lifting a finger.',
-          },
-        ].map((card, i) => (
-          <div
-            key={i}
-            className="glass"
-            style={{ borderRadius: 18, padding: '22px 20px', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'default' }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'
-              ;(e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.10)'
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'
-              ;(e.currentTarget as HTMLElement).style.boxShadow = ''
-            }}
-          >
-            <div style={{
-              width: 38, height: 38,
-              background: 'rgba(0,0,0,0.05)',
-              borderRadius: 11,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              marginBottom: 14,
-            }}>
-              <i className={`ti ${card.icon}`} style={{ fontSize: 19, color: '#333' }} aria-hidden="true" />
+      {/* MIDDLE — 3 stacked boxes left + image right */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 16, marginBottom: 40, alignItems: 'start' }}>
+        
+        {/* Left: 3 stacked feature cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[
+            {
+              icon: 'ti-message-chatbot',
+              title: 'Qualify leads automatically',
+              desc: 'The agent asks the right questions to understand where your lead is and what they need.',
+            },
+            {
+              icon: 'ti-send',
+              title: 'Send your lead magnet',
+              desc: 'Automatically delivers your guide or video link at the right moment in the conversation.',
+            },
+            {
+              icon: 'ti-calendar-check',
+              title: 'Book calls on autopilot',
+              desc: 'Converts warm leads into booked calls without you lifting a finger.',
+            },
+          ].map((card, i) => (
+            <div
+              key={i}
+              className="glass"
+              style={{ borderRadius: 18, padding: '22px 20px', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'default' }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'
+                ;(e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.10)'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'
+                ;(e.currentTarget as HTMLElement).style.boxShadow = ''
+              }}
+            >
+              <div style={{
+                width: 38, height: 38,
+                background: 'rgba(0,0,0,0.05)',
+                borderRadius: 11,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 14,
+              }}>
+                <i className={`ti ${card.icon}`} style={{ fontSize: 19, color: '#333' }} aria-hidden="true" />
+              </div>
+              <h3 style={{ fontSize: 13, fontWeight: 600, color: '#111', marginBottom: 6 }}>{card.title}</h3>
+              <p style={{ fontSize: 12, color: '#888', lineHeight: 1.55 }}>{card.desc}</p>
             </div>
-            <h3 style={{ fontSize: 13, fontWeight: 600, color: '#111', marginBottom: 6 }}>{card.title}</h3>
-            <p style={{ fontSize: 12, color: '#888', lineHeight: 1.55 }}>{card.desc}</p>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        {/* Right: WhatsApp screenshot */}
+        <div style={{
+          borderRadius: 20,
+          overflow: 'hidden',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
+          border: '1px solid rgba(0,0,0,0.06)',
+        }}>
+          <img
+            src="/whatsapp.png"
+            alt="WhatsApp AI agent conversation"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        </div>
       </div>
 
+      {/* BOTTOM — same as now */}
       <div style={{ textAlign: 'center' }}>
         <button
           onClick={onDeploy}
