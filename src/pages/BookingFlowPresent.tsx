@@ -174,8 +174,8 @@ function WhatsAppMockup() {
   return (
     <div style={{
       width: '100%',
-      height: 485,
-      maxHeight: 485,
+      height: 493,
+      maxHeight: 493,
       borderRadius: 24,
       overflow: 'hidden',
       border: '1px solid rgba(0,0,0,0.08)',
