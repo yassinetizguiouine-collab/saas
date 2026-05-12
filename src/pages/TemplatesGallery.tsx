@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, CSSProperties } from 'react'
 
 interface Template {
   id: string
@@ -80,9 +80,200 @@ const FILTERS = ['All', 'Booking', 'Follow Up', 'Closing'] as const
 type Filter = typeof FILTERS[number]
 
 const TAG_STYLES: Record<string, { bg: string; color: string; border: string }> = {
-  Booking: { bg: 'rgba(37,211,102,0.08)', color: '#1a8c4e', border: '0.5px solid rgba(37,211,102,0.25)' },
-  'Follow Up': { bg: 'rgba(124,77,204,0.08)', color: '#7c4dcc', border: '0.5px solid rgba(124,77,204,0.22)' },
-  Closing: { bg: 'rgba(196,122,26,0.08)', color: '#c47a1a', border: '0.5px solid rgba(196,122,26,0.22)' },
+  Booking: {
+    bg: 'rgba(37,211,102,0.08)',
+    color: '#1a8c4e',
+    border: '0.5px solid rgba(37,211,102,0.25)',
+  },
+  'Follow Up': {
+    bg: 'rgba(124,77,204,0.08)',
+    color: '#7c4dcc',
+    border: '0.5px solid rgba(124,77,204,0.22)',
+  },
+  Closing: {
+    bg: 'rgba(196,122,26,0.08)',
+    color: '#c47a1a',
+    border: '0.5px solid rgba(196,122,26,0.22)',
+  },
+}
+
+// Keyframe injection (runs once)
+const STYLE_ID = 'tg-keyframes'
+if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
+  const s = document.createElement('style')
+  s.id = STYLE_ID
+  s.textContent = `
+    @keyframes tg-fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes tg-orb1 {
+      0%,100% { transform: translate(0,0) scale(1); }
+      50%     { transform: translate(60px,40px) scale(1.1); }
+    }
+    @keyframes tg-orb2 {
+      0%,100% { transform: translate(0,0) scale(1); }
+      50%     { transform: translate(-50px,-30px) scale(1.08); }
+    }
+  `
+  document.head.appendChild(s)
+}
+
+function WhatsAppSvg({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="#25D366" aria-hidden="true">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  )
+}
+
+function SquigglyUnderline() {
+  return (
+    <svg
+      viewBox="0 0 286 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="none"
+      style={{
+        position: 'absolute',
+        bottom: -6,
+        left: '-8%',
+        width: '116%',
+        height: 16,
+        color: '#7c4dcc',
+        opacity: 0.65,
+        pointerEvents: 'none',
+      }}
+    >
+      <path
+        d="M2 10C20 4 40 14 60 8C80 2 100 14 120 8C140 2 160 14 180 8C200 2 220 14 240 8C260 2 270 10 284 6"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M4 13C24 7 44 17 64 11C84 5 104 17 124 11C144 5 164 17 184 11C204 5 224 17 244 11C264 5 274 13 282 9"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.4"
+      />
+    </svg>
+  )
+}
+
+function TemplateCard({
+  template,
+  onSelect,
+  animDelay,
+}: {
+  template: Template
+  onSelect: (id: string) => void
+  animDelay: number
+}) {
+  const [hovered, setHovered] = useState(false)
+  const tagStyle = TAG_STYLES[template.tag]
+
+  const card: CSSProperties = {
+    background: hovered ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.55)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: hovered ? '0.5px solid rgba(0,0,0,0.14)' : '0.5px solid rgba(255,255,255,0.95)',
+    borderRadius: 18,
+    boxShadow: hovered
+      ? '0 12px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)'
+      : '0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
+    padding: '22px 20px 18px',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 14,
+    position: 'relative',
+    overflow: 'hidden',
+    transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+    transition: 'all 0.24s cubic-bezier(0.4,0,0.2,1)',
+    animation: `tg-fadeUp 0.45s ease ${animDelay}s both`,
+  }
+
+  const iconWrap: CSSProperties = {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    background: hovered ? 'rgba(124,77,204,0.10)' : 'rgba(0,0,0,0.05)',
+    border: hovered ? '0.5px solid rgba(124,77,204,0.2)' : '0.5px solid rgba(0,0,0,0.07)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    transition: 'all 0.2s ease',
+  }
+
+  const ctaColor = hovered ? '#7c4dcc' : '#aaa'
+
+  return (
+    <div
+      onClick={() => onSelect(template.id)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={card}
+    >
+      {/* Shine line */}
+      <div style={{
+        position: 'absolute', top: 0, left: '10%', right: '10%', height: 1,
+        background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.9),transparent)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Top row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div style={iconWrap}>
+          <i
+            className={`ti ${template.icon}`}
+            style={{ fontSize: 20, color: hovered ? '#7c4dcc' : '#444', transition: 'color 0.2s' }}
+            aria-hidden="true"
+          />
+        </div>
+        <span style={{
+          fontSize: 11, fontWeight: 600, padding: '4px 11px', borderRadius: 100,
+          background: tagStyle.bg, color: tagStyle.color, border: tagStyle.border,
+          letterSpacing: '0.01em', whiteSpace: 'nowrap',
+        }}>
+          {template.tag}
+        </span>
+      </div>
+
+      {/* Text */}
+      <div style={{ flex: 1 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111', marginBottom: 6, lineHeight: 1.35, letterSpacing: '-0.01em' }}>
+          {template.title}
+        </h3>
+        <p style={{ fontSize: 12.5, color: '#666', lineHeight: 1.65, margin: 0 }}>
+          {template.desc}
+        </p>
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        paddingTop: 14, borderTop: '0.5px solid rgba(0,0,0,0.07)', marginTop: 'auto',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#bbb' }}>
+          <WhatsAppSvg size={14} />
+          WhatsApp Agent
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: hovered ? 7 : 5,
+          fontSize: 12, fontWeight: 600, color: ctaColor,
+          transition: 'all 0.2s ease',
+        }}>
+          Use template
+          <i className="ti ti-arrow-right" style={{ fontSize: 13 }} aria-hidden="true" />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 interface Props {
@@ -92,7 +283,7 @@ interface Props {
 export default function TemplatesGallery({ onSelect }: Props) {
   const [activeFilter, setActiveFilter] = useState<Filter>('All')
   const [search, setSearch] = useState('')
-  const [hovered, setHovered] = useState<string | null>(null)
+  const [searchFocused, setSearchFocused] = useState(false)
 
   const filtered = TEMPLATES.filter(t => {
     const matchFilter = activeFilter === 'All' || t.category === activeFilter
@@ -103,143 +294,169 @@ export default function TemplatesGallery({ onSelect }: Props) {
     return matchFilter && matchSearch
   })
 
-  return (
-    <div style={{ padding: '40px 48px', maxWidth: 960, margin: '0 auto' }}>
+  const root: CSSProperties = {
+    padding: '48px 40px 80px',
+    maxWidth: 1040,
+    margin: '0 auto',
+    position: 'relative',
+    minHeight: '100%',
+    fontFamily: 'inherit',
+  }
 
-      {/* Header */}
-      <div style={{ marginBottom: 32 }}>
+  return (
+    <div style={root}>
+
+      {/* ── Header ── */}
+      <header style={{
+        textAlign: 'center',
+        maxWidth: 580,
+        margin: '0 auto 44px',
+        animation: 'tg-fadeUp 0.5s ease both',
+      }}>
+        {/* Badge */}
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: 'rgba(37,211,102,0.08)', border: '0.5px solid rgba(37,211,102,0.3)',
-          borderRadius: 20, padding: '5px 14px', fontSize: 12, color: '#1a8c4e',
-          marginBottom: 16, fontWeight: 500,
+          display: 'inline-flex', alignItems: 'center', gap: 7,
+          background: 'rgba(37,211,102,0.08)',
+          border: '0.5px solid rgba(37,211,102,0.25)',
+          borderRadius: 100, padding: '5px 16px',
+          fontSize: 12.5, fontWeight: 500, color: '#1a8c4e',
+          marginBottom: 22, letterSpacing: '0.01em',
         }}>
-          <i className="ti ti-brand-whatsapp" style={{ fontSize: 14 }} aria-hidden="true" />
+          <WhatsAppSvg size={14} />
           WhatsApp AI Sales Agent
         </div>
-        <h1 style={{ fontSize: 30, fontWeight: 700, color: '#111', letterSpacing: '-0.7px', marginBottom: 8 }}>
-          Choose your flow
-        </h1>
-        <p style={{ fontSize: 14, color: '#888', lineHeight: 1.6, maxWidth: 480 }}>
-          Pick a template that matches your goal. Each one deploys a ready-made WhatsApp AI agent in minutes.
-        </p>
-      </div>
 
-      {/* Search */}
-      <div style={{ position: 'relative', marginBottom: 14 }}>
-        <i className="ti ti-search" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#bbb', fontSize: 16, pointerEvents: 'none' }} aria-hidden="true" />
+        {/* Title with squiggly */}
+        <h1 style={{
+          fontSize: 'clamp(32px, 4vw, 50px)',
+          fontWeight: 700,
+          color: '#111',
+          letterSpacing: '-0.03em',
+          lineHeight: 1.1,
+          margin: '0 0 14px',
+        }}>
+          Choose your{' '}
+          <span style={{ position: 'relative', display: 'inline-block' }}>
+            flow
+            <SquigglyUnderline />
+          </span>
+        </h1>
+
+        <p style={{ fontSize: 14.5, color: '#777', lineHeight: 1.7, maxWidth: 440, margin: '0 auto' }}>
+          Pick a template that matches your goal. Each one deploys a ready-made
+          WhatsApp AI agent in minutes.
+        </p>
+      </header>
+
+      {/* ── Search ── */}
+      <div style={{
+        maxWidth: 520,
+        margin: '0 auto 18px',
+        position: 'relative',
+        animation: 'tg-fadeUp 0.5s ease 0.08s both',
+      }}>
+        <i className="ti ti-search" style={{
+          position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)',
+          color: '#bbb', fontSize: 16, pointerEvents: 'none',
+        }} aria-hidden="true" />
         <input
           type="text"
           placeholder="Search templates..."
           value={search}
           onChange={e => setSearch(e.target.value)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
           style={{
-            width: '100%', padding: '11px 14px 11px 40px',
-            border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 12,
-            background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)',
-            fontSize: 14, color: '#111', outline: 'none', fontFamily: 'inherit',
+            width: '100%',
+            padding: '13px 16px 13px 42px',
+            background: 'rgba(255,255,255,0.65)',
+            backdropFilter: 'blur(18px)',
+            WebkitBackdropFilter: 'blur(18px)',
+            border: searchFocused
+              ? '0.5px solid rgba(124,77,204,0.35)'
+              : '0.5px solid rgba(255,255,255,0.9)',
+            borderRadius: 14,
+            boxShadow: searchFocused
+              ? '0 0 0 3px rgba(124,77,204,0.08), 0 2px 16px rgba(0,0,0,0.06)'
+              : '0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
+            fontSize: 14,
+            color: '#111',
+            outline: 'none',
+            fontFamily: 'inherit',
+            boxSizing: 'border-box',
+            transition: 'all 0.22s cubic-bezier(0.4,0,0.2,1)',
           }}
         />
       </div>
 
-      {/* Filter pills */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
-        {FILTERS.map(f => (
-          <button
-            key={f}
-            onClick={() => setActiveFilter(f)}
-            style={{
-              padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 500,
-              border: activeFilter === f ? 'none' : '0.5px solid rgba(0,0,0,0.12)',
-              background: activeFilter === f ? '#111' : 'rgba(255,255,255,0.65)',
-              color: activeFilter === f ? '#fff' : '#666',
-              cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-            }}
-          >
-            {f}
-          </button>
-        ))}
+      {/* ── Filter pills ── */}
+      <div style={{
+        display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
+        marginBottom: 28,
+        animation: 'tg-fadeUp 0.5s ease 0.14s both',
+      }}>
+        {FILTERS.map(f => {
+          const active = activeFilter === f
+          return (
+            <button
+              key={f}
+              onClick={() => setActiveFilter(f)}
+              style={{
+                padding: '8px 20px', borderRadius: 100, fontSize: 13, fontWeight: 500,
+                fontFamily: 'inherit', cursor: 'pointer', userSelect: 'none',
+                background: active ? 'rgba(17,17,17,0.88)' : 'rgba(255,255,255,0.65)',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+                border: active ? '0.5px solid rgba(17,17,17,0.9)' : '0.5px solid rgba(255,255,255,0.9)',
+                color: active ? '#fff' : '#666',
+                boxShadow: active
+                  ? '0 4px 20px rgba(0,0,0,0.14)'
+                  : '0 2px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',
+                transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+              }}
+            >
+              {f}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Count */}
-      <div style={{ fontSize: 12, color: '#bbb', marginBottom: 18 }}>
+      {/* ── Count ── */}
+      <p style={{
+        textAlign: 'center', fontSize: 12, color: '#bbb',
+        marginBottom: 20, letterSpacing: '0.02em',
+        animation: 'tg-fadeUp 0.4s ease 0.2s both',
+      }}>
         {filtered.length} template{filtered.length !== 1 ? 's' : ''}
-      </div>
+      </p>
 
-      {/* Grid */}
+      {/* ── Grid / Empty ── */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#bbb' }}>
-          <i className="ti ti-search-off" style={{ fontSize: 32, display: 'block', marginBottom: 12 }} aria-hidden="true" />
-          <p style={{ fontSize: 14 }}>No templates found</p>
+        <div style={{
+          textAlign: 'center', padding: '72px 0', color: '#bbb',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+          background: 'rgba(255,255,255,0.55)',
+          backdropFilter: 'blur(20px)',
+          border: '0.5px solid rgba(255,255,255,0.9)',
+          borderRadius: 18,
+        }}>
+          <i className="ti ti-search-off" style={{ fontSize: 36 }} aria-hidden="true" />
+          <p style={{ fontSize: 14, margin: 0 }}>No templates found</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: 16 }}>
-          {filtered.map(t => {
-            const isHovered = hovered === t.id
-            const tagStyle = TAG_STYLES[t.tag]
-            return (
-              <div
-                key={t.id}
-                onClick={() => onSelect(t.id)}
-                onMouseEnter={() => setHovered(t.id)}
-                onMouseLeave={() => setHovered(null)}
-                style={{
-                  background: 'rgba(255,255,255,0.65)',
-                  backdropFilter: 'blur(20px)',
-                  border: isHovered ? '0.5px solid rgba(0,0,0,0.18)' : '0.5px solid rgba(255,255,255,0.95)',
-                  boxShadow: isHovered ? '0 8px 32px rgba(0,0,0,0.10)' : '0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
-                  borderRadius: 18, padding: '22px 20px', cursor: 'pointer',
-                  transition: 'all 0.18s',
-                  transform: isHovered ? 'translateY(-3px)' : 'translateY(0)',
-                  display: 'flex', flexDirection: 'column', gap: 14,
-                }}
-              >
-                {/* Icon + tag */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div style={{
-                    width: 40, height: 40,
-                    background: isHovered ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.05)',
-                    borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'background 0.15s', flexShrink: 0,
-                  }}>
-                    <i className={`ti ${t.icon}`} style={{ fontSize: 20, color: '#333' }} aria-hidden="true" />
-                  </div>
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20,
-                    background: tagStyle.bg, color: tagStyle.color, border: tagStyle.border,
-                  }}>
-                    {t.tag}
-                  </span>
-                </div>
-
-                {/* Text */}
-                <div>
-                  <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111', marginBottom: 6, lineHeight: 1.35 }}>
-                    {t.title}
-                  </h3>
-                  <p style={{ fontSize: 12, color: '#888', lineHeight: 1.6 }}>
-                    {t.desc}
-                  </p>
-                </div>
-
-                {/* Footer */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#bbb' }}>
-                    <i className="ti ti-brand-whatsapp" style={{ fontSize: 14, color: '#25D366' }} aria-hidden="true" />
-                    WhatsApp Agent
-                  </div>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 4,
-                    fontSize: 12, fontWeight: 600,
-                    color: isHovered ? '#111' : '#aaa', transition: 'color 0.15s',
-                  }}>
-                    Use template
-                    <i className="ti ti-arrow-right" style={{ fontSize: 13 }} aria-hidden="true" />
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: 18,
+        }}>
+          {filtered.map((t, i) => (
+            <TemplateCard
+              key={t.id}
+              template={t}
+              onSelect={onSelect}
+              animDelay={0.1 + i * 0.05}
+            />
+          ))}
         </div>
       )}
     </div>
