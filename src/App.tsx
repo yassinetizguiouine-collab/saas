@@ -19,9 +19,15 @@ export default function App() {
 
   useEffect(() => {
     async function init() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setAppState('auth'); return }
-      await checkUserProgress(session.user.id)
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) throw error
+        if (!session) { setAppState('auth'); return }
+        await checkUserProgress(session.user.id)
+      } catch (e) {
+        console.error('Init error:', e)
+        setAppState('auth')
+      }
     }
     init()
 
@@ -33,21 +39,26 @@ export default function App() {
   }, [])
 
   async function checkUserProgress(userId: string) {
-    if (!userId) {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setAppState('auth'); return }
-      userId = user.id
+    try {
+      if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { setAppState('auth'); return }
+        userId = user.id
+      }
+      const [{ data: ob }, { data: sp }] = await Promise.all([
+        supabase.from('onboarding').select('completed').eq('user_id', userId).maybeSingle(),
+        supabase.from('sales_process').select('completed').eq('user_id', userId).maybeSingle(),
+      ])
+      const obDone = ob?.completed ?? false
+      const spDone = sp?.completed ?? false
+      setSalesProcessDone(spDone)
+      if (!obDone) { setAppState('onboarding'); return }
+      setAppState('app')
+      setPage(spDone ? 'gallery' : 'sales-process')
+    } catch (e) {
+      console.error('checkUserProgress error:', e)
+      setAppState('auth')
     }
-    const [{ data: ob }, { data: sp }] = await Promise.all([
-      supabase.from('onboarding').select('completed').eq('user_id', userId).maybeSingle(),
-      supabase.from('sales_process').select('completed').eq('user_id', userId).maybeSingle(),
-    ])
-    const obDone = ob?.completed ?? false
-    const spDone = sp?.completed ?? false
-    setSalesProcessDone(spDone)
-    if (!obDone) { setAppState('onboarding'); return }
-    setAppState('app')
-    setPage(spDone ? 'gallery' : 'sales-process')
   }
 
   async function handleSignOut() {
@@ -55,16 +66,20 @@ export default function App() {
   }
 
   async function handleUseTemplate(templateId: string, templateTitle: string) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data } = await supabase.from('flows').insert({
-      user_id: user.id, template_id: templateId,
-      template_title: templateTitle, status: 'draft', config: {},
-    }).select().single()
-    if (data) {
-      setActiveFlowId(data.id)
-      setActiveTemplateId(templateId)
-      setPage('flow-config')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase.from('flows').insert({
+        user_id: user.id, template_id: templateId,
+        template_title: templateTitle, status: 'draft', config: {},
+      }).select().single()
+      if (data) {
+        setActiveFlowId(data.id)
+        setActiveTemplateId(templateId)
+        setPage('flow-config')
+      }
+    } catch (e) {
+      console.error('handleUseTemplate error:', e)
     }
   }
 
