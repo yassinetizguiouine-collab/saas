@@ -166,7 +166,7 @@ function SquigglyUnderline() {
 
 function TemplateCard({
   template,
-  
+  onUseTemplate,
   animDelay,
 }: {
   template: Template
