@@ -38,6 +38,13 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Safety net: if still loading after 5s, force to auth
+  useEffect(() => {
+    if (appState !== 'loading') return
+    const timer = setTimeout(() => setAppState('auth'), 5000)
+    return () => clearTimeout(timer)
+  }, [appState])
+
   async function checkUserProgress(userId: string) {
     try {
       if (!userId) {
