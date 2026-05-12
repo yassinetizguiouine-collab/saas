@@ -166,11 +166,11 @@ function SquigglyUnderline() {
 
 function TemplateCard({
   template,
-  onSelect,
+  
   animDelay,
 }: {
   template: Template
-  onSelect: (id: string) => void
+  onUseTemplate: (id: string, title: string) => void
   animDelay: number
 }) {
   const [hovered, setHovered] = useState(false)
@@ -214,7 +214,7 @@ function TemplateCard({
 
   return (
     <div
-      onClick={() => onSelect(template.id)}
+      onClick={() => onUseTemplate(template.id, template.title)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={card}
@@ -277,10 +277,10 @@ function TemplateCard({
 }
 
 interface Props {
-  onSelect: (templateId: string) => void
+  onUseTemplate: (templateId: string, templateTitle: string) => void
 }
 
-export default function TemplatesGallery({ onSelect }: Props) {
+export default function TemplatesGallery({ onUseTemplate }: Props) {
   const [activeFilter, setActiveFilter] = useState<Filter>('All')
   const [search, setSearch] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
@@ -453,7 +453,7 @@ export default function TemplatesGallery({ onSelect }: Props) {
             <TemplateCard
               key={t.id}
               template={t}
-              onSelect={onSelect}
+              onUseTemplate={onUseTemplate}
               animDelay={0.1 + i * 0.05}
             />
           ))}
