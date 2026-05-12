@@ -1,6 +1,9 @@
+import { supabase } from '../lib/supabase'
 import { useState } from 'react'
 
 interface Props {
+  flowId?: string | null
+  templateId?: string | null
   onBack: () => void
 }
 
@@ -87,7 +90,7 @@ function Field({ label, placeholder, type = 'text', hint, value, onChange }: {
   )
 }
 
-export default function BookingFlowConfig({ onBack }: Props) {
+export default function FlowConfig({ onBack, flowId, templateId }: Props) {
   const [selectedTone, setSelectedTone] = useState('friendly')
 
   const [receiveModal, setReceiveModal] = useState(false)
