@@ -230,8 +230,22 @@ export default function SalesProcess({ onComplete }: Props) {
 
       {/* Phase: build */}
       {phase === 'build' && (
-        <div style={{ animation: 'sp-up 0.35s ease both' }}>
-          <button onClick={() => setPhase('preset')} style={{
+  <div style={{ animation: 'sp-up 0.35s ease both' }}>
+
+    {/* Selected preset banner */}
+    {selectedPreset && (
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        background: 'rgba(124,77,204,0.08)', border: '0.5px solid rgba(124,77,204,0.22)',
+        borderRadius: 100, padding: '6px 16px', fontSize: 12.5, fontWeight: 500,
+        color: '#7c4dcc', marginBottom: 20,
+      }}>
+        <i className="ti ti-check" style={{ fontSize: 13 }} />
+        {PRESET_FUNNELS.find(p => p.id === selectedPreset)?.label}
+      </div>
+    )}
+
+    <button onClick={() => setPhase('preset')} style={{
             display: 'flex', alignItems: 'center', gap: 6, color: '#999', fontSize: 13,
             background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
             padding: 0, marginBottom: 32,
