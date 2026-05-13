@@ -7,6 +7,7 @@ import SalesProcess from './pages/SalesProcess'
 import TemplatesGallery from './pages/TemplatesGallery'
 import MyFlows from './pages/MyFlows'
 import FlowConfig from './pages/FlowConfig'
+import FlowPreview from './pages/FlowPreview'
 
 type AppState = 'loading' | 'auth' | 'onboarding' | 'app'
 
@@ -86,7 +87,8 @@ export default function App() {
       if (data) {
         setActiveFlowId(data.id)
         setActiveTemplateId(templateId)
-        setPage('flow-config')
+        // Go to preview first, then to config after deploy
+        setPage('flow-preview')
       }
     } catch (e) {
       console.error('handleUseTemplate error:', e)
@@ -96,6 +98,11 @@ export default function App() {
   function handleConfigureFlow(flowId: string, templateId: string) {
     setActiveFlowId(flowId)
     setActiveTemplateId(templateId)
+    setPage('flow-config')
+  }
+
+  function handlePreviewDeploy() {
+    // From preview, go straight to config
     setPage('flow-config')
   }
 
@@ -117,6 +124,7 @@ export default function App() {
       <main style={{ flex: 1, overflowY: 'auto' }}>
         {page === 'sales-process' && <SalesProcess onComplete={() => { setSalesProcessDone(true); setPage('gallery') }} />}
         {page === 'gallery' && salesProcessDone && <TemplatesGallery onUseTemplate={handleUseTemplate} />}
+        {page === 'flow-preview' && <FlowPreview onDeploy={handlePreviewDeploy} />}
         {page === 'my-flows' && salesProcessDone && <MyFlows onConfigureFlow={handleConfigureFlow} />}
         {page === 'flow-config' && <FlowConfig flowId={activeFlowId} templateId={activeTemplateId} onBack={() => setPage('my-flows')} />}
       </main>
