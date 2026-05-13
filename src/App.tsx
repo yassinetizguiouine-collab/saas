@@ -33,7 +33,10 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') { setAppState('auth'); return }
-      if (session) await checkUserProgress(session.user.id)
+      if (session) {
+        // 500ms delay ensures token is stored in localStorage before RLS queries fire
+        setTimeout(() => checkUserProgress(session.user.id), 500)
+      }
     })
     return () => subscription.unsubscribe()
   }, [])
