@@ -1,4 +1,4 @@
-export type Page = 'gallery' | 'my-flows' | 'sales-process' | 'flow-config'
+export type Page = 'gallery' | 'my-flows' | 'sales-process' | 'flow-config' | 'flow-preview'
 
 interface SidebarProps {
   activePage: Page
