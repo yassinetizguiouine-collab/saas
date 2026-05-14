@@ -24,7 +24,7 @@ export default function App() {
         const { data: { session }, error } = await supabase.auth.getSession()
         if (error) throw error
         if (!session) { setAppState('auth'); return }
-        await checkUserProgress(session.user.id)
+        await checkUserProgress(session.user.id, false)
       } catch (e) {
         console.error('Init error:', e)
         setAppState('auth')
@@ -34,29 +34,26 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') { setAppState('auth'); return }
-      if (session) {
-        // 500ms delay ensures token is stored in localStorage before RLS queries fire
-        setTimeout(() => checkUserProgress(session.user.id), 500)
+      if (event === 'SIGNED_IN' && session) {
+        setTimeout(() => checkUserProgress(session.user.id, true), 500)
       }
     })
     return () => subscription.unsubscribe()
   }, [])
 
-  // Safety net: if still loading after 5s, force to auth
   useEffect(() => {
     if (appState !== 'loading') return
     const timer = setTimeout(() => setAppState('auth'), 5000)
     return () => clearTimeout(timer)
   }, [appState])
 
-  // Auto-transition from initializing to onboarding after 2s
   useEffect(() => {
     if (appState !== 'initializing') return
-    const timer = setTimeout(() => setAppState('onboarding'), 2000)
+    const timer = setTimeout(() => setAppState('onboarding'), 2400)
     return () => clearTimeout(timer)
   }, [appState])
 
-  async function checkUserProgress(userId: string) {
+  async function checkUserProgress(userId: string, showInitializing = false) {
     try {
       if (!userId) {
         const { data: { user } } = await supabase.auth.getUser()
@@ -70,7 +67,10 @@ export default function App() {
       const obDone = ob?.completed ?? false
       const spDone = sp?.completed ?? false
       setSalesProcessDone(spDone)
-      if (!obDone) { setAppState('initializing'); return }
+      if (!obDone) {
+        setAppState(showInitializing ? 'initializing' : 'onboarding')
+        return
+      }
       setAppState('app')
       setPage(spDone ? 'gallery' : 'sales-process')
     } catch (e) {
@@ -94,7 +94,6 @@ export default function App() {
       if (data) {
         setActiveFlowId(data.id)
         setActiveTemplateId(templateId)
-        // Go to preview first, then to config after deploy
         setPage('flow-preview')
       }
     } catch (e) {
@@ -109,15 +108,14 @@ export default function App() {
   }
 
   function handlePreviewDeploy() {
-    // From preview, go straight to config
     setPage('flow-config')
   }
 
   if (appState === 'loading') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }}>
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-        <i className="ti ti-loader-2" style={{ fontSize: 28, color: '#ccc', animation: 'spin 1s linear infinite' }} />
+        <i className="ti ti-loader-2" style={{ fontSize: 26, color: '#333', animation: 'spin 1s linear infinite' }} />
       </div>
     )
   }
@@ -125,28 +123,40 @@ export default function App() {
   if (appState === 'initializing') {
     return (
       <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#000',
+        minHeight: '100vh', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', background: '#0a0a0a',
         flexDirection: 'column',
-        gap: 24,
       }}>
-        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-        <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', letterSpacing: '-0.04em' }}>
-          LeadFlow
+        <style>{`
+          @keyframes spin { to { transform: rotate(360deg) } }
+          @keyframes lf-rise { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:translateY(0) } }
+          @keyframes lf-bar { from { width:0 } to { width:100% } }
+          @keyframes lf-fade { from { opacity:0 } to { opacity:1 } }
+        `}</style>
+        <div style={{ textAlign: 'center', animation: 'lf-rise 0.7s ease 0.1s both' }}>
+          <div style={{ fontSize: 42, fontWeight: 800, color: '#fff', letterSpacing: '-0.04em', marginBottom: 10 }}>
+            LeadFlow
+          </div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', animation: 'lf-fade 0.5s ease 0.5s both' }}>
+            Initializing your workspace…
+          </div>
         </div>
-        <div style={{ fontSize: 16, color: '#aaa', textAlign: 'center' }}>
-          Initializing your workspace...
+        <div style={{
+          marginTop: 48, width: 160, height: 1.5,
+          background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden',
+          animation: 'lf-fade 0.4s ease 0.7s both',
+        }}>
+          <div style={{
+            height: '100%', background: 'rgba(255,255,255,0.6)', borderRadius: 99,
+            animation: 'lf-bar 2s cubic-bezier(0.4,0,0.2,1) 0.85s both',
+          }} />
         </div>
-        <i className="ti ti-loader-2" style={{ fontSize: 28, color: '#666', animation: 'spin 1s linear infinite', marginTop: 16 }} />
       </div>
     )
   }
 
-  if (appState === 'auth') return <AuthPage onAuth={() => checkUserProgress('')} />
-  if (appState === 'onboarding') return <Onboarding onComplete={() => checkUserProgress('')} />
+  if (appState === 'auth') return <AuthPage onAuth={() => checkUserProgress('', false)} />
+  if (appState === 'onboarding') return <Onboarding onComplete={() => checkUserProgress('', false)} />
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
