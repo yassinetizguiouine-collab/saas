@@ -33,8 +33,21 @@ const STEPS = [
     id: 'industry',
     question: 'What industry is your business in?',
     sub: 'This helps us tailor the agent language to your market.',
-    type: 'text' as const,
-    placeholder: 'e.g. Real Estate, Coaching, E-commerce, SaaS…',
+    type: 'chips' as const,
+    options: [
+      { label: '🏠 Real Estate', value: 'real-estate' },
+      { label: '🎓 Coaching / Consulting', value: 'coaching' },
+      { label: '🛍️ E-commerce', value: 'ecommerce' },
+      { label: '💻 SaaS / Tech', value: 'saas' },
+      { label: '🏋️ Health & Fitness', value: 'health-fitness' },
+      { label: '💰 Finance / Investing', value: 'finance' },
+      { label: '🎨 Creative / Agency', value: 'creative-agency' },
+      { label: '⚖️ Legal / Professional', value: 'legal' },
+      { label: '🏥 Healthcare', value: 'healthcare' },
+      { label: '🍽️ Food & Restaurant', value: 'food' },
+      { label: '🎓 Education / Courses', value: 'education' },
+      { label: '✨ Other', value: 'other' },
+    ],
   },
   {
     id: 'ideal_client',
@@ -164,7 +177,7 @@ function LiquidLogo() {
         position: 'absolute',
         width: 280, height: 280,
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(120,80,255,0.35), transparent 70%)',
+        background: 'radial-gradient(circle, rgba(120,80,255,0.15), transparent 70%)',
         filter: 'blur(40px)',
         animation: 'pulseGlow 4s ease-in-out infinite',
       }} />
@@ -182,7 +195,7 @@ function LiquidLogo() {
       <div style={{
         position: 'absolute',
         width: 180, height: 36,
-        background: 'rgba(0,0,0,0.5)',
+        background: 'rgba(100,100,180,0.15)',
         borderRadius: '50%',
         bottom: 52,
         filter: 'blur(22px)',
@@ -200,10 +213,12 @@ function LiquidLogo() {
           position: 'absolute',
           width: 195, height: 118,
           left: 33, top: 10,
-          background: '#fff',
+          background: 'rgba(255,255,255,0.55)',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
           borderRadius: '52% 48% 45% 55% / 58% 45% 55% 42%',
           animation: 'blob1anim 3.2s ease-in-out infinite alternate',
-          boxShadow: '0 0 40px rgba(255,255,255,0.08)',
+          boxShadow: '0 8px 40px rgba(96,165,250,0.25), inset 0 1px 0 rgba(255,255,255,0.8)',
+          border: '1px solid rgba(255,255,255,0.6)',
         }}>
           <div style={{
             position: 'absolute', inset: 0,
@@ -219,10 +234,12 @@ function LiquidLogo() {
           position: 'absolute',
           width: 170, height: 92,
           left: 45, top: 95,
-          background: '#fff',
+          background: 'rgba(255,255,255,0.5)',
+          backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
           borderRadius: '42% 58% 52% 48% / 55% 40% 60% 45%',
           animation: 'blob2anim 2.7s ease-in-out infinite alternate',
-          boxShadow: '0 0 30px rgba(255,255,255,0.06)',
+          boxShadow: '0 8px 32px rgba(52,211,153,0.2), inset 0 1px 0 rgba(255,255,255,0.7)',
+          border: '1px solid rgba(255,255,255,0.55)',
         }}>
           <div style={{
             position: 'absolute', inset: 0,
@@ -238,10 +255,12 @@ function LiquidLogo() {
           position: 'absolute',
           width: 92, height: 70,
           left: 85, top: 168,
-          background: '#fff',
+          background: 'rgba(255,255,255,0.45)',
+          backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
           borderRadius: '50% 50% 45% 55% / 52% 48% 52% 48%',
           animation: 'blob3anim 2.2s ease-in-out infinite alternate',
-          boxShadow: '0 0 24px rgba(255,255,255,0.05)',
+          boxShadow: '0 8px 28px rgba(167,139,250,0.2), inset 0 1px 0 rgba(255,255,255,0.65)',
+          border: '1px solid rgba(255,255,255,0.5)',
         }}>
           <div style={{
             position: 'absolute', inset: 0,
@@ -544,37 +563,83 @@ export default function Onboarding({ onComplete }: Props) {
         </div>
       </div>
 
-      {/* ── Right panel — dark with liquid logo ── */}
+      {/* ── Right panel — fluid glass ── */}
       <div style={{
         flex: 1, margin: '20px 20px 20px 0',
         borderRadius: 28, overflow: 'hidden',
-        background: 'radial-gradient(circle at top, #2d1b69 0%, #111 45%, #050505 100%)',
+        position: 'relative', zIndex: 1,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        position: 'relative', zIndex: 1,
-        gap: 0,
       }}>
-        {/* Liquid logo */}
-        <LiquidLogo />
+        <style>{`
+          @keyframes fluidA { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(60px,-40px) scale(1.15)} 66%{transform:translate(-30px,50px) scale(0.95)} }
+          @keyframes fluidB { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-50px,60px) scale(1.1)} 66%{transform:translate(70px,-30px) scale(1.2)} }
+          @keyframes fluidC { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,70px) scale(0.9)} 66%{transform:translate(-60px,-50px) scale(1.1)} }
+          @keyframes fluidD { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-70px,-60px) scale(1.2)} 66%{transform:translate(50px,40px) scale(0.95)} }
+        `}</style>
 
-        {/* LeadFlow label */}
-        <div style={{
-          fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.2)',
-          letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4,
-        }}>
-          LeadFlow
+        {/* Fluid color blobs background */}
+        <div style={{ position: 'absolute', inset: 0, background: '#f0f4ff', borderRadius: 28 }}>
+          {/* Blue blob */}
+          <div style={{
+            position: 'absolute', width: 420, height: 420, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(96,165,250,0.7) 0%, rgba(59,130,246,0.4) 50%, transparent 70%)',
+            filter: 'blur(50px)', top: '-80px', left: '-60px',
+            animation: 'fluidA 9s ease-in-out infinite',
+          }} />
+          {/* Green blob */}
+          <div style={{
+            position: 'absolute', width: 380, height: 380, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(52,211,153,0.65) 0%, rgba(16,185,129,0.35) 50%, transparent 70%)',
+            filter: 'blur(55px)', bottom: '-60px', right: '-40px',
+            animation: 'fluidB 11s ease-in-out infinite',
+          }} />
+          {/* Purple blob */}
+          <div style={{
+            position: 'absolute', width: 320, height: 320, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(167,139,250,0.6) 0%, rgba(139,92,246,0.3) 50%, transparent 70%)',
+            filter: 'blur(45px)', top: '40%', left: '20%',
+            animation: 'fluidC 8s ease-in-out infinite',
+          }} />
+          {/* Sky blob */}
+          <div style={{
+            position: 'absolute', width: 280, height: 280, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(125,211,252,0.55) 0%, rgba(56,189,248,0.25) 50%, transparent 70%)',
+            filter: 'blur(40px)', bottom: '20%', left: '-20px',
+            animation: 'fluidD 13s ease-in-out infinite',
+          }} />
+          {/* Frosted glass overlay */}
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: 28,
+            backdropFilter: 'blur(0px)',
+            background: 'rgba(255,255,255,0.18)',
+          }} />
         </div>
 
-        {/* Quote — changes per step */}
-        <div key={step} style={{
-          marginTop: 36, textAlign: 'center', padding: '0 44px',
-          animation: 'lf-up 0.4s ease both',
-        }}>
+        {/* Content sits on top of the glass */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {/* Liquid logo */}
+          <LiquidLogo />
+
+          {/* LeadFlow label */}
           <div style={{
-            fontSize: 13, color: 'rgba(255,255,255,0.38)',
-            lineHeight: 1.7, fontStyle: 'italic',
+            fontSize: 12, fontWeight: 700, color: 'rgba(60,60,100,0.4)',
+            letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4,
           }}>
-            {QUOTES[step]}
+            LeadFlow
+          </div>
+
+          {/* Quote — changes per step */}
+          <div key={step} style={{
+            marginTop: 36, textAlign: 'center', padding: '0 44px',
+            animation: 'lf-up 0.4s ease both',
+          }}>
+            <div style={{
+              fontSize: 13, color: 'rgba(60,60,100,0.55)',
+              lineHeight: 1.7, fontStyle: 'italic',
+            }}>
+              {QUOTES[step]}
+            </div>
           </div>
         </div>
       </div>
