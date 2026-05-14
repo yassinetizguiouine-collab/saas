@@ -252,10 +252,10 @@ export default function Onboarding({ onComplete }: Props) {
         })
 
       if (error) throw error
+      // Call onComplete to move to next section
       onComplete()
     } catch (e) {
       console.error('Save onboarding error:', e)
-    } finally {
       setLoading(false)
     }
   }
@@ -266,11 +266,32 @@ export default function Onboarding({ onComplete }: Props) {
       gridTemplateColumns: '1fr 1fr',
       minHeight: '100vh',
       background: '#fff',
+      flexDirection: 'column',
     }}>
+      {/* Header - stays at top */}
+      <div style={{
+        gridColumn: '1 / -1',
+        padding: '20px 48px',
+        borderBottom: '0.5px solid rgba(0,0,0,0.07)',
+        background: '#fff',
+      }}>
+        <div style={{ fontSize: 18, fontWeight: 800, color: '#111', letterSpacing: '-0.04em' }}>
+          LeadFlow
+        </div>
+      </div>
+
+      {/* Progress Bar - spans both columns */}
+      <div style={{
+        gridColumn: '1 / -1',
+        padding: '20px 48px 0',
+      }}>
+        <ProgressBar current={currentStep + 1} total={STEPS.length} />
+      </div>
+
       {/* Left side - Questions */}
-      <div style={{ padding: '60px 48px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ padding: '40px 48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 0 }}>
         <div style={{ maxWidth: 500 }}>
-          {/* Header */}
+          {/* Step counter */}
           <div style={{ marginBottom: 12 }}>
             <div style={{ fontSize: 13, color: '#999', fontWeight: 500, letterSpacing: '0.05em', marginBottom: 8 }}>
               STEP {currentStep + 1} OF {STEPS.length}
