@@ -105,7 +105,7 @@ const QUOTES = [
   'The agent knows exactly where it sits in your funnel.',
   'Your AI agent introduces itself as part of your brand.',
   'More context means smarter, more human conversations.',
-  'We craft messaging around your ideal client's pain points.',
+  "We craft messaging around your ideal client's pain points.",
   'Pricing shapes tone, urgency, and objection handling.',
   'Your traffic source shapes how the agent opens conversations.',
   'Your goal unlocks the right templates — pre-built for you.',
