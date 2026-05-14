@@ -7,520 +7,692 @@ interface Props {
 
 const STEPS = [
   {
-    id: 'profile',
-    question: 'What describes you the most?',
+    id: 'role',
+    question: 'How would you describe yourself?',
     sub: "We'll personalise your experience based on your profile.",
     type: 'chips' as const,
     options: [
       { label: '🌱 New to Business', value: 'new-to-business' },
       { label: '🏢 Business Owner', value: 'business-owner' },
-      { label: '🚀 Agency', value: 'agency' },
-      { label: '🔧 Engineer', value: 'engineer' },
+      { label: '💼 Sales', value: 'sales' },
       { label: '⚙️ Automation Specialist', value: 'automation' },
+      { label: '🔧 Engineer', value: 'engineer' },
       { label: '📣 Marketer', value: 'marketer' },
+      { label: '🚀 Agency', value: 'agency' },
       { label: '✨ Other', value: 'other' },
     ],
   },
   {
     id: 'business_name',
-    question: 'What is your business name?',
+    question: 'What is the name of your business?',
     sub: 'Your AI agent will introduce itself on behalf of your brand.',
     type: 'text' as const,
     placeholder: 'e.g. Nova Consulting',
   },
   {
-    id: 'industry',
-    question: 'What industry is {business_name} in?',
-    sub: 'Tell us about your industry or niche.',
-    type: 'text' as const,
-    placeholder: 'e.g. Digital Marketing, SaaS, E-commerce, Coaching',
-  },
-  {
-    id: 'ideal_client',
-    question: 'Who is the ideal client of {business_name}?',
-    sub: 'Describe your target audience — who they are, what they struggle with.',
+    id: 'business_what',
+    question: 'What does your business do?',
+    sub: 'Describe what you offer — products, services, results.',
     type: 'textarea' as const,
-    placeholder: 'e.g. Coaches and consultants doing $5k–$20k/month who struggle with lead follow-ups...',
+    placeholder: 'e.g. We help coaches and consultants book more calls through WhatsApp automation…',
   },
   {
-    id: 'results_promise',
-    question: 'What results do you promise your clients?',
-    sub: 'The transformation or outcome you deliver.',
+    id: 'business_who',
+    question: 'Who do you sell to?',
+    sub: 'Your ideal client — who are they, what do they struggle with?',
     type: 'textarea' as const,
-    placeholder: 'e.g. We help coaches book 10+ qualified calls per week without manual follow-ups...',
+    placeholder: 'e.g. Online coaches doing $5k–$20k/month who are overwhelmed by manual follow-ups…',
   },
   {
-    id: 'product_type',
-    question: 'How do you deliver your product?',
-    sub: 'What is the format of what you offer?',
+    id: 'price_range',
+    question: 'How much does your offer sell for?',
+    sub: "This helps us calibrate the agent's tone and qualification questions.",
     type: 'chips' as const,
     options: [
-      { label: '🎥 Video Course', value: 'video-course' },
-      { label: '📱 Digital Product', value: 'digital-product' },
-      { label: '📦 Physical Product', value: 'physical-product' },
-      { label: '🎓 Training/Coaching', value: 'training' },
-      { label: '💼 Service', value: 'service' },
-      { label: '📊 Software/SaaS', value: 'saas' },
+      { label: 'Under $500', value: 'under-500' },
+      { label: '$500 – $2k', value: '500-2k' },
+      { label: '$2k – $5k', value: '2k-5k' },
+      { label: '$5k – $15k', value: '5k-15k' },
+      { label: '$15k+', value: '15k-plus' },
+      { label: 'Varies / Custom', value: 'custom' },
     ],
   },
   {
-    id: 'product_price',
-    question: 'How much does your {product_type} cost?',
-    sub: 'This helps us calibrate how the agent qualifies leads.',
-    type: 'number' as const,
-    placeholder: '9999',
+    id: 'lead_sources',
+    question: 'Where do your leads come from today?',
+    sub: 'Select all that apply.',
+    type: 'chips-multi' as const,
+    options: [
+      { label: '📱 Paid Ads (Meta/TikTok)', value: 'paid-ads' },
+      { label: '🔍 Google Ads', value: 'google-ads' },
+      { label: '📲 Organic Social', value: 'organic-social' },
+      { label: '🤝 Referrals', value: 'referrals' },
+      { label: '📧 Email List', value: 'email' },
+      { label: '🌐 Website / SEO', value: 'seo' },
+      { label: '📞 Cold Outreach', value: 'cold' },
+      { label: '🎤 Events / Webinars', value: 'events' },
+    ],
   },
   {
-    id: 'offer_name',
-    question: 'What is the name of your offer?',
-    sub: 'The actual product name (like "AirMax" or "Sales Bootcamp").',
-    type: 'text' as const,
-    placeholder: 'e.g. The Lead Machine, Sales Mastery Program',
-  },
-  {
-    id: 'traffic_source',
-    question: 'What is your #1 traffic source?',
-    sub: 'Where do most of your leads come from?',
-    type: 'text' as const,
-    placeholder: 'e.g. TikTok, Google Ads, Referrals, Organic Instagram',
-  },
-  {
-    id: 'closing_method',
-    question: 'How do you close your clients?',
-    sub: 'Does your closing process involve phone calls?',
+    id: 'sales_goal',
+    question: 'What is your #1 goal right now?',
+    sub: "We'll surface the most relevant templates first.",
     type: 'chips' as const,
     options: [
-      { label: '📞 Phone call', value: 'phone-call' },
-      { label: '⚡ Without phone call (automation only)', value: 'no-phone' },
+      { label: '📅 Book more calls', value: 'book-calls' },
+      { label: '💰 Close more deals', value: 'close-deals' },
+      { label: '🔄 Automate follow-ups', value: 'follow-ups' },
+      { label: '⭐ Collect reviews', value: 'reviews' },
+      { label: '👥 Get more referrals', value: 'referrals' },
+      { label: '🔥 Keep leads warm', value: 'nurture' },
+    ],
+  },
+  {
+    id: 'automation_level',
+    question: 'How familiar are you with automation platforms?',
+    sub: 'Be honest — this helps us show the right level of complexity.',
+    type: 'chips' as const,
+    options: [
+      { label: '🆕 Brand new to this', value: 'new' },
+      { label: '📖 Used a few tools', value: 'some' },
+      { label: '⚡ Pretty comfortable', value: 'comfortable' },
+      { label: '🧠 Power user', value: 'expert' },
     ],
   },
 ]
 
-// ─── 3D Rotating Logo Animation ──────────────────────────────────────────
-function RotatingLogo() {
+// ─── Animated Logo (organic morph: dot → mushroom → bounce → loop) ────
+function LogoMorph() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animRef = useRef<number>(0)
+  const frameRef = useRef(0)
+  const rafRef = useRef<number>(0)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-
-    canvas.width = 280
-    canvas.height = 280
-
     const ctx = canvas.getContext('2d')!
-    let rotation = 0
+    const W = canvas.width
+    const H = canvas.height
+    const cx = W / 2
+    const cy = H / 2 + 20
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      
-      // Teal background
-      ctx.fillStyle = '#5eccc0'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+    // Each frame: t goes 0→1 over the full loop (4s at 60fps = 240 frames)
+    const LOOP = 260
 
-      // Save and transform for rotation
-      ctx.save()
-      ctx.translate(canvas.width / 2, canvas.height / 2)
-      ctx.rotate(rotation)
+    // Keyframe shapes — drawn as bezier-approximated blobs via SVG path data rendered to canvas
+    // We interpolate between "states" using a t value
 
-      // Draw pixelated mushroom/logo shape (simplified voxel style)
-      const scale = 30
-      const voxels = [
-        // Top part (mushroom cap)
-        [[0, -2], [1, -2], [2, -2], [3, -2], [-1, -2], [-2, -2]],
-        [[-1, -1], [0, -1], [1, -1], [2, -1]],
-        [[-1, 0], [0, 0], [1, 0], [2, 0]],
-        [[0, 1], [1, 1]],
-        // Middle
-        [[0, 2], [1, 2]],
-        // Bottom part (stem and base)
-        [[-1, 3], [0, 3], [1, 3]],
-        [[-2, 4], [-1, 4], [0, 4], [1, 4], [2, 4]],
-      ]
-
-      ctx.fillStyle = '#c4d961'
-      voxels.forEach(row => {
-        row.forEach(([x, y]) => {
-          ctx.fillRect(x * scale - scale / 2, y * scale - scale / 2, scale - 2, scale - 2)
-        })
-      })
-
-      // Add some dotted edge effect for that pixelated look
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
-      const dotSize = 4
-      voxels.forEach(row => {
-        row.forEach(([x, y]) => {
-          // Random dots on edges
-          if (Math.random() > 0.7) {
-            ctx.fillRect(x * scale - scale / 2 + Math.random() * scale, y * scale - scale / 2 + Math.random() * scale, dotSize, dotSize)
-          }
-        })
-      })
-
-      ctx.restore()
-
-      rotation += 0.03
-      animRef.current = requestAnimationFrame(draw)
+    function lerp(a: number, b: number, t: number) {
+      return a + (b - a) * t
     }
 
-    draw()
-    return () => cancelAnimationFrame(animRef.current)
+    function easeInOut(t: number) {
+      return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+    }
+
+    function easeOutBounce(t: number) {
+      if (t < 1 / 2.75) return 7.5625 * t * t
+      if (t < 2 / 2.75) { t -= 1.5 / 2.75; return 7.5625 * t * t + 0.75 }
+      if (t < 2.5 / 2.75) { t -= 2.25 / 2.75; return 7.5625 * t * t + 0.9375 }
+      t -= 2.625 / 2.75; return 7.5625 * t * t + 0.984375
+    }
+
+    // Draw the mushroom logo shape morphing from dot
+    // Shape is defined by a set of parameters that interpolate
+    function drawShape(t: number) {
+      ctx.clearRect(0, 0, W, H)
+
+      // t: 0=dot, 0.2=pill, 0.4=morph, 0.6=full mushroom, 0.8=bounce, 1=loop back
+
+      let dotR = 4
+      let capW = 0
+      let capH = 0
+      let stemW = 0
+      let stemH = 0
+      let capY = cy
+      let bounce = 0
+
+      if (t < 0.15) {
+        // Phase 1: dot → small pill
+        const p = easeInOut(t / 0.15)
+        dotR = lerp(4, 18, p)
+        capW = lerp(0, 18, p)
+        capH = lerp(0, 22, p)
+        capY = cy
+      } else if (t < 0.35) {
+        // Phase 2: pill → cap shape forming
+        const p = easeInOut((t - 0.15) / 0.2)
+        capW = lerp(18, 70, p)
+        capH = lerp(22, 65, p)
+        stemW = lerp(0, 18, p)
+        stemH = lerp(0, 20, p)
+        capY = lerp(cy, cy - 15, p)
+        dotR = 0
+      } else if (t < 0.55) {
+        // Phase 3: grow to full mushroom
+        const p = easeInOut((t - 0.35) / 0.2)
+        capW = lerp(70, 95, p)
+        capH = lerp(65, 85, p)
+        stemW = lerp(18, 28, p)
+        stemH = lerp(20, 38, p)
+        capY = lerp(cy - 15, cy - 20, p)
+        dotR = 0
+      } else if (t < 0.72) {
+        // Phase 4: settle — slight squish
+        const p = easeInOut((t - 0.55) / 0.17)
+        capW = lerp(95, 88, p)
+        capH = lerp(85, 90, p)
+        stemW = 28
+        stemH = 38
+        capY = cy - 20
+        dotR = 0
+      } else if (t < 0.88) {
+        // Phase 5: bounce — drop slightly then spring up
+        const p = (t - 0.72) / 0.16
+        bounce = Math.sin(p * Math.PI * 2) * 8 * (1 - p)
+        capW = 88
+        capH = 90
+        stemW = 28
+        stemH = 38
+        capY = cy - 20 + bounce
+        dotR = 0
+      } else {
+        // Phase 6: fade back to dot
+        const p = easeInOut((t - 0.88) / 0.12)
+        capW = lerp(88, 4, p)
+        capH = lerp(90, 4, p)
+        stemW = lerp(28, 0, p)
+        stemH = lerp(38, 0, p)
+        capY = lerp(cy - 20, cy, p)
+        dotR = lerp(0, 4, p)
+      }
+
+      ctx.save()
+
+      // Shadow
+      if (capW > 20) {
+        const shadowAlpha = Math.min(1, capW / 88) * 0.18
+        const shadowW = capW * 0.7
+        ctx.beginPath()
+        ctx.ellipse(cx, cy + stemH + 8, shadowW * 0.5, 6, 0, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`
+        ctx.fill()
+      }
+
+      // Draw main cap (top blob of the mushroom)
+      if (capW > 2) {
+        // Cap is a rounded blob — approximate with multiple ellipses + bezier
+        const r = capW / 2
+        const h = capH / 2
+
+        ctx.beginPath()
+        // Top cap: smooth blob
+        ctx.save()
+        ctx.translate(cx, capY)
+        // Main cap ellipse
+        ctx.beginPath()
+        ctx.ellipse(0, 0, r, h * 0.85, 0, 0, Math.PI * 2)
+        ctx.fillStyle = '#111'
+        ctx.fill()
+
+        // Second lobe — left bump (like the inspo logo has 3 lobes)
+        if (capW > 40) {
+          const lobeScale = Math.min(1, (capW - 40) / 50)
+          ctx.beginPath()
+          ctx.ellipse(-r * 0.55, h * 0.1, r * 0.42 * lobeScale, h * 0.55 * lobeScale, -0.15, 0, Math.PI * 2)
+          ctx.fillStyle = '#111'
+          ctx.fill()
+
+          // Third lobe — right bump
+          ctx.beginPath()
+          ctx.ellipse(r * 0.45, h * 0.15, r * 0.36 * lobeScale, h * 0.48 * lobeScale, 0.2, 0, Math.PI * 2)
+          ctx.fillStyle = '#111'
+          ctx.fill()
+        }
+        ctx.restore()
+
+        // Stem
+        if (stemW > 2 && stemH > 2) {
+          const sw = stemW / 2
+          const sh = stemH
+          const stemTop = capY + h * 0.5
+          ctx.beginPath()
+          ctx.moveTo(cx - sw, stemTop)
+          ctx.bezierCurveTo(cx - sw * 1.1, stemTop + sh * 0.5, cx - sw * 0.9, stemTop + sh * 0.8, cx - sw * 1.3, stemTop + sh)
+          ctx.lineTo(cx + sw * 1.3, stemTop + sh)
+          ctx.bezierCurveTo(cx + sw * 0.9, stemTop + sh * 0.8, cx + sw * 1.1, stemTop + sh * 0.5, cx + sw, stemTop)
+          ctx.closePath()
+          ctx.fillStyle = '#111'
+          ctx.fill()
+        }
+      } else if (dotR > 0) {
+        // Just a dot
+        ctx.beginPath()
+        ctx.arc(cx, cy, dotR, 0, Math.PI * 2)
+        ctx.fillStyle = '#111'
+        ctx.fill()
+      }
+
+      ctx.restore()
+    }
+
+    function animate() {
+      frameRef.current = (frameRef.current + 1) % LOOP
+      const t = frameRef.current / LOOP
+      drawShape(t)
+      rafRef.current = requestAnimationFrame(animate)
+    }
+
+    animate()
+    return () => cancelAnimationFrame(rafRef.current)
   }, [])
 
-  return <canvas ref={canvasRef} style={{ width: 280, height: 280, borderRadius: 24 }} />
-}
-
-// ─── Progress Bar ──────────────────────────────────────────────────────────
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  const percent = (current / total) * 100
   return (
-    <div style={{ display: 'flex', gap: 6, marginBottom: 32 }}>
-      {Array.from({ length: total }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            flex: 1,
-            height: 3,
-            borderRadius: 2,
-            background: i < current ? '#7c4dcc' : 'rgba(0,0,0,0.08)',
-            transition: 'all 0.3s ease',
-          }}
-        />
-      ))}
-    </div>
+    <canvas
+      ref={canvasRef}
+      width={280}
+      height={280}
+      style={{ display: 'block' }}
+    />
   )
 }
 
-// ─── Main Onboarding Component ─────────────────────────────────────────────
-export default function Onboarding({ onComplete }: Props) {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [answers, setAnswers] = useState<Record<string, any>>({})
-  const [loading, setLoading] = useState(false)
+// ─── Glow dot grid background ─────────────────────────────────────────
+function GlowDotGrid() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const mouse = useRef({ x: -999, y: -999 })
+  const raf = useRef<number>(0)
 
-  const step = STEPS[currentStep]
-  const businessName = answers.business_name || 'your business'
-  const productType = answers.product_type ? (STEPS[5].options?.find(o => o.value === answers.product_type)?.label || 'product') : 'product'
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')!
+    const DOT_SPACING = 18
+    const GLOW_RADIUS = 120
 
-  // Replace placeholders in question text
-  const displayQuestion = step.question
-    .replace('{business_name}', businessName)
-    .replace('{product_type}', productType)
-
-  async function handleNext() {
-    if (!answers[step.id]) return
-
-    if (currentStep < STEPS.length - 1) {
-      setCurrentStep(currentStep + 1)
-    } else {
-      // Save to Supabase
-      await saveOnboarding()
+    function resize() {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
     }
-  }
+    resize()
+    window.addEventListener('resize', resize)
 
-  function handleBack() {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+    function onMove(e: MouseEvent) {
+      mouse.current = { x: e.clientX, y: e.clientY }
     }
-  }
+    window.addEventListener('mousemove', onMove)
 
-  async function saveOnboarding() {
-    try {
-      setLoading(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      // Transform answers to match database structure
-      const onboardingData = {
-        profile: answers.profile,
-        business_name: answers.business_name,
-        industry: answers.industry,
-        ideal_client: answers.ideal_client,
-        results_promise: answers.results_promise,
-        product_type: answers.product_type,
-        product_price: answers.product_price,
-        offer_name: answers.offer_name,
-        traffic_source: answers.traffic_source,
-        closing_method: answers.closing_method,
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      const cols = Math.ceil(canvas.width / DOT_SPACING) + 1
+      const rows = Math.ceil(canvas.height / DOT_SPACING) + 1
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = c * DOT_SPACING
+          const y = r * DOT_SPACING
+          const dx = x - mouse.current.x
+          const dy = y - mouse.current.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          const proximity = Math.max(0, 1 - dist / GLOW_RADIUS)
+          if (proximity > 0) {
+            const alpha = 0.12 + proximity * 0.65
+            const radius = 1 + proximity * 2.5
+            ctx.beginPath()
+            ctx.arc(x, y, radius, 0, Math.PI * 2)
+            ctx.fillStyle = `rgba(124, 77, 204, ${alpha})`
+            ctx.fill()
+          } else {
+            ctx.beginPath()
+            ctx.arc(x, y, 1, 0, Math.PI * 2)
+            ctx.fillStyle = 'rgba(0,0,0,0.10)'
+            ctx.fill()
+          }
+        }
       }
-
-      const { error } = await supabase
-        .from('onboarding')
-        .upsert({
-          user_id: user.id,
-          completed: true,
-          answers: onboardingData,
-        })
-
-      if (error) throw error
-      // Call onComplete to move to next section
-      onComplete()
-    } catch (e) {
-      console.error('Save onboarding error:', e)
-      setLoading(false)
+      raf.current = requestAnimationFrame(draw)
     }
+    draw()
+
+    return () => {
+      cancelAnimationFrame(raf.current)
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('mousemove', onMove)
+    }
+  }, [])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 0,
+        pointerEvents: 'none',
+        background: '#f9f9f9',
+      }}
+    />
+  )
+}
+
+// ─── Chip ─────────────────────────────────────────────────────────────
+function Chip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '10px 20px', borderRadius: 100, fontSize: 13.5, fontWeight: 500,
+        fontFamily: 'inherit', cursor: 'pointer', userSelect: 'none',
+        background: selected ? '#111' : 'rgba(255,255,255,0.72)',
+        backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+        border: selected ? '0.5px solid #111' : '0.5px solid rgba(0,0,0,0.13)',
+        color: selected ? '#fff' : '#444',
+        boxShadow: selected ? '0 4px 16px rgba(0,0,0,0.16)' : '0 1px 6px rgba(0,0,0,0.05)',
+        transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+      }}
+      onMouseEnter={e => {
+        if (!selected) {
+          const el = e.currentTarget as HTMLElement
+          el.style.background = 'rgba(124,77,204,0.08)'
+          el.style.borderColor = 'rgba(124,77,204,0.3)'
+          el.style.color = '#7c4dcc'
+        }
+      }}
+      onMouseLeave={e => {
+        if (!selected) {
+          const el = e.currentTarget as HTMLElement
+          el.style.background = 'rgba(255,255,255,0.72)'
+          el.style.borderColor = 'rgba(0,0,0,0.13)'
+          el.style.color = '#444'
+        }
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────
+export default function Onboarding({ onComplete }: Props) {
+  const [step, setStep] = useState(0)
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
+  const [saving, setSaving] = useState(false)
+  const [animKey, setAnimKey] = useState(0)
+
+  const current = STEPS[step]
+  const singleVal = answers[current.id] as string | undefined
+  const multiVal = (answers[current.id] as string[] | undefined) ?? []
+
+  function setSingle(v: string) {
+    setAnswers(a => ({ ...a, [current.id]: v }))
+  }
+  function toggleMulti(v: string) {
+    setAnswers(a => {
+      const prev = (a[current.id] as string[] | undefined) ?? []
+      return { ...a, [current.id]: prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v] }
+    })
+  }
+
+  function canAdvance() {
+    const v = answers[current.id]
+    if (!v) return false
+    if (Array.isArray(v)) return v.length > 0
+    return (v as string).trim().length > 0
+  }
+
+  function goNext() {
+    if (step < STEPS.length - 1) {
+      setAnimKey(k => k + 1)
+      setStep(s => s + 1)
+    } else {
+      handleSave()
+    }
+  }
+
+  function goBack() {
+    if (step > 0) {
+      setAnimKey(k => k + 1)
+      setStep(s => s - 1)
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSaving(false); return }
+
+    await supabase.from('onboarding').upsert({
+      user_id: user.id,
+      role: answers.role,
+      business_name: answers.business_name,
+      business_what: answers.business_what,
+      business_who: answers.business_who,
+      price_range: answers.price_range,
+      lead_sources: answers.lead_sources,
+      sales_goal: answers.sales_goal,
+      automation_level: answers.automation_level,
+      completed: true,
+    }, { onConflict: 'user_id' })
+
+    setSaving(false)
+    onComplete()
   }
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      minHeight: '100vh',
-      background: '#fff',
-      flexDirection: 'column',
-    }}>
-      {/* Header - stays at top */}
+    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'inherit', position: 'relative' }}>
+      <GlowDotGrid />
+
+      {/* Left panel — form */}
       <div style={{
-        gridColumn: '1 / -1',
-        padding: '20px 48px',
-        borderBottom: '0.5px solid rgba(0,0,0,0.07)',
-        background: '#fff',
+        width: '52%', minHeight: '100vh',
+        display: 'flex', flexDirection: 'column',
+        padding: '40px 56px',
+        position: 'relative', zIndex: 1,
       }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: '#111', letterSpacing: '-0.04em' }}>
+        {/* Logo — always at top */}
+        <div style={{ fontSize: 20, fontWeight: 800, color: '#111', letterSpacing: '-0.03em', marginBottom: 36 }}>
           LeadFlow
         </div>
-      </div>
 
-      {/* Progress Bar - spans both columns */}
-      <div style={{
-        gridColumn: '1 / -1',
-        padding: '20px 48px 0',
-      }}>
-        <ProgressBar current={currentStep + 1} total={STEPS.length} />
-      </div>
+        {/* Progress bar */}
+        <div style={{ display: 'flex', gap: 5, marginBottom: 48 }}>
+          {STEPS.map((_, i) => (
+            <div key={i} style={{
+              height: 3, flex: 1, borderRadius: 99,
+              background: i <= step ? '#111' : 'rgba(0,0,0,0.10)',
+              transition: 'background 0.4s ease',
+            }} />
+          ))}
+        </div>
 
-      {/* Left side - Questions */}
-      <div style={{ padding: '40px 48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 0 }}>
-        <div style={{ maxWidth: 500 }}>
-          {/* Step counter */}
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, color: '#999', fontWeight: 500, letterSpacing: '0.05em', marginBottom: 8 }}>
-              STEP {currentStep + 1} OF {STEPS.length}
+        {/* Step content — animates on change */}
+        <div key={animKey} style={{ flex: 1, animation: 'lf-up 0.38s ease both' }}>
+          <style>{`
+            @keyframes lf-up { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+          `}</style>
+
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+            Step {step + 1} of {STEPS.length}
+          </div>
+
+          <h2 style={{ fontSize: 28, fontWeight: 700, color: '#111', letterSpacing: '-0.03em', lineHeight: 1.2, marginBottom: 10 }}>
+            {current.question}
+          </h2>
+          <p style={{ fontSize: 14, color: '#888', lineHeight: 1.6, marginBottom: 32 }}>
+            {current.sub}
+          </p>
+
+          {current.type === 'chips' && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {current.options!.map(o => (
+                <Chip key={o.value} label={o.label} selected={singleVal === o.value} onClick={() => setSingle(o.value)} />
+              ))}
             </div>
-            <h1 style={{ fontSize: 32, fontWeight: 700, color: '#111', margin: '0 0 12px', lineHeight: 1.2 }}>
-              {displayQuestion}
-            </h1>
-            <p style={{ fontSize: 14, color: '#777', margin: 0, lineHeight: 1.6 }}>
-              {step.sub}
-            </p>
-          </div>
+          )}
 
-          {/* Input field */}
-          <div style={{ marginTop: 32, marginBottom: 48 }}>
-            {step.type === 'text' && (
-              <input
-                type="text"
-                placeholder={step.placeholder}
-                value={answers[step.id] || ''}
-                onChange={e => setAnswers({ ...answers, [step.id]: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '13px 16px',
-                  fontSize: 14,
-                  border: '0.5px solid rgba(0,0,0,0.1)',
-                  borderRadius: 12,
-                  fontFamily: 'inherit',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                }}
-                onFocus={e => {
-                  e.currentTarget.style.borderColor = 'rgba(124, 77, 204, 0.3)'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(124, 77, 204, 0.08)'
-                }}
-                onBlur={e => {
-                  e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              />
-            )}
+          {current.type === 'chips-multi' && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {current.options!.map(o => (
+                <Chip key={o.value} label={o.label} selected={multiVal.includes(o.value)} onClick={() => toggleMulti(o.value)} />
+              ))}
+            </div>
+          )}
 
-            {step.type === 'number' && (
-              <input
-                type="number"
-                placeholder={step.placeholder}
-                value={answers[step.id] || ''}
-                onChange={e => setAnswers({ ...answers, [step.id]: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '13px 16px',
-                  fontSize: 14,
-                  border: '0.5px solid rgba(0,0,0,0.1)',
-                  borderRadius: 12,
-                  fontFamily: 'inherit',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                }}
-                onFocus={e => {
-                  e.currentTarget.style.borderColor = 'rgba(124, 77, 204, 0.3)'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(124, 77, 204, 0.08)'
-                }}
-                onBlur={e => {
-                  e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              />
-            )}
-
-            {step.type === 'textarea' && (
-              <textarea
-                placeholder={step.placeholder}
-                value={answers[step.id] || ''}
-                onChange={e => setAnswers({ ...answers, [step.id]: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '13px 16px',
-                  fontSize: 14,
-                  border: '0.5px solid rgba(0,0,0,0.1)',
-                  borderRadius: 12,
-                  fontFamily: 'inherit',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  minHeight: 100,
-                  resize: 'none',
-                  transition: 'all 0.2s',
-                }}
-                onFocus={e => {
-                  e.currentTarget.style.borderColor = 'rgba(124, 77, 204, 0.3)'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(124, 77, 204, 0.08)'
-                }}
-                onBlur={e => {
-                  e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              />
-            )}
-
-            {(step.type === 'chips' || step.type === 'chips-multi') && step.options && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {step.options.map(opt => {
-                  const isSelected = step.type === 'chips'
-                    ? answers[step.id] === opt.value
-                    : Array.isArray(answers[step.id]) && answers[step.id].includes(opt.value)
-
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => {
-                        if (step.type === 'chips') {
-                          setAnswers({ ...answers, [step.id]: opt.value })
-                        } else {
-                          const current = answers[step.id] || []
-                          const updated = current.includes(opt.value)
-                            ? current.filter((v: string) => v !== opt.value)
-                            : [...current, opt.value]
-                          setAnswers({ ...answers, [step.id]: updated })
-                        }
-                      }}
-                      style={{
-                        padding: '12px 16px',
-                        border: isSelected ? '1.5px solid #7c4dcc' : '0.5px solid rgba(0,0,0,0.1)',
-                        borderRadius: 10,
-                        background: isSelected ? 'rgba(124, 77, 204, 0.08)' : 'transparent',
-                        color: isSelected ? '#7c4dcc' : '#333',
-                        fontSize: 14,
-                        fontWeight: isSelected ? 500 : 400,
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        transition: 'all 0.2s',
-                        textAlign: 'left',
-                      }}
-                      onMouseEnter={e => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(124, 77, 204, 0.3)'
-                          e.currentTarget.style.background = 'rgba(124, 77, 204, 0.04)'
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'
-                          e.currentTarget.style.background = 'transparent'
-                        }
-                      }}
-                    >
-                      {opt.label}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Navigation buttons */}
-          <div style={{ display: 'flex', gap: 12 }}>
-            {currentStep > 0 && (
-              <button
-                onClick={handleBack}
-                style={{
-                  padding: '12px 24px',
-                  border: '0.5px solid rgba(0,0,0,0.1)',
-                  borderRadius: 10,
-                  background: 'transparent',
-                  color: '#666',
-                  fontSize: 14,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'rgba(124, 77, 204, 0.3)'
-                  e.currentTarget.style.color = '#7c4dcc'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'
-                  e.currentTarget.style.color = '#666'
-                }}
-              >
-                Back
-              </button>
-            )}
-            <button
-              onClick={handleNext}
-              disabled={!answers[step.id] || loading}
+          {current.type === 'text' && (
+            <input
+              type="text"
+              autoFocus
+              placeholder={current.placeholder}
+              value={singleVal ?? ''}
+              onChange={e => setSingle(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && canAdvance() && goNext()}
               style={{
-                flex: 1,
-                padding: '12px 24px',
-                border: 'none',
-                borderRadius: 10,
-                background: answers[step.id] ? '#111' : '#ddd',
-                color: answers[step.id] ? '#fff' : '#999',
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: answers[step.id] ? 'pointer' : 'not-allowed',
-                fontFamily: 'inherit',
-                transition: 'all 0.2s',
+                width: '100%', padding: '14px 18px', borderRadius: 14,
+                background: 'rgba(255,255,255,0.8)',
+                border: '0.5px solid rgba(0,0,0,0.13)',
+                fontSize: 15, color: '#111', outline: 'none',
+                fontFamily: 'inherit', boxSizing: 'border-box',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
               }}
-              onMouseEnter={e => {
-                if (answers[step.id]) {
-                  e.currentTarget.style.background = '#7c4dcc'
-                }
+            />
+          )}
+
+          {current.type === 'textarea' && (
+            <textarea
+              autoFocus
+              placeholder={current.placeholder}
+              value={singleVal ?? ''}
+              onChange={e => setSingle(e.target.value)}
+              rows={4}
+              style={{
+                width: '100%', padding: '14px 18px', borderRadius: 14,
+                background: 'rgba(255,255,255,0.8)',
+                border: '0.5px solid rgba(0,0,0,0.13)',
+                fontSize: 15, color: '#111', outline: 'none',
+                fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.65,
+                boxSizing: 'border-box', boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
               }}
-              onMouseLeave={e => {
-                if (answers[step.id]) {
-                  e.currentTarget.style.background = '#111'
-                }
-              }}
-            >
-              {loading ? 'Saving...' : currentStep === STEPS.length - 1 ? 'Complete' : 'Next'}
-            </button>
-          </div>
+            />
+          )}
+        </div>
+
+        {/* Nav */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 40 }}>
+          <button
+            onClick={goBack}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'none', border: 'none', cursor: step === 0 ? 'default' : 'pointer',
+              color: step === 0 ? 'transparent' : '#999', fontSize: 13,
+              fontFamily: 'inherit', padding: 0, transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => step > 0 && ((e.currentTarget as HTMLElement).style.color = '#111')}
+            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = step === 0 ? 'transparent' : '#999')}
+          >
+            <i className="ti ti-arrow-left" style={{ fontSize: 15 }} />
+            Back
+          </button>
+
+          <button
+            onClick={goNext}
+            disabled={!canAdvance() || saving}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: '#111', color: '#fff', border: 'none', borderRadius: 12,
+              padding: '12px 28px', fontSize: 14, fontWeight: 600,
+              fontFamily: 'inherit', cursor: canAdvance() ? 'pointer' : 'not-allowed',
+              opacity: canAdvance() && !saving ? 1 : 0.4,
+              transition: 'all 0.18s',
+            }}
+            onMouseEnter={e => {
+              if (canAdvance() && !saving) {
+                const el = e.currentTarget as HTMLElement
+                el.style.background = '#7c4dcc'
+                el.style.transform = 'translateY(-1px)'
+                el.style.boxShadow = '0 6px 20px rgba(124,77,204,0.35)'
+              }
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLElement
+              el.style.background = '#111'
+              el.style.transform = 'none'
+              el.style.boxShadow = 'none'
+            }}
+          >
+            {saving ? 'Saving…' : step === STEPS.length - 1 ? 'Finish' : 'Next'}
+            {!saving && <i className="ti ti-arrow-right" style={{ fontSize: 14 }} />}
+          </button>
         </div>
       </div>
 
-      {/* Right side - Animated Logo */}
+      {/* Right panel — dark with morphing logo */}
       <div style={{
-        background: 'linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '60px 48px',
+        flex: 1, margin: '20px 20px 20px 0',
+        borderRadius: 28, overflow: 'hidden',
+        background: '#0a0a0a',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        position: 'relative', zIndex: 1,
+        gap: 0,
       }}>
-        <div style={{ textAlign: 'center' }}>
-          <RotatingLogo />
-          <p style={{ marginTop: 32, fontSize: 13, color: '#999', maxWidth: 240, margin: '32px auto 0' }}>
-            Your AI agent will be trained with this information to qualify leads perfectly.
-          </p>
+        {/* Subtle noise texture overlay */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.03,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundSize: '200px 200px',
+        }} />
+
+        {/* Glow behind logo */}
+        <div style={{
+          position: 'absolute',
+          width: 300, height: 300,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        {/* The morphing logo */}
+        <div style={{ position: 'relative', zIndex: 1, filter: 'invert(1)' }}>
+          <LogoMorph />
+        </div>
+
+        {/* LeadFlow label below */}
+        <div style={{
+          position: 'relative', zIndex: 1,
+          marginTop: 8,
+          fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.2)',
+          letterSpacing: '0.12em', textTransform: 'uppercase',
+        }}>
+          LeadFlow
+        </div>
+
+        {/* Step label */}
+        <div key={step} style={{
+          position: 'relative', zIndex: 1,
+          marginTop: 40,
+          textAlign: 'center',
+          animation: 'lf-up 0.4s ease both',
+          padding: '0 40px',
+        }}>
+          <div style={{
+            fontSize: 12, color: 'rgba(255,255,255,0.3)',
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+            marginBottom: 8,
+          }}>
+            {step + 1} / {STEPS.length}
+          </div>
+          <div style={{
+            fontSize: 13.5, color: 'rgba(255,255,255,0.5)',
+            lineHeight: 1.6, fontStyle: 'italic',
+          }}>
+            {[
+              'The agent knows exactly where it sits in your funnel.',
+              'Your AI agent will introduce itself as part of your brand.',
+              'More context means smarter, more human conversations.',
+              'We craft messaging around your ideal client's pain points.',
+              'Pricing shapes tone, urgency, and objection handling.',
+              'Your traffic source shapes how the agent opens conversations.',
+              'Your goal unlocks the right templates — pre-built for your case.',
+              'The experience adapts to your level. No overwhelm.',
+            ][step]}
+          </div>
         </div>
       </div>
     </div>
