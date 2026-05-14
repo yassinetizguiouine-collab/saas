@@ -199,7 +199,7 @@ export default function Onboarding({ onComplete }: Props) {
 
   const step = STEPS[currentStep]
   const businessName = answers.business_name || 'your business'
-  const productType = answers.product_type ? STEPS[5].options?.find(o => o.value === answers.product_type)?.label : 'product' : 'product'
+  const productType = answers.product_type ? (STEPS[5].options?.find(o => o.value === answers.product_type)?.label || 'product') : 'product'
 
   // Replace placeholders in question text
   const displayQuestion = step.question
