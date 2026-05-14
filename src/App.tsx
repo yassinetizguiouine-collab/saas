@@ -9,7 +9,7 @@ import MyFlows from './pages/MyFlows'
 import FlowConfig from './pages/FlowConfig'
 import FlowPreview from './pages/FlowPreview'
 
-type AppState = 'loading' | 'auth' | 'onboarding' | 'app'
+type AppState = 'loading' | 'auth' | 'initializing' | 'onboarding' | 'app'
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
@@ -49,6 +49,13 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [appState])
 
+  // Auto-transition from initializing to onboarding after 2s
+  useEffect(() => {
+    if (appState !== 'initializing') return
+    const timer = setTimeout(() => setAppState('onboarding'), 2000)
+    return () => clearTimeout(timer)
+  }, [appState])
+
   async function checkUserProgress(userId: string) {
     try {
       if (!userId) {
@@ -63,7 +70,7 @@ export default function App() {
       const obDone = ob?.completed ?? false
       const spDone = sp?.completed ?? false
       setSalesProcessDone(spDone)
-      if (!obDone) { setAppState('onboarding'); return }
+      if (!obDone) { setAppState('initializing'); return }
       setAppState('app')
       setPage(spDone ? 'gallery' : 'sales-process')
     } catch (e) {
@@ -111,6 +118,29 @@ export default function App() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
         <i className="ti ti-loader-2" style={{ fontSize: 28, color: '#ccc', animation: 'spin 1s linear infinite' }} />
+      </div>
+    )
+  }
+
+  if (appState === 'initializing') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#000',
+        flexDirection: 'column',
+        gap: 24,
+      }}>
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+        <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', letterSpacing: '-0.04em' }}>
+          LeadFlow
+        </div>
+        <div style={{ fontSize: 16, color: '#aaa', textAlign: 'center' }}>
+          Initializing your workspace...
+        </div>
+        <i className="ti ti-loader-2" style={{ fontSize: 28, color: '#666', animation: 'spin 1s linear infinite', marginTop: 16 }} />
       </div>
     )
   }
