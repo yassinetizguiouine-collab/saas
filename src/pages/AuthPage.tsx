@@ -10,6 +10,7 @@ export default function AuthPage({ onAuth }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [initializing, setInitializing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
@@ -22,15 +23,56 @@ export default function AuthPage({ onAuth }: Props) {
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) { setError(error.message); setLoading(false); return }
       setSuccess('Account created! Logging you in…')
-      setTimeout(onAuth, 1200)
+      setTimeout(() => {
+        setLoading(false)
+        setInitializing(true)
+        setTimeout(onAuth, 2400)
+      }, 1200)
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) { setError(error.message); setLoading(false); return }
-      onAuth()
+      setLoading(false)
+      setInitializing(true)
+      setTimeout(onAuth, 2400)
     }
-    setLoading(false)
   }
 
+  // ── Initializing screen — shows ONLY right after successful login ──
+  if (initializing) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', background: '#0a0a0a',
+        flexDirection: 'column',
+      }}>
+        <style>{`
+          @keyframes lf-rise { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:translateY(0) } }
+          @keyframes lf-bar  { from { width:0 } to { width:100% } }
+          @keyframes lf-fade { from { opacity:0 } to { opacity:1 } }
+        `}</style>
+        <div style={{ textAlign: 'center', animation: 'lf-rise 0.7s ease 0.1s both' }}>
+          <div style={{ fontSize: 42, fontWeight: 800, color: '#fff', letterSpacing: '-0.04em', marginBottom: 10 }}>
+            LeadFlow
+          </div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', animation: 'lf-fade 0.5s ease 0.5s both' }}>
+            Initializing your workspace…
+          </div>
+        </div>
+        <div style={{
+          marginTop: 48, width: 160, height: 1.5,
+          background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden',
+          animation: 'lf-fade 0.4s ease 0.7s both',
+        }}>
+          <div style={{
+            height: '100%', background: 'rgba(255,255,255,0.6)', borderRadius: 99,
+            animation: 'lf-bar 2s cubic-bezier(0.4,0,0.2,1) 0.85s both',
+          }} />
+        </div>
+      </div>
+    )
+  }
+
+  // ── Auth form ──
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
