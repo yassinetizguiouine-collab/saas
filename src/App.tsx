@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import Sidebar, { Page } from './components/Sidebar'
 import AuthPage from './pages/AuthPage'
@@ -9,7 +9,7 @@ import MyFlows from './pages/MyFlows'
 import FlowConfig from './pages/FlowConfig'
 import FlowPreview from './pages/FlowPreview'
 
-type AppState = 'loading' | 'auth' | 'initializing' | 'onboarding' | 'app'
+type AppState = 'loading' | 'auth' | 'onboarding' | 'app'
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
@@ -17,60 +17,33 @@ export default function App() {
   const [salesProcessDone, setSalesProcessDone] = useState(false)
   const [activeFlowId, setActiveFlowId] = useState<string | null>(null)
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null)
-  // This ref tracks whether we already ran init from the stored session.
-  // If true, SIGNED_IN is a real fresh login; if false, it's just session restore.
-  const initDone = useRef(false)
 
   useEffect(() => {
-    // Step 1: Try to restore existing session silently (no black screen)
-    async function init() {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        if (error) throw error
-        if (!session) {
-          setAppState('auth')
-        } else {
-          await checkUserProgress(session.user.id, false)
-        }
-      } catch (e) {
-        console.error('Init error:', e)
+    // Restore session silently — no black screen ever on refresh/tab switch
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
         setAppState('auth')
-      } finally {
-        initDone.current = true
-      }
-    }
-    init()
-
-    // Step 2: Listen for auth changes
-    // SIGNED_IN fires on both fresh login AND session restore from localStorage.
-    // We use initDone to tell them apart:
-    //   - if initDone is false → session restore (already handled above) → skip
-    //   - if initDone is true  → real fresh login → show black screen
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') { setAppState('auth'); return }
-      if (event === 'SIGNED_IN' && session) {
-        if (!initDone.current) return // session restore already handled in init()
-        setTimeout(() => checkUserProgress(session.user.id, true), 500)
+      } else {
+        checkUserProgress(session.user.id)
       }
     })
+
+    // Only handle sign out here — AuthPage handles the post-login transition
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') setAppState('auth')
+    })
+
     return () => subscription.unsubscribe()
   }, [])
 
-  // Safety net: if still on loading after 5s, kick to auth
+  // Safety net: if still loading after 5s, go to auth
   useEffect(() => {
     if (appState !== 'loading') return
     const timer = setTimeout(() => setAppState('auth'), 5000)
     return () => clearTimeout(timer)
   }, [appState])
 
-  // Auto-advance from initializing → onboarding after 2.4s
-  useEffect(() => {
-    if (appState !== 'initializing') return
-    const timer = setTimeout(() => setAppState('onboarding'), 2400)
-    return () => clearTimeout(timer)
-  }, [appState])
-
-  async function checkUserProgress(userId: string, showInitializing = false) {
+  async function checkUserProgress(userId?: string) {
     try {
       if (!userId) {
         const { data: { user } } = await supabase.auth.getUser()
@@ -85,7 +58,7 @@ export default function App() {
       const spDone = sp?.completed ?? false
       setSalesProcessDone(spDone)
       if (!obDone) {
-        setAppState(showInitializing ? 'initializing' : 'onboarding')
+        setAppState('onboarding')
         return
       }
       setAppState('app')
@@ -128,8 +101,6 @@ export default function App() {
     setPage('flow-config')
   }
 
-  // ── Screens ──────────────────────────────────────────────────────────
-
   if (appState === 'loading') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }}>
@@ -139,42 +110,8 @@ export default function App() {
     )
   }
 
-  if (appState === 'initializing') {
-    return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', background: '#0a0a0a',
-        flexDirection: 'column',
-      }}>
-        <style>{`
-          @keyframes lf-rise { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:translateY(0) } }
-          @keyframes lf-bar  { from { width:0 } to { width:100% } }
-          @keyframes lf-fade { from { opacity:0 } to { opacity:1 } }
-        `}</style>
-        <div style={{ textAlign: 'center', animation: 'lf-rise 0.7s ease 0.1s both' }}>
-          <div style={{ fontSize: 42, fontWeight: 800, color: '#fff', letterSpacing: '-0.04em', marginBottom: 10 }}>
-            LeadFlow
-          </div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', animation: 'lf-fade 0.5s ease 0.5s both' }}>
-            Initializing your workspace…
-          </div>
-        </div>
-        <div style={{
-          marginTop: 48, width: 160, height: 1.5,
-          background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden',
-          animation: 'lf-fade 0.4s ease 0.7s both',
-        }}>
-          <div style={{
-            height: '100%', background: 'rgba(255,255,255,0.6)', borderRadius: 99,
-            animation: 'lf-bar 2s cubic-bezier(0.4,0,0.2,1) 0.85s both',
-          }} />
-        </div>
-      </div>
-    )
-  }
-
-  if (appState === 'auth') return <AuthPage onAuth={() => checkUserProgress('', false)} />
-  if (appState === 'onboarding') return <Onboarding onComplete={() => checkUserProgress('', false)} />
+  if (appState === 'auth') return <AuthPage onAuth={() => checkUserProgress()} />
+  if (appState === 'onboarding') return <Onboarding onComplete={() => checkUserProgress()} />
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
