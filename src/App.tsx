@@ -18,7 +18,6 @@ export default function App() {
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null)
 
   useEffect(() => {
-    // Restore session silently — no black screen ever on refresh/tab switch
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         setAppState('auth')
@@ -27,7 +26,6 @@ export default function App() {
       }
     })
 
-    // Only handle sign out here — AuthPage handles the post-login transition
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') setAppState('auth')
     })
@@ -35,7 +33,6 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Safety net: if still loading after 5s, go to auth
   useEffect(() => {
     if (appState !== 'loading') return
     const timer = setTimeout(() => setAppState('auth'), 5000)
@@ -55,15 +52,9 @@ export default function App() {
       ])
       const obDone = ob?.completed ?? false
       const recDone = rec?.completed ?? false
-      
-      if (!obDone) {
-        setAppState('onboarding')
-        return
-      }
-      if (!recDone) {
-        setAppState('recommender')
-        return
-      }
+
+      if (!obDone) { setAppState('onboarding'); return }
+      if (!recDone) { setAppState('recommender'); return }
       setAppState('app')
       setPage('gallery')
     } catch (e) {
@@ -76,12 +67,12 @@ export default function App() {
     await supabase.auth.signOut()
   }
 
+  // Called by FlowRecommender — creates the flow, marks rec done, then goes to PREVIEW first
   async function handleRecommendationComplete(templateId: string) {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Create the flow from the recommended template
       const { data: newFlow } = await supabase.from('flows').insert({
         user_id: user.id,
         template_id: templateId,
@@ -91,17 +82,16 @@ export default function App() {
       }).select().single()
 
       if (newFlow) {
-        // Mark recommendation as completed
         await supabase.from('recommended_flows').upsert(
           { user_id: user.id, completed: true, recommended_template_id: templateId },
           { onConflict: 'user_id' }
         )
 
-        // Set active flow and go to config
+        // Store flow + template, go to app and show PREVIEW first
         setActiveFlowId(newFlow.id)
         setActiveTemplateId(templateId)
         setAppState('app')
-        setPage('flow-config')
+        setPage('flow-preview') // ← preview first, not config
       }
     } catch (e) {
       console.error('handleRecommendationComplete error:', e)
@@ -112,7 +102,7 @@ export default function App() {
     const templates: Record<string, string> = {
       'booking-with-lm': 'Booking Flow w/ Lead Magnet',
       'booking-without-lm': 'Booking Flow w/o Lead Magnet',
-      'no-booking': 'No Booking Flow',
+      'close-in-chat': 'Close in WhatsApp Convo',
     }
     return templates[templateId] || 'Custom Flow'
   }
@@ -135,13 +125,14 @@ export default function App() {
     }
   }
 
-  function handleConfigureFlow(flowId: string, templateId: string) {
-    setActiveFlowId(flowId)
-    setActiveTemplateId(templateId)
+  // Called by FlowPreview "Configure my flow" button → goes to config
+  function handlePreviewDeploy() {
     setPage('flow-config')
   }
 
-  function handlePreviewDeploy() {
+  function handleConfigureFlow(flowId: string, templateId: string) {
+    setActiveFlowId(flowId)
+    setActiveTemplateId(templateId)
     setPage('flow-config')
   }
 
@@ -163,7 +154,7 @@ export default function App() {
       <Sidebar activePage={page} onNavigate={setPage} onSignOut={handleSignOut} />
       <main style={{ flex: 1, overflowY: 'auto' }}>
         {page === 'gallery' && <TemplatesGallery onUseTemplate={handleUseTemplate} />}
-        {page === 'flow-preview' && <FlowPreview onDeploy={handlePreviewDeploy} />}
+        {page === 'flow-preview' && <FlowPreview onDeploy={handlePreviewDeploy} templateId={activeTemplateId} />}
         {page === 'my-flows' && <MyFlows onConfigureFlow={handleConfigureFlow} />}
         {page === 'flow-config' && <FlowConfig flowId={activeFlowId} templateId={activeTemplateId} onBack={() => setPage('my-flows')} />}
       </main>
