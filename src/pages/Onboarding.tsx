@@ -5,12 +5,22 @@ interface Props {
   onComplete: () => void
 }
 
-const STEPS = [
+interface Step {
+  id: string
+  question: string
+  sub: string
+  type: 'chips' | 'chips-multi' | 'text' | 'textarea'
+  options?: Array<{ label: string; value: string }>
+  placeholder?: string
+  conditional?: (answers: Record<string, any>) => boolean
+}
+
+const STEPS: Step[] = [
   {
     id: 'role',
     question: 'What describes you the most?',
     sub: "We'll personalise your experience based on your profile.",
-    type: 'chips' as const,
+    type: 'chips',
     options: [
       { label: '🌱 New to Business', value: 'new-to-business' },
       { label: '🏢 Business Owner', value: 'business-owner' },
@@ -26,14 +36,14 @@ const STEPS = [
     id: 'business_name',
     question: 'What is the name of your business?',
     sub: 'Your AI agent will introduce itself on behalf of your brand.',
-    type: 'text' as const,
+    type: 'text',
     placeholder: 'e.g. Nova Consulting',
   },
   {
     id: 'industry',
     question: 'What industry is your business in?',
     sub: 'This helps us tailor the agent language to your market.',
-    type: 'chips' as const,
+    type: 'chips',
     options: [
       { label: '🏠 Real Estate', value: 'real-estate' },
       { label: '🎓 Coaching / Consulting', value: 'coaching' },
@@ -53,21 +63,21 @@ const STEPS = [
     id: 'ideal_client',
     question: 'Who is the ideal client of your business?',
     sub: 'Describe who you help — their profile, pain points, situation.',
-    type: 'textarea' as const,
+    type: 'textarea',
     placeholder: 'e.g. Online coaches doing $5k–$20k/month who struggle to follow up with leads manually…',
   },
   {
     id: 'results_promised',
     question: 'What results do you promise your clients?',
     sub: 'The transformation or outcome your clients get from working with you.',
-    type: 'textarea' as const,
+    type: 'textarea',
     placeholder: 'e.g. We help them book 10+ qualified calls per week on autopilot without paid ads…',
   },
   {
     id: 'product_type',
     question: 'How do you deliver your product?',
     sub: 'What format does your offer come in?',
-    type: 'chips' as const,
+    type: 'chips',
     options: [
       { label: '🎥 Video / Online Course', value: 'video-course' },
       { label: '📦 Physical Product', value: 'physical' },
@@ -83,21 +93,21 @@ const STEPS = [
     id: 'price',
     question: 'How much does your offer cost?',
     sub: 'Enter the price of your main offer.',
-    type: 'text' as const,
+    type: 'text',
     placeholder: 'e.g. $2,000 / $97/month / Free + upsell…',
   },
   {
     id: 'offer_name',
     question: 'What is the name of your offer?',
     sub: 'The actual name your clients know it by.',
-    type: 'text' as const,
+    type: 'text',
     placeholder: 'e.g. The Scale Blueprint, AirMax Pro, 90-Day Accelerator…',
   },
   {
     id: 'traffic_source',
     question: 'What is your #1 traffic source?',
     sub: 'Where do most of your leads come from right now?',
-    type: 'chips' as const,
+    type: 'chips',
     options: [
       { label: '📱 Paid Ads (Meta/TikTok)', value: 'paid-ads' },
       { label: '🔍 Google Ads', value: 'google-ads' },
@@ -113,11 +123,22 @@ const STEPS = [
     id: 'closing_method',
     question: 'How do you close your clients?',
     sub: 'How does a lead become a paying customer?',
-    type: 'chips' as const,
+    type: 'chips',
     options: [
       { label: '📞 Phone Call / Sales Call', value: 'phone-call' },
       { label: '🤖 Without Phone Call', value: 'no-call' },
     ],
+  },
+  {
+    id: 'has_lead_magnet',
+    question: 'Do you use a lead magnet?',
+    sub: 'A lead magnet is a free resource (guide, template, checklist) to qualify leads before the call.',
+    type: 'chips',
+    options: [
+      { label: '✅ Yes, I use a lead magnet', value: 'true' },
+      { label: '❌ No lead magnet, straight to call', value: 'false' },
+    ],
+    conditional: (answers: Record<string, any>) => answers.closing_method === 'phone-call',
   },
 ]
 
@@ -132,6 +153,7 @@ const QUOTES = [
   'Your offer name makes every conversation feel personal and real.',
   'Traffic source shapes how the agent opens the first message.',
   'Knowing your close method lets us build the perfect handoff.',
+  'A lead magnet turns browsers into buyers before the call.',
 ]
 
 // ─── Liquid Blob Animation ─────────────────────────────────────────────
@@ -388,7 +410,9 @@ export default function Onboarding({ onComplete }: Props) {
   const [saving, setSaving] = useState(false)
   const [animKey, setAnimKey] = useState(0)
 
-  const current = STEPS[step]
+  // Get visible steps based on conditions
+  const visibleSteps = STEPS.filter(s => !s.conditional || s.conditional(answers))
+  const current = visibleSteps[step]
   const singleVal = answers[current.id] as string | undefined
   const multiVal = (answers[current.id] as string[] | undefined) ?? []
 
@@ -408,7 +432,7 @@ export default function Onboarding({ onComplete }: Props) {
   }
 
   function goNext() {
-    if (step < STEPS.length - 1) { setAnimKey(k => k + 1); setStep(s => s + 1) }
+    if (step < visibleSteps.length - 1) { setAnimKey(k => k + 1); setStep(s => s + 1) }
     else handleSave()
   }
 
@@ -420,6 +444,12 @@ export default function Onboarding({ onComplete }: Props) {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setSaving(false); return }
+    
+    // Convert has_lead_magnet from string to boolean
+    const hasLeadMagnet = answers.has_lead_magnet === 'true' ? true : 
+                          answers.has_lead_magnet === 'false' ? false : 
+                          null
+    
     await supabase.from('onboarding').upsert({
       user_id: user.id,
       role: answers.role,
@@ -432,6 +462,7 @@ export default function Onboarding({ onComplete }: Props) {
       offer_name: answers.offer_name,
       traffic_source: answers.traffic_source,
       closing_method: answers.closing_method,
+      has_lead_magnet: hasLeadMagnet,
       completed: true,
     }, { onConflict: 'user_id' })
     setSaving(false)
@@ -454,9 +485,9 @@ export default function Onboarding({ onComplete }: Props) {
           LeadFlow
         </div>
 
-        {/* Progress */}
+        {/* Progress — now based on visibleSteps */}
         <div style={{ display: 'flex', gap: 5, marginBottom: 48 }}>
-          {STEPS.map((_, i) => (
+          {visibleSteps.map((_, i) => (
             <div key={i} style={{
               height: 3, flex: 1, borderRadius: 99,
               background: i <= step ? '#111' : 'rgba(0,0,0,0.10)',
@@ -470,7 +501,7 @@ export default function Onboarding({ onComplete }: Props) {
           <style>{`@keyframes lf-up { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }`}</style>
 
           <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
-            Step {step + 1} of {STEPS.length}
+            Step {step + 1} of {visibleSteps.length}
           </div>
           <h2 style={{ fontSize: 28, fontWeight: 700, color: '#111', letterSpacing: '-0.03em', lineHeight: 1.2, marginBottom: 10 }}>
             {current.question}
@@ -557,7 +588,7 @@ export default function Onboarding({ onComplete }: Props) {
               el.style.boxShadow = 'none'
             }}
           >
-            {saving ? 'Saving…' : step === STEPS.length - 1 ? 'Finish' : 'Next'}
+            {saving ? 'Saving…' : step === visibleSteps.length - 1 ? 'Finish' : 'Next'}
             {!saving && <i className="ti ti-arrow-right" style={{ fontSize: 14 }} />}
           </button>
         </div>
@@ -638,7 +669,7 @@ export default function Onboarding({ onComplete }: Props) {
               fontSize: 13, color: 'rgba(60,60,100,0.55)',
               lineHeight: 1.7, fontStyle: 'italic',
             }}>
-              {QUOTES[step]}
+              {QUOTES[Math.min(step, QUOTES.length - 1)]}
             </div>
           </div>
         </div>
