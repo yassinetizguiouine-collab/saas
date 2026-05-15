@@ -3,13 +3,13 @@ import { supabase } from './lib/supabase'
 import Sidebar, { Page } from './components/Sidebar'
 import AuthPage from './pages/AuthPage'
 import Onboarding from './pages/Onboarding'
-import IntroScreen from './pages/IntroScreen'
+import FlowRecommender from './pages/FlowRecommender'
 import TemplatesGallery from './pages/TemplatesGallery'
 import MyFlows from './pages/MyFlows'
 import FlowConfig from './pages/FlowConfig'
 import FlowPreview from './pages/FlowPreview'
 
-type AppState = 'loading' | 'auth' | 'onboarding' | 'intro' | 'app'
+type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'app'
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
@@ -49,19 +49,19 @@ export default function App() {
         if (!user) { setAppState('auth'); return }
         userId = user.id
       }
-      const [{ data: ob }, { data: intro }] = await Promise.all([
+      const [{ data: ob }, { data: rec }] = await Promise.all([
         supabase.from('onboarding').select('completed').eq('user_id', userId).maybeSingle(),
-        supabase.from('intro_screen').select('completed').eq('user_id', userId).maybeSingle(),
+        supabase.from('recommended_flows').select('completed').eq('user_id', userId).maybeSingle(),
       ])
       const obDone = ob?.completed ?? false
-      const introDone = intro?.completed ?? false
+      const recDone = rec?.completed ?? false
       
       if (!obDone) {
         setAppState('onboarding')
         return
       }
-      if (!introDone) {
-        setAppState('intro')
+      if (!recDone) {
+        setAppState('recommender')
         return
       }
       setAppState('app')
@@ -76,20 +76,45 @@ export default function App() {
     await supabase.auth.signOut()
   }
 
-  async function handleIntroComplete() {
+  async function handleRecommendationComplete(templateId: string) {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      // Mark intro as completed
-      await supabase.from('intro_screen').upsert(
-        { user_id: user.id, completed: true },
-        { onConflict: 'user_id' }
-      )
-      setAppState('app')
-      setPage('gallery')
+
+      // Create the flow from the recommended template
+      const { data: newFlow } = await supabase.from('flows').insert({
+        user_id: user.id,
+        template_id: templateId,
+        template_title: getTemplateTitle(templateId),
+        status: 'draft',
+        config: {},
+      }).select().single()
+
+      if (newFlow) {
+        // Mark recommendation as completed
+        await supabase.from('recommended_flows').upsert(
+          { user_id: user.id, completed: true, recommended_template_id: templateId },
+          { onConflict: 'user_id' }
+        )
+
+        // Set active flow and go to config
+        setActiveFlowId(newFlow.id)
+        setActiveTemplateId(templateId)
+        setAppState('app')
+        setPage('flow-config')
+      }
     } catch (e) {
-      console.error('handleIntroComplete error:', e)
+      console.error('handleRecommendationComplete error:', e)
     }
+  }
+
+  function getTemplateTitle(templateId: string): string {
+    const templates: Record<string, string> = {
+      'booking-with-lm': 'Booking Flow w/ Lead Magnet',
+      'booking-without-lm': 'Booking Flow w/o Lead Magnet',
+      'no-booking': 'No Booking Flow',
+    }
+    return templates[templateId] || 'Custom Flow'
   }
 
   async function handleUseTemplate(templateId: string, templateTitle: string) {
@@ -131,7 +156,7 @@ export default function App() {
 
   if (appState === 'auth') return <AuthPage onAuth={() => checkUserProgress()} />
   if (appState === 'onboarding') return <Onboarding onComplete={() => checkUserProgress()} />
-  if (appState === 'intro') return <IntroScreen onComplete={handleIntroComplete} />
+  if (appState === 'recommender') return <FlowRecommender onRecommended={handleRecommendationComplete} />
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
