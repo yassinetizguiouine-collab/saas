@@ -27,6 +27,14 @@ const TEMPLATES: Template[] = [
     tag: 'Booking',
   },
   {
+    id: 'close-in-chat',
+    category: 'Closing',
+    title: 'Close in WhatsApp Convo',
+    desc: 'Qualify leads, handle objections, and close the sale entirely inside WhatsApp — no call needed.',
+    icon: 'ti-message-2-check',
+    tag: 'Closing',
+  },
+  {
     id: 'followup-post-call',
     category: 'Follow Up',
     title: 'Follow Up — Post Call',
