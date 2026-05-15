@@ -3,18 +3,17 @@ import { supabase } from './lib/supabase'
 import Sidebar, { Page } from './components/Sidebar'
 import AuthPage from './pages/AuthPage'
 import Onboarding from './pages/Onboarding'
-import SalesProcess from './pages/SalesProcess'
+import IntroScreen from './pages/IntroScreen'
 import TemplatesGallery from './pages/TemplatesGallery'
 import MyFlows from './pages/MyFlows'
 import FlowConfig from './pages/FlowConfig'
 import FlowPreview from './pages/FlowPreview'
 
-type AppState = 'loading' | 'auth' | 'onboarding' | 'app'
+type AppState = 'loading' | 'auth' | 'onboarding' | 'intro' | 'app'
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
-  const [page, setPage] = useState<Page>('sales-process')
-  const [salesProcessDone, setSalesProcessDone] = useState(false)
+  const [page, setPage] = useState<Page>('gallery')
   const [activeFlowId, setActiveFlowId] = useState<string | null>(null)
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null)
 
@@ -50,19 +49,23 @@ export default function App() {
         if (!user) { setAppState('auth'); return }
         userId = user.id
       }
-      const [{ data: ob }, { data: sp }] = await Promise.all([
+      const [{ data: ob }, { data: intro }] = await Promise.all([
         supabase.from('onboarding').select('completed').eq('user_id', userId).maybeSingle(),
-        supabase.from('sales_process').select('completed').eq('user_id', userId).maybeSingle(),
+        supabase.from('intro_screen').select('completed').eq('user_id', userId).maybeSingle(),
       ])
       const obDone = ob?.completed ?? false
-      const spDone = sp?.completed ?? false
-      setSalesProcessDone(spDone)
+      const introDone = intro?.completed ?? false
+      
       if (!obDone) {
         setAppState('onboarding')
         return
       }
+      if (!introDone) {
+        setAppState('intro')
+        return
+      }
       setAppState('app')
-      setPage(spDone ? 'gallery' : 'sales-process')
+      setPage('gallery')
     } catch (e) {
       console.error('checkUserProgress error:', e)
       setAppState('auth')
@@ -71,6 +74,22 @@ export default function App() {
 
   async function handleSignOut() {
     await supabase.auth.signOut()
+  }
+
+  async function handleIntroComplete() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      // Mark intro as completed
+      await supabase.from('intro_screen').upsert(
+        { user_id: user.id, completed: true },
+        { onConflict: 'user_id' }
+      )
+      setAppState('app')
+      setPage('gallery')
+    } catch (e) {
+      console.error('handleIntroComplete error:', e)
+    }
   }
 
   async function handleUseTemplate(templateId: string, templateTitle: string) {
@@ -103,24 +122,24 @@ export default function App() {
 
   if (appState === 'loading') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f9f9' }}>
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-        <i className="ti ti-loader-2" style={{ fontSize: 26, color: '#333', animation: 'spin 1s linear infinite' }} />
+        <i className="ti ti-loader-2" style={{ fontSize: 26, color: '#ddd', animation: 'spin 1s linear infinite' }} />
       </div>
     )
   }
 
   if (appState === 'auth') return <AuthPage onAuth={() => checkUserProgress()} />
   if (appState === 'onboarding') return <Onboarding onComplete={() => checkUserProgress()} />
+  if (appState === 'intro') return <IntroScreen onComplete={handleIntroComplete} />
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      <Sidebar activePage={page} onNavigate={setPage} salesProcessDone={salesProcessDone} onSignOut={handleSignOut} />
+      <Sidebar activePage={page} onNavigate={setPage} onSignOut={handleSignOut} />
       <main style={{ flex: 1, overflowY: 'auto' }}>
-        {page === 'sales-process' && <SalesProcess onComplete={() => { setSalesProcessDone(true); setPage('gallery') }} />}
-        {page === 'gallery' && salesProcessDone && <TemplatesGallery onUseTemplate={handleUseTemplate} />}
+        {page === 'gallery' && <TemplatesGallery onUseTemplate={handleUseTemplate} />}
         {page === 'flow-preview' && <FlowPreview onDeploy={handlePreviewDeploy} />}
-        {page === 'my-flows' && salesProcessDone && <MyFlows onConfigureFlow={handleConfigureFlow} />}
+        {page === 'my-flows' && <MyFlows onConfigureFlow={handleConfigureFlow} />}
         {page === 'flow-config' && <FlowConfig flowId={activeFlowId} templateId={activeTemplateId} onBack={() => setPage('my-flows')} />}
       </main>
     </div>
