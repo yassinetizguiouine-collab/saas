@@ -529,7 +529,7 @@ function WaitTimeSelector() {
   const [selected, setSelected] = useState('10min')
   const OPTIONS = ['5min', '10min', '15min', '30min', '1h', '2h']
   return (
-    <GlassSection icon="ti-clock" title="Wait Time Before Follow-up" defaultOpen={true}>
+    <GlassSection icon="ti-clock" title="Wait Time Before Follow-up" defaultOpen={false}>
       <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 14 }}>
         How long after sending the lead magnet should your agent wait before sending Script 2?
       </p>
