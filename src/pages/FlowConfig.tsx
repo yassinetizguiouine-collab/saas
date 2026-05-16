@@ -1,4 +1,3 @@
-import { supabase } from '../lib/supabase'
 import { useState } from 'react'
 
 interface Props {
@@ -16,27 +15,9 @@ const TONES = [
 
 function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.18)', backdropFilter: 'blur(4px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}
-    >
-      <div
-        onClick={e => e.stopPropagation()}
-        className="glass-strong"
-        style={{ borderRadius: 20, padding: '28px 32px', width: 420, position: 'relative' }}
-      >
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: 16, right: 16,
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: '#aaa', fontSize: 18, fontFamily: 'inherit',
-          }}
-        >
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.18)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div onClick={e => e.stopPropagation()} className="glass-strong" style={{ borderRadius: 20, padding: '28px 32px', width: 420, position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', fontSize: 18, fontFamily: 'inherit' }}>
           <i className="ti ti-x" aria-hidden="true" />
         </button>
         {children}
@@ -45,16 +26,11 @@ function Modal({ onClose, children }: { onClose: () => void; children: React.Rea
   )
 }
 
-function GlassSection({ icon, title, children, defaultOpen = false }: {
-  icon: string; title: string; children: React.ReactNode; defaultOpen?: boolean
-}) {
+function GlassSection({ icon, title, children, defaultOpen = false }: { icon: string; title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="glass" style={{ borderRadius: 18, overflow: 'hidden' }}>
-      <div
-        onClick={() => setOpen(o => !o)}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', cursor: 'pointer' }}
-      >
+      <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', cursor: 'pointer' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 32, height: 32, background: 'rgba(0,0,0,0.05)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <i className={`ti ${icon}`} style={{ fontSize: 16, color: '#444' }} aria-hidden="true" />
@@ -68,332 +44,26 @@ function GlassSection({ icon, title, children, defaultOpen = false }: {
   )
 }
 
-function Field({ label, placeholder, type = 'text', hint, value, onChange }: {
-  label: string; placeholder: string; type?: string; hint?: string
-  value?: string; onChange?: (v: string) => void
-}) {
-  const inputStyle: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.7)', border: '0.5px solid rgba(0,0,0,0.12)',
-    borderRadius: 9, padding: '9px 12px', fontSize: 13, color: '#111',
-    outline: 'none', fontFamily: 'inherit', width: '100%',
-  }
+function Field({ label, placeholder, type = 'text', hint, value, onChange }: { label: string; placeholder: string; type?: string; hint?: string; value?: string; onChange?: (v: string) => void }) {
+  const inputStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.7)', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 9, padding: '9px 12px', fontSize: 13, color: '#111', outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
       <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>{label}</label>
       {hint && <span style={{ fontSize: 11, color: '#aaa', marginTop: -3 }}>{hint}</span>}
       {type === 'textarea' ? (
-        <textarea placeholder={placeholder} rows={3} value={value} onChange={e => onChange?.(e.target.value)}
-          style={{ ...inputStyle, resize: 'vertical' }} />
+        <textarea placeholder={placeholder} rows={3} value={value} onChange={e => onChange?.(e.target.value)} style={{ ...inputStyle, resize: 'vertical' }} />
       ) : (
-        <input type={type} placeholder={placeholder} value={value} onChange={e => onChange?.(e.target.value)}
-          style={inputStyle} />
+        <input type={type} placeholder={placeholder} value={value} onChange={e => onChange?.(e.target.value)} style={inputStyle} />
       )}
     </div>
   )
 }
 
-// ─── SCRIPT: BOOKING WITH LEAD MAGNET ────────────────────────────────────────
-
-function ScriptBookingWithLM() {
-  const [scriptMode, setScriptMode] = useState<null | 'proven' | 'scratch'>(null)
-  const [scratchText, setScratchText] = useState('')
-  const [source, setSource] = useState('')
-  const [niche, setNiche] = useState('')
-  const [magnetType, setMagnetType] = useState('')
-  const [magnetLink, setMagnetLink] = useState('')
-  const [promise, setPromise] = useState('')
-  const [teaser, setTeaser] = useState('')
-  const [greeting, setGreeting] = useState('')
-
-  const greetingText = greeting || 'Wa alaykoum salam'
-  const sourceLine = source ? `you came from ${source}` : 'you came from TikTok'
-  const nicheLine = niche ? `because you want to ${niche}` : 'because you want to start making money from home'
-  const magnetLine = magnetType || 'guide'
-  const promiseLine = promise || "In 4 minutes, you'll understand how simple it is to get paid online"
-  const teaserLine = teaser || "don't skip page 14…👀"
-
-  const scriptPreview = `${greetingText} 👋 Just to confirm — ${sourceLine} ${nicheLine}, right?
-
-(Lead replies)
-
-Perfect 😊 Before I send your ${magnetLine}, what's your name?
-
-(Lead replies)
-
-Nice to meet you, [NAME] 👍
-Quick question so I send you the right thing — Have you ever made money online before, or not yet?
-
-(Lead replies)
-
-And do you understand how it works fully, or are you just starting?
-
-(Lead replies)
-
-Great so this is the right thing for you!
-I'll send you your ${magnetLine} now. ${promiseLine}.
-Then if you like it, we'll talk about what you should do next to make your first sale as fast as possible insha'Allah
-Sounds good to you?
-
-(Lead replies)
-
-Perfect so here's your ${magnetLine}: ${magnetLink || '(your link)'}
-Take 4 minutes to read it now 👍
-When you finish, send me "done" and I'll show you the next step
-Ah and ${teaserLine}`
-
-  return (
-    <GlassSection icon="ti-script" title="Script 1 — Lead Qualification + Lead Magnet" defaultOpen={false}>
-      {scriptMode === null && (
-        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setScriptMode('proven')} />
-          <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom welcome script from a blank page." onClick={() => setScriptMode('scratch')} />
-        </div>
-      )}
-      {scriptMode === 'proven' && (
-        <div style={{ marginTop: 16 }}>
-          <BackButton onClick={() => setScriptMode(null)} />
-          <p style={{ fontSize: 12, color: '#999', marginBottom: 16 }}>Fill in the fields and watch your script update live below.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Traffic source" placeholder="e.g. TikTok, Instagram..." hint="Where are your leads coming from?" value={source} onChange={setSource} />
-              <Field label="Niche / pain point" placeholder="e.g. start making money from home" hint="What does your audience want?" value={niche} onChange={setNiche} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Lead magnet type" placeholder="e.g. guide, ebook, video..." value={magnetType} onChange={setMagnetType} />
-              <Field label="Lead magnet link" placeholder="https://..." type="url" value={magnetLink} onChange={setMagnetLink} />
-            </div>
-            <Field label="Outcome promise" placeholder="e.g. In 4 minutes, you'll understand how simple it is to get paid online" hint="What will they get after consuming the lead magnet?" value={promise} onChange={setPromise} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Page teaser (optional)" placeholder="e.g. don't skip page 14..." hint="A curiosity hook." value={teaser} onChange={setTeaser} />
-              <Field label="Custom greeting (optional)" placeholder="e.g. Wa alaykoum salam, Hey..." value={greeting} onChange={setGreeting} />
-            </div>
-            <LivePreview script={scriptPreview} />
-          </div>
-        </div>
-      )}
-      {scriptMode === 'scratch' && (
-        <ScratchMode text={scratchText} onChange={setScratchText} onBack={() => setScriptMode(null)} />
-      )}
-    </GlassSection>
-  )
-}
-
-// ─── SCRIPT: BOOKING WITHOUT LEAD MAGNET ─────────────────────────────────────
-
-function ScriptBookingWithoutLM() {
-  const [scriptMode, setScriptMode] = useState<null | 'proven' | 'scratch'>(null)
-  const [scratchText, setScratchText] = useState('')
-  const [source, setSource] = useState('')
-  const [painPoint, setPainPoint] = useState('')
-  const [greeting, setGreeting] = useState('')
-  const [callLength, setCallLength] = useState('')
-  const [callPurpose, setCallPurpose] = useState('')
-
-  const greetingText = greeting || 'Hey'
-  const sourceLine = source ? `you reached out from ${source}` : 'you reached out'
-  const painLine = painPoint ? `because you want to ${painPoint}` : 'because you want to grow your business'
-  const callLengthLine = callLength || '20-min'
-  const callPurposeLine = callPurpose || 'show you exactly how this works for your situation'
-
-  const scriptPreview = `${greetingText} 👋 Just to confirm — ${sourceLine} ${painLine}, right?
-
-(Lead replies)
-
-Perfect 😊 What's your name?
-
-(Lead replies)
-
-Nice to meet you, [NAME] 👍
-Quick question — what's your biggest challenge right now when it comes to getting clients?
-
-(Lead replies)
-
-I hear you. And are you currently doing any kind of outreach, or is it mostly coming to you?
-
-(Lead replies)
-
-Got it — so you're at the stage where the right system would make a big difference.
-
-Let me ask you this — on a scale of 1 to 10, how serious are you about changing that in the next 30 days?
-
-(Lead replies)
-
-That's what I needed to know 💪
-
-I'd love to jump on a quick ${callLengthLine} call with you to ${callPurposeLine}.
-No pressure — just a real conversation.
-
-Want to lock in a time? 📅`
-
-  return (
-    <GlassSection icon="ti-script" title="Script 1 — Lead Qualification + Direct Booking" defaultOpen={false}>
-      {scriptMode === null && (
-        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setScriptMode('proven')} />
-          <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom welcome script from a blank page." onClick={() => setScriptMode('scratch')} />
-        </div>
-      )}
-      {scriptMode === 'proven' && (
-        <div style={{ marginTop: 16 }}>
-          <BackButton onClick={() => setScriptMode(null)} />
-          <p style={{ fontSize: 12, color: '#999', marginBottom: 16 }}>Fill in the fields and watch your script update live below.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Traffic source" placeholder="e.g. TikTok, Instagram..." hint="Where are your leads coming from?" value={source} onChange={setSource} />
-              <Field label="Pain point / goal" placeholder="e.g. grow your business, get more clients" hint="What does your lead want?" value={painPoint} onChange={setPainPoint} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Call length" placeholder="e.g. 20-min, 30-min" hint="How long is your discovery call?" value={callLength} onChange={setCallLength} />
-              <Field label="Call purpose" placeholder="e.g. show you how this works for your situation" value={callPurpose} onChange={setCallPurpose} />
-            </div>
-            <Field label="Custom greeting (optional)" placeholder="e.g. Wa alaykoum salam, Hey..." value={greeting} onChange={setGreeting} />
-            <LivePreview script={scriptPreview} />
-          </div>
-        </div>
-      )}
-      {scriptMode === 'scratch' && (
-        <ScratchMode text={scratchText} onChange={setScratchText} onBack={() => setScriptMode(null)} />
-      )}
-    </GlassSection>
-  )
-}
-
-// ─── SCRIPT: CLOSE IN CHAT ───────────────────────────────────────────────────
-
-function ScriptCloseInChat() {
-  const [qualifyMode, setQualifyMode] = useState<null | 'proven' | 'scratch'>(null)
-  const [closeMode, setCloseMode] = useState<null | 'proven' | 'scratch'>(null)
-  const [qualifyScratch, setQualifyScratch] = useState('')
-  const [closeScratch, setCloseScratch] = useState('')
-
-  const [source, setSource] = useState('')
-  const [offerName, setOfferName] = useState('')
-  const [offerOutcome, setOfferOutcome] = useState('')
-  const [offerBenefit1, setOfferBenefit1] = useState('')
-  const [offerBenefit2, setOfferBenefit2] = useState('')
-  const [offerBenefit3, setOfferBenefit3] = useState('')
-  const [greeting, setGreeting] = useState('')
-  const [ctaLine, setCtaLine] = useState('')
-
-  const greetingText = greeting || 'Hey'
-  const sourceLine = source ? `you reached out from ${source}` : 'you reached out'
-  const offerLine = offerName || 'our program'
-  const outcomeLine = offerOutcome || 'increase your revenue without working more hours'
-  const b1 = offerBenefit1 || 'You get the full system'
-  const b2 = offerBenefit2 || 'Direct support from me'
-  const b3 = offerBenefit3 || 'First results in 30 days'
-  const ctaText = ctaLine || 'Are you ready to get started today?'
-
-  const qualifyScript = `${greetingText} 👋 Just to confirm — ${sourceLine} because you're interested in ${offerLine}, right?
-
-(Lead replies)
-
-Perfect! What's your name?
-
-(Lead replies)
-
-Nice [NAME] 👍 Quick question — what made you reach out today specifically?
-
-(Lead replies)
-
-That makes sense. And right now — what's the main thing you're trying to solve?
-
-(Lead replies)
-
-Got it. And if you had a solution to that in the next 30 days, what would that change for you?
-
-(Lead replies)
-
-I love that. You're exactly the kind of person this is built for.`
-
-  const closeScript = `So here's what happens inside ${offerLine}:
-
-Your goal is to ${outcomeLine}.
-
-Here's what you get:
-✅ ${b1}
-✅ ${b2}
-✅ ${b3}
-
-${ctaText} 🚀
-
-(Lead replies)
-
-Amazing — let me get you set up right now 👇`
-
-  return (
-    <>
-      {/* Script 1: Qualify */}
-      <GlassSection icon="ti-script" title="Script 1 — Lead Qualification" defaultOpen={false}>
-        {qualifyMode === null && (
-          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setQualifyMode('proven')} />
-            <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom qualification script." onClick={() => setQualifyMode('scratch')} />
-          </div>
-        )}
-        {qualifyMode === 'proven' && (
-          <div style={{ marginTop: 16 }}>
-            <BackButton onClick={() => setQualifyMode(null)} />
-            <p style={{ fontSize: 12, color: '#999', marginBottom: 16 }}>Fill in the fields and watch your script update live below.</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <Field label="Traffic source" placeholder="e.g. TikTok, Instagram..." hint="Where are your leads coming from?" value={source} onChange={setSource} />
-                <Field label="Offer name" placeholder="e.g. our coaching program, the course..." value={offerName} onChange={setOfferName} />
-              </div>
-              <Field label="Custom greeting (optional)" placeholder="e.g. Wa alaykoum salam, Hey..." value={greeting} onChange={setGreeting} />
-              <LivePreview script={qualifyScript} />
-            </div>
-          </div>
-        )}
-        {qualifyMode === 'scratch' && (
-          <ScratchMode text={qualifyScratch} onChange={setQualifyScratch} onBack={() => setQualifyMode(null)} />
-        )}
-      </GlassSection>
-
-      {/* Script 2: Close */}
-      <GlassSection icon="ti-currency-dollar" title="Script 2 — Closing Script" defaultOpen={false}>
-        {closeMode === null && (
-          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested closing template." onClick={() => setCloseMode('proven')} />
-            <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom closing script." onClick={() => setCloseMode('scratch')} />
-          </div>
-        )}
-        {closeMode === 'proven' && (
-          <div style={{ marginTop: 16 }}>
-            <BackButton onClick={() => setCloseMode(null)} />
-            <p style={{ fontSize: 12, color: '#999', marginBottom: 16 }}>Fill in your offer details and watch the closing script build itself.</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Field label="Offer name" placeholder="e.g. the mentorship, our program..." value={offerName} onChange={setOfferName} />
-              <Field label="Main outcome" placeholder="e.g. increase your revenue without working more hours" hint="What transformation does your offer give?" value={offerOutcome} onChange={setOfferOutcome} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
-                <Field label="Benefit 1" placeholder="e.g. Full system access" value={offerBenefit1} onChange={setOfferBenefit1} />
-                <Field label="Benefit 2" placeholder="e.g. Direct support" value={offerBenefit2} onChange={setOfferBenefit2} />
-                <Field label="Benefit 3" placeholder="e.g. Results in 30 days" value={offerBenefit3} onChange={setOfferBenefit3} />
-              </div>
-              <Field label="CTA line" placeholder="e.g. Are you ready to get started today?" value={ctaLine} onChange={setCtaLine} />
-              <LivePreview script={closeScript} />
-            </div>
-          </div>
-        )}
-        {closeMode === 'scratch' && (
-          <ScratchMode text={closeScratch} onChange={setCloseScratch} onBack={() => setCloseMode(null)} />
-        )}
-      </GlassSection>
-    </>
-  )
-}
-
-// ─── SHARED SMALL COMPONENTS ─────────────────────────────────────────────────
-
 function ScriptModeCard({ icon, title, desc, onClick }: { icon: string; title: string; desc: string; onClick: () => void }) {
   return (
-    <div
-      onClick={onClick}
-      className="glass"
-      style={{ borderRadius: 14, padding: '20px', cursor: 'pointer', transition: 'all 0.15s', border: '0.5px solid rgba(0,0,0,0.08)' }}
+    <div onClick={onClick} className="glass" style={{ borderRadius: 14, padding: '20px', cursor: 'pointer', transition: 'all 0.15s', border: '0.5px solid rgba(0,0,0,0.08)' }}
       onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'}
-      onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = ''}
-    >
+      onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = ''}>
       <div style={{ width: 36, height: 36, background: 'rgba(0,0,0,0.05)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
         <i className={`ti ${icon}`} style={{ fontSize: 18, color: '#333' }} aria-hidden="true" />
       </div>
@@ -416,9 +86,7 @@ function LivePreview({ script }: { script: string }) {
     <div style={{ marginTop: 8 }}>
       <div style={{ fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 8 }}>Live script preview</div>
       <div className="glass" style={{ borderRadius: 14, padding: '16px 18px' }}>
-        <pre style={{ fontSize: 12, color: '#444', lineHeight: 1.75, whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>
-          {script}
-        </pre>
+        <pre style={{ fontSize: 12, color: '#444', lineHeight: 1.75, whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>{script}</pre>
       </div>
     </div>
   )
@@ -428,25 +96,769 @@ function ScratchMode({ text, onChange, onBack }: { text: string; onChange: (v: s
   return (
     <div style={{ marginTop: 16 }}>
       <BackButton onClick={onBack} />
-      <div style={{ marginBottom: 14 }}>
-        <a href="https://hollmann.international/vehicle/26G0794/" target="_blank" rel="noopener noreferrer"
-          style={{ fontSize: 12, color: '#111', textDecoration: 'underline', fontWeight: 500 }}>
-          How to write my welcome script?
-        </a>
-      </div>
       <textarea
         placeholder="Write your script here..."
         value={text}
         onChange={e => onChange(e.target.value)}
         rows={16}
-        style={{
-          width: '100%', background: 'rgba(255,255,255,0.7)',
-          border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 12,
-          padding: '14px', fontSize: 13, color: '#111',
-          outline: 'none', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.7,
-        }}
+        style={{ width: '100%', background: 'rgba(255,255,255,0.7)', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 12, padding: '14px', fontSize: 13, color: '#111', outline: 'none', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.7, boxSizing: 'border-box' }}
       />
     </div>
+  )
+}
+
+// ─── BOOKING WITH LM — SCRIPT 1 ──────────────────────────────────────────────
+
+function ScriptBookingWithLM_S1() {
+  const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
+  const [scratch, setScratch] = useState('')
+  const [greeting, setGreeting] = useState('Wa alaykoum salam')
+  const [trafficSource, setTrafficSource] = useState('TikTok')
+  const [leadGoal, setLeadGoal] = useState('start making money from home')
+  const [magnetType, setMagnetType] = useState('guide')
+  const [pastExperience, setPastExperience] = useState('made money online')
+  const [currentLevelCheck, setCurrentLevelCheck] = useState('understand how it works')
+  const [outcomePromise, setOutcomePromise] = useState("In 4 minutes, you'll understand how simple it is to get paid online.")
+  const [nextStepFraming, setNextStepFraming] = useState("make your first sale as fast as possible insha'Allah")
+  const [magnetLink, setMagnetLink] = useState('')
+  const [readTime, setReadTime] = useState('4 minutes')
+  const [pageTeaser, setPageTeaser] = useState("don't skip page 14…👀")
+
+  const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
+
+(Lead replies)
+
+Perfect 😊 Before I send your ${magnetType}, what's your name?
+
+(Lead replies)
+
+Nice to meet you, (NAME) 👍
+Quick question so I send you the right thing — Have you ever ${pastExperience} before, or not yet?
+
+(Lead replies)
+
+And do you ${currentLevelCheck} fully, or are you just starting?
+
+(Lead replies)
+
+Great so this is the right thing for you!
+
+I'll send you your ${magnetType} now. ${outcomePromise}
+
+Then if you like it, we'll talk about what you should do next to ${nextStepFraming}
+
+Sounds good to you?
+
+(Lead replies)
+
+Perfect so here's your ${magnetType}: ${magnetLink || '(your link)'}
+
+Take ${readTime} to read it now 👍
+
+When you finish, send me "done" and I'll show you the next step
+
+Ah and ${pageTeaser}`
+
+  return (
+    <GlassSection icon="ti-script" title="Script 1 — Lead Qualification + Lead Magnet Delivery" defaultOpen={false}>
+      {mode === null && (
+        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setMode('proven')} />
+          <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom script from a blank page." onClick={() => setMode('scratch')} />
+        </div>
+      )}
+      {mode === 'proven' && (
+        <div style={{ marginTop: 16 }}>
+          <BackButton onClick={() => setMode(null)} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Greeting" placeholder="e.g. Wa alaykoum salam, Hey..." value={greeting} onChange={setGreeting} />
+              <Field label="Traffic source" placeholder="e.g. TikTok, Instagram..." value={trafficSource} onChange={setTrafficSource} />
+            </div>
+            <Field label="Lead goal" placeholder="e.g. start making money from home" hint="What does your lead want to achieve?" value={leadGoal} onChange={setLeadGoal} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Lead magnet type" placeholder="e.g. guide, video, ebook..." value={magnetType} onChange={setMagnetType} />
+              <Field label="Lead magnet link" placeholder="https://..." type="url" value={magnetLink} onChange={setMagnetLink} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Past experience" placeholder="e.g. made money online..." hint="Fill in: Have you ever ___ before?" value={pastExperience} onChange={setPastExperience} />
+              <Field label="Current level check" placeholder="e.g. understand how it works..." hint="Fill in: And do you ___ fully?" value={currentLevelCheck} onChange={setCurrentLevelCheck} />
+            </div>
+            <Field label="Outcome promise" placeholder="e.g. In 4 minutes, you'll understand how simple it is to get paid online." hint="What will they get after consuming the lead magnet?" value={outcomePromise} onChange={setOutcomePromise} />
+            <Field label="Next step framing" placeholder="e.g. make your first sale as fast as possible" hint="Fill in: we'll talk about what you should do next to ___" value={nextStepFraming} onChange={setNextStepFraming} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Read time" placeholder="e.g. 4 minutes" value={readTime} onChange={setReadTime} />
+              <Field label="Page teaser" placeholder="e.g. don't skip page 14…👀" hint="A curiosity hook at the end." value={pageTeaser} onChange={setPageTeaser} />
+            </div>
+            <LivePreview script={preview} />
+          </div>
+        </div>
+      )}
+      {mode === 'scratch' && <ScratchMode text={scratch} onChange={setScratch} onBack={() => setMode(null)} />}
+    </GlassSection>
+  )
+}
+
+// ─── BOOKING WITH LM — SCRIPT 2 ──────────────────────────────────────────────
+
+function ScriptBookingWithLM_S2() {
+  const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
+  const [scratch, setScratch] = useState('')
+  const [greeting, setGreeting] = useState('Salam my friend')
+  const [pastExperience, setPastExperience] = useState('making money online')
+  const [leadGoal, setLeadGoal] = useState('make money from home')
+  const [consumeIt, setConsumeIt] = useState('read it')
+  const [incomeGoal1, setIncomeGoal1] = useState('extra income on the side')
+  const [incomeGoal2, setIncomeGoal2] = useState('replace your income completely')
+  const [motivation1, setMotivation1] = useState('Feel more in control of my life')
+  const [motivation2, setMotivation2] = useState('Stop worrying about money')
+  const [motivation3, setMotivation3] = useState('Support the people around me')
+  const [motivation4, setMotivation4] = useState('Finally feel proud of myself')
+  const [offerType, setOfferType] = useState('live training')
+  const [offerDay, setOfferDay] = useState('This Saturday')
+  const [offerDesc1, setOfferDesc1] = useState('How to offer something people actually want to pay for, even if you have no experience')
+  const [offerDesc2, setOfferDesc2] = useState("How to use TikTok to bring people to you every day, even if you're starting from scratch")
+  const [actionPlan, setActionPlan] = useState('simple 7-day action plan')
+  const [firstResult, setFirstResult] = useState('your first $100 online')
+  const [fullPrice, setFullPrice] = useState('$18')
+  const [discountedPrice, setDiscountedPrice] = useState('$9')
+  const [discountPct, setDiscountPct] = useState('50%')
+  const [condition1, setCondition1] = useState('You actually apply what you learn')
+  const [condition2, setCondition2] = useState('You give me your feedback so I can improve it')
+  const [condition3, setCondition3] = useState("You leave a review if you feel it's worth it")
+  const [sessions, setSessions] = useState('6pm / 7pm / 8pm / 9pm')
+  const [paymentLink, setPaymentLink] = useState('')
+
+  const preview = `${greeting}
+Sorry I didn't verify earlier — did the link for the guide work?
+
+(Lead replies)
+
+Perfect 👍
+And did you have time to go through it or not yet?
+
+If not complete:
+No worries at all 👍
+Go finish it first, it'll make everything much clearer for you
+Message me after
+
+If complete:
+
+(Lead replies)
+
+Nice — I'm curious, how did you find it?
+Did it help you understand how ${pastExperience} actually works?
+
+(Lead replies)
+
+I'm glad it helped 🙏
+Quick question — What made you want to ${consumeIt} in the first place?
+Are you more just curious or actually looking to ${leadGoal}?
+
+(Lead replies)
+
+Ok I see 👍
+So you're actually serious about this
+And why does that matter to you?
+Why do you want to ${leadGoal}?
+Is it more like:
+${incomeGoal1}
+or ${incomeGoal2}?
+
+(Lead replies)
+
+Got it 👍
+And if that actually works out for you… what would that change in your life?
+Is it more like:
+1 — ${motivation1}
+2 — ${motivation2}
+3 — ${motivation3}
+4 — ${motivation4}
+
+(Lead replies)
+
+That's powerful
+
+Now be honest with me…
+If nothing changes, and you stay exactly where you are right now…
+how would you feel in a few months knowing you could've done more?
+
+(Lead replies)
+
+Yeah… I understand
+
+And that's exactly the problem most people face
+They understand the basics… but they don't have a clear plan to follow
+
+Because the truth is — ${pastExperience} isn't complicated
+but without knowing what to do step by step, people just stay stuck
+
+So let me ask you this:
+Do you feel like you could figure everything out alone…
+or would it be better to have some guidance and a clear plan to follow?
+
+(Lead replies)
+
+That makes sense 👍
+I can see you're serious about this
+
+So here's what I can do for you:
+
+${offerDay}, I'm doing a ${offerType}
+where I show step by step how to start from zero
+Nothing complicated, just simple and clear
+
+On the call, I'll show you 2 important things:
+1 — ${offerDesc1}
+2 — ${offerDesc2}
+
+And at the end, I'll give you a ${actionPlan}
+so you know exactly what to do to get ${firstResult}
+No guessing, no confusion
+
+Does that sound like something you'd want to join?
+
+(Lead replies)
+
+Perfect 👍
+
+So normally, access to this is ${fullPrice}
+But since you actually took action and went through the guide,
+I can let you in for just ${discountedPrice} — so you save ${discountPct}
+
+But under 3 simple conditions:
+1 — ${condition1}
+2 — ${condition2}
+3 — ${condition3}
+Fair?
+
+And just so you feel comfortable —
+if after the call you're not 100% clear on what to do to get ${firstResult},
+I'll send you your money back
+No risk for you 👍
+
+Does that sound good?
+
+(Lead replies)
+
+Perfect 👍
+I have ${sessions}
+Which one works best for you?
+
+(Lead replies)
+
+Perfect 👍
+Here's the link to save your spot 👇
+${paymentLink || '(your payment link)'}
+Once you're in, send me a screenshot 👍`
+
+  return (
+    <GlassSection icon="ti-currency-dollar" title="Script 2 — Follow-up + Closing" defaultOpen={false}>
+      {mode === null && (
+        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setMode('proven')} />
+          <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom script from a blank page." onClick={() => setMode('scratch')} />
+        </div>
+      )}
+      {mode === 'proven' && (
+        <div style={{ marginTop: 16 }}>
+          <BackButton onClick={() => setMode(null)} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Greeting" placeholder="e.g. Salam my friend, Hey..." value={greeting} onChange={setGreeting} />
+              <Field label="Consume it" placeholder="e.g. read it, watch it, go through it..." hint="Fill in: What made you want to ___ in the first place?" value={consumeIt} onChange={setConsumeIt} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Past experience" placeholder="e.g. making money online..." hint="Fill in: how ___ actually works?" value={pastExperience} onChange={setPastExperience} />
+              <Field label="Lead goal" placeholder="e.g. make money from home..." value={leadGoal} onChange={setLeadGoal} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Income goal option 1" placeholder="e.g. extra income on the side" value={incomeGoal1} onChange={setIncomeGoal1} />
+              <Field label="Income goal option 2" placeholder="e.g. replace your income completely" value={incomeGoal2} onChange={setIncomeGoal2} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Motivation 1" placeholder="e.g. Feel more in control of my life" value={motivation1} onChange={setMotivation1} />
+              <Field label="Motivation 2" placeholder="e.g. Stop worrying about money" value={motivation2} onChange={setMotivation2} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Motivation 3" placeholder="e.g. Support the people around me" value={motivation3} onChange={setMotivation3} />
+              <Field label="Motivation 4" placeholder="e.g. Finally feel proud of myself" value={motivation4} onChange={setMotivation4} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Offer type" placeholder="e.g. live training, workshop..." value={offerType} onChange={setOfferType} />
+              <Field label="Offer day" placeholder="e.g. This Saturday, Tomorrow..." value={offerDay} onChange={setOfferDay} />
+            </div>
+            <Field label="Offer description line 1" placeholder="e.g. How to offer something people actually want to pay for, even if you have no experience" value={offerDesc1} onChange={setOfferDesc1} />
+            <Field label="Offer description line 2" placeholder="e.g. How to use TikTok to bring people to you every day, even if you're starting from scratch" value={offerDesc2} onChange={setOfferDesc2} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Action plan" placeholder="e.g. simple 7-day action plan" value={actionPlan} onChange={setActionPlan} />
+              <Field label="First result" placeholder="e.g. your first $100 online" value={firstResult} onChange={setFirstResult} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+              <Field label="Full price" placeholder="e.g. $18" value={fullPrice} onChange={setFullPrice} />
+              <Field label="Discounted price" placeholder="e.g. $9" value={discountedPrice} onChange={setDiscountedPrice} />
+              <Field label="Discount %" placeholder="e.g. 50%" value={discountPct} onChange={setDiscountPct} />
+            </div>
+            <Field label="Condition 1" placeholder="e.g. You actually apply what you learn" value={condition1} onChange={setCondition1} />
+            <Field label="Condition 2" placeholder="e.g. You give me your feedback so I can improve it" value={condition2} onChange={setCondition2} />
+            <Field label="Condition 3" placeholder="e.g. You leave a review if you feel it's worth it" value={condition3} onChange={setCondition3} />
+            <Field label="Sessions" placeholder="e.g. 6pm / 7pm / 8pm / 9pm" hint="List all available time slots" value={sessions} onChange={setSessions} />
+            <Field label="Payment link" placeholder="https://..." type="url" value={paymentLink} onChange={setPaymentLink} />
+            <LivePreview script={preview} />
+          </div>
+        </div>
+      )}
+      {mode === 'scratch' && <ScratchMode text={scratch} onChange={setScratch} onBack={() => setMode(null)} />}
+    </GlassSection>
+  )
+}
+
+// ─── BOOKING WITHOUT LM — SCRIPT 1 ───────────────────────────────────────────
+
+function ScriptBookingWithoutLM_S1() {
+  const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
+  const [scratch, setScratch] = useState('')
+  const [greeting, setGreeting] = useState('Hey')
+  const [trafficSource, setTrafficSource] = useState('TikTok')
+  const [leadGoal, setLeadGoal] = useState('make money from home')
+  const [pastExperience, setPastExperience] = useState('made money online')
+  const [currentLevelCheck, setCurrentLevelCheck] = useState('understand how it works')
+  const [incomeGoal1, setIncomeGoal1] = useState('extra income on the side')
+  const [incomeGoal2, setIncomeGoal2] = useState('replace your income completely')
+  const [motivation1, setMotivation1] = useState('Feel more in control of my life')
+  const [motivation2, setMotivation2] = useState('Stop worrying about money')
+  const [motivation3, setMotivation3] = useState('Support the people around me')
+  const [motivation4, setMotivation4] = useState('Finally feel proud of myself')
+
+  const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
+
+(Lead replies)
+
+Perfect 😊 What's your name?
+
+(Lead replies)
+
+Nice to meet you, (NAME) 👍
+Quick question — Have you ever ${pastExperience} before, or not yet?
+
+(Lead replies)
+
+And do you ${currentLevelCheck} fully, or are you just starting?
+
+(Lead replies)
+
+Got it 👍
+And why does that matter to you?
+Why do you want to ${leadGoal}?
+Is it more like:
+${incomeGoal1}
+or ${incomeGoal2}?
+
+(Lead replies)
+
+And if that actually works out for you… what would that change in your life?
+Is it more like:
+1 — ${motivation1}
+2 — ${motivation2}
+3 — ${motivation3}
+4 — ${motivation4}
+
+(Lead replies)
+
+That's powerful.
+Now be honest with me…
+If nothing changes and you stay exactly where you are right now…
+how would you feel in a few months knowing you could've done more?
+
+(Lead replies)
+
+Yeah… I understand.
+And that's exactly the problem most people face —
+they want to ${leadGoal} but don't have a clear plan to follow.
+So let me ask you this:
+Do you feel like you could figure everything out alone…
+or would it be better to have some guidance and a clear plan?
+
+(Lead replies)`
+
+  return (
+    <GlassSection icon="ti-script" title="Script 1 — Lead Qualification" defaultOpen={false}>
+      {mode === null && (
+        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setMode('proven')} />
+          <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom script from a blank page." onClick={() => setMode('scratch')} />
+        </div>
+      )}
+      {mode === 'proven' && (
+        <div style={{ marginTop: 16 }}>
+          <BackButton onClick={() => setMode(null)} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Greeting" placeholder="e.g. Hey, Salam..." value={greeting} onChange={setGreeting} />
+              <Field label="Traffic source" placeholder="e.g. TikTok, Instagram..." value={trafficSource} onChange={setTrafficSource} />
+            </div>
+            <Field label="Lead goal" placeholder="e.g. make money from home" hint="What does your lead want to achieve?" value={leadGoal} onChange={setLeadGoal} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Past experience" placeholder="e.g. made money online..." hint="Fill in: Have you ever ___ before?" value={pastExperience} onChange={setPastExperience} />
+              <Field label="Current level check" placeholder="e.g. understand how it works..." hint="Fill in: And do you ___ fully?" value={currentLevelCheck} onChange={setCurrentLevelCheck} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Income goal option 1" placeholder="e.g. extra income on the side" value={incomeGoal1} onChange={setIncomeGoal1} />
+              <Field label="Income goal option 2" placeholder="e.g. replace your income completely" value={incomeGoal2} onChange={setIncomeGoal2} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Motivation 1" placeholder="e.g. Feel more in control of my life" value={motivation1} onChange={setMotivation1} />
+              <Field label="Motivation 2" placeholder="e.g. Stop worrying about money" value={motivation2} onChange={setMotivation2} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Motivation 3" placeholder="e.g. Support the people around me" value={motivation3} onChange={setMotivation3} />
+              <Field label="Motivation 4" placeholder="e.g. Finally feel proud of myself" value={motivation4} onChange={setMotivation4} />
+            </div>
+            <LivePreview script={preview} />
+          </div>
+        </div>
+      )}
+      {mode === 'scratch' && <ScratchMode text={scratch} onChange={setScratch} onBack={() => setMode(null)} />}
+    </GlassSection>
+  )
+}
+
+// ─── BOOKING WITHOUT LM — SCRIPT 2 ───────────────────────────────────────────
+
+function ScriptBookingWithoutLM_S2() {
+  const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
+  const [scratch, setScratch] = useState('')
+  const [offerType, setOfferType] = useState('live training')
+  const [offerDay, setOfferDay] = useState('This Saturday')
+  const [offerDesc1, setOfferDesc1] = useState('How to offer something people actually want to pay for, even if you have no experience')
+  const [offerDesc2, setOfferDesc2] = useState("How to use TikTok to bring people to you every day, even if you're starting from scratch")
+  const [actionPlan, setActionPlan] = useState('simple 7-day action plan')
+  const [firstResult, setFirstResult] = useState('your first $100 online')
+  const [fullPrice, setFullPrice] = useState('$18')
+  const [discountedPrice, setDiscountedPrice] = useState('$9')
+  const [discountPct, setDiscountPct] = useState('50%')
+  const [condition1, setCondition1] = useState('You actually apply what you learn')
+  const [condition2, setCondition2] = useState('You give me your feedback so I can improve it')
+  const [condition3, setCondition3] = useState("You leave a review if you feel it's worth it")
+  const [sessions, setSessions] = useState('6pm / 7pm / 8pm / 9pm')
+  const [paymentLink, setPaymentLink] = useState('')
+
+  const preview = `That makes sense 👍
+I can see you're serious about this.
+
+So here's what I can do for you:
+
+${offerDay}, I'm doing a ${offerType}
+where I show step by step how to start from zero.
+Nothing complicated, just simple and clear.
+
+On the call, I'll show you 2 important things:
+1 — ${offerDesc1}
+2 — ${offerDesc2}
+
+And at the end, I'll give you a ${actionPlan}
+so you know exactly what to do to get ${firstResult}
+No guessing, no confusion.
+
+Does that sound like something you'd want to join?
+
+(Lead replies)
+
+Perfect 👍
+
+So normally, access to this is ${fullPrice}
+But since you reached out today,
+I can let you in for just ${discountedPrice} — so you save ${discountPct}
+
+But under 3 simple conditions:
+1 — ${condition1}
+2 — ${condition2}
+3 — ${condition3}
+Fair?
+
+And just so you feel comfortable —
+if after the call you're not 100% clear on what to do to get ${firstResult},
+I'll send you your money back.
+No risk for you 👍
+
+Does that sound good?
+
+(Lead replies)
+
+Perfect 👍
+I have ${sessions}
+Which one works best for you?
+
+(Lead replies)
+
+Perfect 👍
+Here's the link to save your spot 👇
+${paymentLink || '(your payment link)'}
+Once you're in, send me a screenshot 👍`
+
+  return (
+    <GlassSection icon="ti-currency-dollar" title="Script 2 — Closing" defaultOpen={false}>
+      {mode === null && (
+        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setMode('proven')} />
+          <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom script from a blank page." onClick={() => setMode('scratch')} />
+        </div>
+      )}
+      {mode === 'proven' && (
+        <div style={{ marginTop: 16 }}>
+          <BackButton onClick={() => setMode(null)} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Offer type" placeholder="e.g. live training, workshop, call..." value={offerType} onChange={setOfferType} />
+              <Field label="Offer day" placeholder="e.g. This Saturday, Tomorrow..." value={offerDay} onChange={setOfferDay} />
+            </div>
+            <Field label="Offer description line 1" placeholder="e.g. How to offer something people actually want to pay for, even if you have no experience" value={offerDesc1} onChange={setOfferDesc1} />
+            <Field label="Offer description line 2" placeholder="e.g. How to use TikTok to bring people to you every day, even if you're starting from scratch" value={offerDesc2} onChange={setOfferDesc2} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Action plan" placeholder="e.g. simple 7-day action plan" value={actionPlan} onChange={setActionPlan} />
+              <Field label="First result" placeholder="e.g. your first $100 online" value={firstResult} onChange={setFirstResult} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+              <Field label="Full price" placeholder="e.g. $18" value={fullPrice} onChange={setFullPrice} />
+              <Field label="Discounted price" placeholder="e.g. $9" value={discountedPrice} onChange={setDiscountedPrice} />
+              <Field label="Discount %" placeholder="e.g. 50%" value={discountPct} onChange={setDiscountPct} />
+            </div>
+            <Field label="Condition 1" placeholder="e.g. You actually apply what you learn" value={condition1} onChange={setCondition1} />
+            <Field label="Condition 2" placeholder="e.g. You give me your feedback so I can improve it" value={condition2} onChange={setCondition2} />
+            <Field label="Condition 3" placeholder="e.g. You leave a review if you feel it's worth it" value={condition3} onChange={setCondition3} />
+            <Field label="Sessions" placeholder="e.g. 6pm / 7pm / 8pm / 9pm" hint="List all available time slots" value={sessions} onChange={setSessions} />
+            <Field label="Payment link" placeholder="https://..." type="url" value={paymentLink} onChange={setPaymentLink} />
+            <LivePreview script={preview} />
+          </div>
+        </div>
+      )}
+      {mode === 'scratch' && <ScratchMode text={scratch} onChange={setScratch} onBack={() => setMode(null)} />}
+    </GlassSection>
+  )
+}
+
+// ─── CLOSE IN CHAT — SCRIPT 1 ────────────────────────────────────────────────
+
+function ScriptCloseInChat_S1() {
+  const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
+  const [scratch, setScratch] = useState('')
+  const [greeting, setGreeting] = useState('Hey')
+  const [trafficSource, setTrafficSource] = useState('TikTok')
+  const [leadGoal, setLeadGoal] = useState('make money from home')
+  const [pastExperience, setPastExperience] = useState('made money online')
+  const [currentLevelCheck, setCurrentLevelCheck] = useState('understand how it works')
+  const [incomeGoal1, setIncomeGoal1] = useState('extra income on the side')
+  const [incomeGoal2, setIncomeGoal2] = useState('replace your income completely')
+  const [motivation1, setMotivation1] = useState('Feel more in control of my life')
+  const [motivation2, setMotivation2] = useState('Stop worrying about money')
+  const [motivation3, setMotivation3] = useState('Support the people around me')
+  const [motivation4, setMotivation4] = useState('Finally feel proud of myself')
+
+  const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
+
+(Lead replies)
+
+Perfect 😊 What's your name?
+
+(Lead replies)
+
+Nice to meet you, (NAME) 👍
+Quick question — Have you ever ${pastExperience} before, or not yet?
+
+(Lead replies)
+
+And do you ${currentLevelCheck} fully, or are you just starting?
+
+(Lead replies)
+
+Got it 👍
+And why does that matter to you?
+Why do you want to ${leadGoal}?
+Is it more like:
+${incomeGoal1}
+or ${incomeGoal2}?
+
+(Lead replies)
+
+And if that actually works out for you… what would that change in your life?
+Is it more like:
+1 — ${motivation1}
+2 — ${motivation2}
+3 — ${motivation3}
+4 — ${motivation4}
+
+(Lead replies)
+
+That's powerful.
+Now be honest with me…
+If nothing changes and you stay exactly where you are right now…
+how would you feel in a few months knowing you could've done more?
+
+(Lead replies)
+
+Yeah… I understand.
+And that's exactly the problem most people face —
+they want to ${leadGoal} but don't have a clear plan to follow.
+So let me ask you this:
+Do you feel like you could figure everything out alone…
+or would it be better to have some guidance and a clear plan?
+
+(Lead replies)`
+
+  return (
+    <GlassSection icon="ti-script" title="Script 1 — Lead Qualification" defaultOpen={false}>
+      {mode === null && (
+        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setMode('proven')} />
+          <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom script from a blank page." onClick={() => setMode('scratch')} />
+        </div>
+      )}
+      {mode === 'proven' && (
+        <div style={{ marginTop: 16 }}>
+          <BackButton onClick={() => setMode(null)} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Greeting" placeholder="e.g. Hey, Salam..." value={greeting} onChange={setGreeting} />
+              <Field label="Traffic source" placeholder="e.g. TikTok, Instagram..." value={trafficSource} onChange={setTrafficSource} />
+            </div>
+            <Field label="Lead goal" placeholder="e.g. make money from home" hint="What does your lead want to achieve?" value={leadGoal} onChange={setLeadGoal} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Past experience" placeholder="e.g. made money online..." hint="Fill in: Have you ever ___ before?" value={pastExperience} onChange={setPastExperience} />
+              <Field label="Current level check" placeholder="e.g. understand how it works..." hint="Fill in: And do you ___ fully?" value={currentLevelCheck} onChange={setCurrentLevelCheck} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Income goal option 1" placeholder="e.g. extra income on the side" value={incomeGoal1} onChange={setIncomeGoal1} />
+              <Field label="Income goal option 2" placeholder="e.g. replace your income completely" value={incomeGoal2} onChange={setIncomeGoal2} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Motivation 1" placeholder="e.g. Feel more in control of my life" value={motivation1} onChange={setMotivation1} />
+              <Field label="Motivation 2" placeholder="e.g. Stop worrying about money" value={motivation2} onChange={setMotivation2} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Motivation 3" placeholder="e.g. Support the people around me" value={motivation3} onChange={setMotivation3} />
+              <Field label="Motivation 4" placeholder="e.g. Finally feel proud of myself" value={motivation4} onChange={setMotivation4} />
+            </div>
+            <LivePreview script={preview} />
+          </div>
+        </div>
+      )}
+      {mode === 'scratch' && <ScratchMode text={scratch} onChange={setScratch} onBack={() => setMode(null)} />}
+    </GlassSection>
+  )
+}
+
+// ─── CLOSE IN CHAT — SCRIPT 2 ────────────────────────────────────────────────
+
+function ScriptCloseInChat_S2() {
+  const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
+  const [scratch, setScratch] = useState('')
+  const [offerName, setOfferName] = useState('our program')
+  const [offerDesc1, setOfferDesc1] = useState('What you get / module 1')
+  const [offerDesc2, setOfferDesc2] = useState('What you get / module 2')
+  const [offerDesc3, setOfferDesc3] = useState('What you get / module 3')
+  const [actionPlan, setActionPlan] = useState('simple 7-day action plan')
+  const [firstResult, setFirstResult] = useState('your first $100 online')
+  const [fullPrice, setFullPrice] = useState('$18')
+  const [discountedPrice, setDiscountedPrice] = useState('$9')
+  const [discountPct, setDiscountPct] = useState('50%')
+  const [condition1, setCondition1] = useState('You actually apply what you learn')
+  const [condition2, setCondition2] = useState('You give me your feedback so I can improve it')
+  const [condition3, setCondition3] = useState("You leave a review if you feel it's worth it")
+  const [paymentLink, setPaymentLink] = useState('')
+
+  const preview = `That makes sense 👍
+
+I can see you're serious about this.
+
+So here's what I can do for you 👇
+
+(Lead replies)
+
+So inside ${offerName}, here's what you get:
+
+1 — ${offerDesc1}
+2 — ${offerDesc2}
+3 — ${offerDesc3}
+
+(Lead replies)
+
+And by the end you'll have ${actionPlan}
+
+So you know exactly what to do to get ${firstResult}
+
+No guessing, no confusion 👍
+
+Does that sound like something you want?
+
+(Lead replies)
+
+Perfect 👍
+
+So normally this is ${fullPrice}
+
+But since you reached out today, I can let you in for just ${discountedPrice} — so you save ${discountPct}
+
+But under 3 conditions:
+1 — ${condition1}
+2 — ${condition2}
+3 — ${condition3}
+
+Fair?
+
+(Lead replies)
+
+And just so you feel comfortable —
+
+If you're not 100% satisfied, I'll send you your money back.
+
+No risk for you 👍
+
+Does that sound good?
+
+(Lead replies)
+
+Perfect 👍
+
+Here's your link to get started 👇
+${paymentLink || '(your payment link)'}
+
+Once you're in, send me a screenshot 👍`
+
+  return (
+    <GlassSection icon="ti-currency-dollar" title="Script 2 — Closing" defaultOpen={false}>
+      {mode === null && (
+        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setMode('proven')} />
+          <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom script from a blank page." onClick={() => setMode('scratch')} />
+        </div>
+      )}
+      {mode === 'proven' && (
+        <div style={{ marginTop: 16 }}>
+          <BackButton onClick={() => setMode(null)} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Field label="Offer name" placeholder="e.g. our program, the course, the mentorship..." value={offerName} onChange={setOfferName} />
+            <Field label="Offer description line 1" placeholder="e.g. Full system access" value={offerDesc1} onChange={setOfferDesc1} />
+            <Field label="Offer description line 2" placeholder="e.g. Direct support from me" value={offerDesc2} onChange={setOfferDesc2} />
+            <Field label="Offer description line 3" placeholder="e.g. First results in 30 days" value={offerDesc3} onChange={setOfferDesc3} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Action plan" placeholder="e.g. simple 7-day action plan" value={actionPlan} onChange={setActionPlan} />
+              <Field label="First result" placeholder="e.g. your first $100 online" value={firstResult} onChange={setFirstResult} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+              <Field label="Full price" placeholder="e.g. $18" value={fullPrice} onChange={setFullPrice} />
+              <Field label="Discounted price" placeholder="e.g. $9" value={discountedPrice} onChange={setDiscountedPrice} />
+              <Field label="Discount %" placeholder="e.g. 50%" value={discountPct} onChange={setDiscountPct} />
+            </div>
+            <Field label="Condition 1" placeholder="e.g. You actually apply what you learn" value={condition1} onChange={setCondition1} />
+            <Field label="Condition 2" placeholder="e.g. You give me your feedback so I can improve it" value={condition2} onChange={setCondition2} />
+            <Field label="Condition 3" placeholder="e.g. You leave a review if you feel it's worth it" value={condition3} onChange={setCondition3} />
+            <Field label="Payment link" placeholder="https://..." type="url" value={paymentLink} onChange={setPaymentLink} />
+            <LivePreview script={preview} />
+          </div>
+        </div>
+      )}
+      {mode === 'scratch' && <ScratchMode text={scratch} onChange={setScratch} onBack={() => setMode(null)} />}
+    </GlassSection>
   )
 }
 
@@ -457,13 +869,11 @@ const TEMPLATE_TITLES: Record<string, string> = {
   'booking-without-lm': 'Configure your direct booking flow',
   'close-in-chat': 'Configure your chat closing flow',
 }
-
 const TEMPLATE_SUBTITLES: Record<string, string> = {
   'booking-with-lm': 'Set up your WhatsApp agent in a few steps.',
   'booking-without-lm': 'Set up your direct booking agent in a few steps.',
   'close-in-chat': 'Set up your chat closing agent in a few steps.',
 }
-
 const TEMPLATE_SAVE_LABELS: Record<string, string> = {
   'booking-with-lm': 'Save & activate booking flow',
   'booking-without-lm': 'Save & activate booking flow',
@@ -489,12 +899,10 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
 
   return (
     <div style={{ padding: '32px 48px', maxWidth: 860, margin: '0 auto' }}>
-      <button
-        onClick={onBack}
+      <button onClick={onBack}
         style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#888', fontSize: 13, cursor: 'pointer', border: 'none', background: 'none', fontFamily: 'inherit', marginBottom: 24, padding: 0 }}
         onMouseEnter={e => (e.currentTarget.style.color = '#111')}
-        onMouseLeave={e => (e.currentTarget.style.color = '#888')}
-      >
+        onMouseLeave={e => (e.currentTarget.style.color = '#888')}>
         <i className="ti ti-arrow-left" style={{ fontSize: 15 }} aria-hidden="true" />
         Back
       </button>
@@ -504,7 +912,6 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* ── INTEGRATIONS (shared) ── */}
         <GlassSection icon="ti-plug" title="Integrations" defaultOpen={true}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }}>
             <div className="glass" style={{ borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -515,10 +922,7 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
                   <div style={{ fontSize: 11, color: receiveConnected ? '#25D366' : '#aaa' }}>{receiveConnected ? '✓ Connected' : 'Incoming messages'}</div>
                 </div>
               </div>
-              <button
-                onClick={() => setReceiveModal(true)}
-                style={{ background: receiveConnected ? 'rgba(37,211,102,0.1)' : '#111', color: receiveConnected ? '#1a8c4e' : '#fff', border: receiveConnected ? '0.5px solid rgba(37,211,102,0.4)' : 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
+              <button onClick={() => setReceiveModal(true)} style={{ background: receiveConnected ? 'rgba(37,211,102,0.1)' : '#111', color: receiveConnected ? '#1a8c4e' : '#fff', border: receiveConnected ? '0.5px solid rgba(37,211,102,0.4)' : 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {receiveConnected ? 'Reconnect' : 'Connect'}
               </button>
             </div>
@@ -530,26 +934,19 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
                   <div style={{ fontSize: 11, color: sendConnected ? '#25D366' : '#aaa' }}>{sendConnected ? '✓ Connected' : 'Outgoing messages'}</div>
                 </div>
               </div>
-              <button
-                onClick={() => setSendModal(true)}
-                style={{ background: sendConnected ? 'rgba(37,211,102,0.1)' : '#111', color: sendConnected ? '#1a8c4e' : '#fff', border: sendConnected ? '0.5px solid rgba(37,211,102,0.4)' : 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
+              <button onClick={() => setSendModal(true)} style={{ background: sendConnected ? 'rgba(37,211,102,0.1)' : '#111', color: sendConnected ? '#1a8c4e' : '#fff', border: sendConnected ? '0.5px solid rgba(37,211,102,0.4)' : 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {sendConnected ? 'Reconnect' : 'Connect'}
               </button>
             </div>
           </div>
         </GlassSection>
 
-        {/* ── TONE (shared) ── */}
         <GlassSection icon="ti-mood-smile" title="AI Agent Tone" defaultOpen={false}>
           <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 14 }}>Choose how your agent speaks to leads.</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {TONES.map(tone => (
-              <div
-                key={tone.id}
-                onClick={() => setSelectedTone(tone.id)}
-                style={{ background: 'rgba(255,255,255,0.6)', border: selectedTone === tone.id ? '1.5px solid #111' : '0.5px solid rgba(0,0,0,0.10)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
-              >
+              <div key={tone.id} onClick={() => setSelectedTone(tone.id)}
+                style={{ background: 'rgba(255,255,255,0.6)', border: selectedTone === tone.id ? '1.5px solid #111' : '0.5px solid rgba(0,0,0,0.10)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#111', marginBottom: 5 }}>{tone.name}</div>
                 <div style={{ fontSize: 11, color: '#888', lineHeight: 1.5 }}>{tone.preview}</div>
               </div>
@@ -557,7 +954,6 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
           </div>
         </GlassSection>
 
-        {/* ── PERSONALITY (shared) ── */}
         <GlassSection icon="ti-user-circle" title="AI Agent Personality" defaultOpen={false}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 }}>
             <Field label="Agent name" placeholder="e.g. Sofia, Max, Alex..." value={agentName} onChange={setAgentName} />
@@ -565,24 +961,19 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
           </div>
         </GlassSection>
 
-        {/* ── TEMPLATE-SPECIFIC SCRIPTS ── */}
-        {key === 'booking-with-lm' && <ScriptBookingWithLM />}
-        {key === 'booking-without-lm' && <ScriptBookingWithoutLM />}
-        {key === 'close-in-chat' && <ScriptCloseInChat />}
+        {key === 'booking-with-lm' && <><ScriptBookingWithLM_S1 /><ScriptBookingWithLM_S2 /></>}
+        {key === 'booking-without-lm' && <><ScriptBookingWithoutLM_S1 /><ScriptBookingWithoutLM_S2 /></>}
+        {key === 'close-in-chat' && <><ScriptCloseInChat_S1 /><ScriptCloseInChat_S2 /></>}
 
-        {/* ── SAVE BUTTON ── */}
-        <button
-          onClick={() => setShowSuccess(true)}
+        <button onClick={() => setShowSuccess(true)}
           style={{ width: '100%', background: '#111', color: '#fff', border: 'none', borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.15s' }}
           onMouseEnter={e => (e.currentTarget.style.opacity = '0.82')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-        >
+          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
           <i className="ti ti-check" style={{ fontSize: 16 }} aria-hidden="true" />
           {saveLabel}
         </button>
       </div>
 
-      {/* ── MODALS ── */}
       {receiveModal && (
         <Modal onClose={() => setReceiveModal(false)}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111', marginBottom: 4 }}>WhatsApp Receive</h2>
@@ -591,9 +982,7 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
             <Field label="Client ID" placeholder="Your WhatsApp Client ID" value={receiveForm.clientId} onChange={v => setReceiveForm(f => ({ ...f, clientId: v }))} />
             <Field label="Client Secret" placeholder="Your WhatsApp Client Secret" type="password" value={receiveForm.clientSecret} onChange={v => setReceiveForm(f => ({ ...f, clientSecret: v }))} />
           </div>
-          <button onClick={() => { setReceiveConnected(true); setReceiveModal(false) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Connect
-          </button>
+          <button onClick={() => { setReceiveConnected(true); setReceiveModal(false) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Connect</button>
         </Modal>
       )}
 
@@ -605,9 +994,7 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
             <Field label="Access Token" placeholder="Your WhatsApp Access Token" type="password" value={sendForm.accessToken} onChange={v => setSendForm(f => ({ ...f, accessToken: v }))} />
             <Field label="Business Account ID" placeholder="Your Business Account ID" value={sendForm.businessId} onChange={v => setSendForm(f => ({ ...f, businessId: v }))} />
           </div>
-          <button onClick={() => { setSendConnected(true); setSendModal(false) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Connect
-          </button>
+          <button onClick={() => { setSendConnected(true); setSendModal(false) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Connect</button>
         </Modal>
       )}
 
@@ -618,12 +1005,8 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
               <i className="ti ti-check" style={{ fontSize: 28, color: '#25D366' }} aria-hidden="true" />
             </div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111', marginBottom: 8 }}>Request sent!</h2>
-            <p style={{ fontSize: 13, color: '#888', lineHeight: 1.6, marginBottom: 24 }}>
-              Your flow configuration has been saved. Your WhatsApp agent will be activated shortly.
-            </p>
-            <button onClick={() => setShowSuccess(false)} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-              Done
-            </button>
+            <p style={{ fontSize: 13, color: '#888', lineHeight: 1.6, marginBottom: 24 }}>Your flow configuration has been saved. Your WhatsApp agent will be activated shortly.</p>
+            <button onClick={() => setShowSuccess(false)} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
           </div>
         </Modal>
       )}
