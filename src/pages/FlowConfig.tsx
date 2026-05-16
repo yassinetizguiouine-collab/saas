@@ -523,8 +523,29 @@ or would it be better to have some guidance and a clear plan?
   )
 }
 
-// ─── BOOKING WITHOUT LM — SCRIPT 2 ───────────────────────────────────────────
+// ─── WAIT TIME SELECTOR ───────────────────────────────────────────────────────
 
+function WaitTimeSelector() {
+  const [selected, setSelected] = useState('10min')
+  const OPTIONS = ['5min', '10min', '15min', '30min', '1h', '2h']
+  return (
+    <GlassSection icon="ti-clock" title="Wait Time Before Follow-up" defaultOpen={true}>
+      <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 14 }}>
+        How long after sending the lead magnet should your agent wait before sending Script 2?
+      </p>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {OPTIONS.map(opt => (
+          <div key={opt} onClick={() => setSelected(opt)}
+            style={{ padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer', background: selected === opt ? '#111' : 'rgba(255,255,255,0.6)', color: selected === opt ? '#fff' : '#444', border: selected === opt ? 'none' : '0.5px solid rgba(0,0,0,0.12)', transition: 'all 0.15s' }}>
+            {opt}
+          </div>
+        ))}
+      </div>
+    </GlassSection>
+  )
+}
+
+// ─── BOOKING WITHOUT LM — SCRIPT 2 ───────────────────────────────────────────
 function ScriptBookingWithoutLM_S2() {
   const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
   const [scratch, setScratch] = useState('')
@@ -961,7 +982,7 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
           </div>
         </GlassSection>
 
-        {key === 'booking-with-lm' && <><ScriptBookingWithLM_S1 /><ScriptBookingWithLM_S2 /></>}
+        {key === 'booking-with-lm' && <><ScriptBookingWithLM_S1 /><WaitTimeSelector /><ScriptBookingWithLM_S2 /></>}
         {key === 'booking-without-lm' && <><ScriptBookingWithoutLM_S1 /><ScriptBookingWithoutLM_S2 /></>}
         {key === 'close-in-chat' && <><ScriptCloseInChat_S1 /><ScriptCloseInChat_S2 /></>}
 
