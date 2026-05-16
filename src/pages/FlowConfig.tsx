@@ -984,7 +984,7 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
 
         {key === 'booking-with-lm' && <><ScriptBookingWithLM_S1 /><WaitTimeSelector /><ScriptBookingWithLM_S2 /></>}
         {key === 'booking-without-lm' && <><ScriptBookingWithoutLM_S1 /><ScriptBookingWithoutLM_S2 /></>}
-        {key === 'close-in-chat' && <><ScriptCloseInChat_S1 /><ScriptCloseInChat_S2 /></>}
+        {key === 'close-in-chat' && <><ScriptBookingWithLM_S1 /><WaitTimeSelector /><ScriptCloseInChat_S2 /></>}
 
         <button onClick={() => setShowSuccess(true)}
           style={{ width: '100%', background: '#111', color: '#fff', border: 'none', borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.15s' }}
