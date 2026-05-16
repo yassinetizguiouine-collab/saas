@@ -8,8 +8,9 @@ import TemplatesGallery from './pages/TemplatesGallery'
 import MyFlows from './pages/MyFlows'
 import FlowConfig from './pages/FlowConfig'
 import FlowPreview from './pages/FlowPreview'
+import FoundFlow from './pages/FoundFlow'
 
-type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'app'
+type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'found' | 'app'
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
@@ -87,11 +88,10 @@ export default function App() {
           { onConflict: 'user_id' }
         )
 
-        // Store flow + template, go to app and show PREVIEW first
+        // Store flow + template, show celebration screen first
         setActiveFlowId(newFlow.id)
         setActiveTemplateId(templateId)
-        setAppState('app')
-        setPage('flow-preview') // ← preview first, not config
+        setAppState('found') // ← celebration screen before preview
       }
     } catch (e) {
       console.error('handleRecommendationComplete error:', e)
@@ -148,6 +148,12 @@ export default function App() {
   if (appState === 'auth') return <AuthPage onAuth={() => checkUserProgress()} />
   if (appState === 'onboarding') return <Onboarding onComplete={() => checkUserProgress()} />
   if (appState === 'recommender') return <FlowRecommender onRecommended={handleRecommendationComplete} />
+  if (appState === 'found') return (
+    <FoundFlow
+      templateId={activeTemplateId || 'booking-with-lm'}
+      onContinue={() => { setAppState('app'); setPage('flow-preview') }}
+    />
+  )
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
