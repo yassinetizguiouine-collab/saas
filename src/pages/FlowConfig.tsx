@@ -120,10 +120,7 @@ function ScriptBookingWithLM_S1({ onDataChange }: { onDataChange: (data: Record<
   const [readTime, setReadTime] = useState('4 minutes')
   const [pageTeaser, setPageTeaser] = useState("don't skip page 14…👀")
 
-  useEffect(() => {
-    onDataChange({ greeting, trafficSource, leadGoal, magnetType, pastExperience, currentLevelCheck, outcomePromise, nextStepFraming, magnetLink, readTime, pageTeaser, scratch, mode })
-  }, [greeting, trafficSource, leadGoal, magnetType, pastExperience, currentLevelCheck, outcomePromise, nextStepFraming, magnetLink, readTime, pageTeaser, scratch, mode, preview])
-  
+  // ✅ preview defined BEFORE useEffect
   const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
 
 (Lead replies)
@@ -158,6 +155,10 @@ Take ${readTime} to read it now 👍
 When you finish, send me "done" and I'll show you the next step
 
 Ah and ${pageTeaser}`
+
+  useEffect(() => {
+    onDataChange({ greeting, trafficSource, leadGoal, magnetType, pastExperience, currentLevelCheck, outcomePromise, nextStepFraming, magnetLink, readTime, pageTeaser, scratch, mode, script_text: preview })
+  }, [greeting, trafficSource, leadGoal, magnetType, pastExperience, currentLevelCheck, outcomePromise, nextStepFraming, magnetLink, readTime, pageTeaser, scratch, mode])
 
   return (
     <GlassSection icon="ti-script" title="Script 1 — Lead Qualification + Lead Magnet Delivery" defaultOpen={false}>
@@ -223,10 +224,7 @@ function ScriptBookingWithLM_S2({ onDataChange }: { onDataChange: (data: Record<
   const [sessions, setSessions] = useState('6pm / 7pm / 8pm / 9pm')
   const [calendarLink, setCalendarLink] = useState('')
 
-  useEffect(() => {
-    onDataChange({ greeting, pastExperience, leadGoal, consumeIt, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode })
-  }, [greeting, pastExperience, leadGoal, consumeIt, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode])
-
+  // ✅ preview defined BEFORE useEffect
   const preview = `${greeting}
 Sorry I didn't verify earlier — did the link for the guide work?
 
@@ -334,6 +332,10 @@ Here's the link to book your spot 👇
 ${calendarLink || '(your calendar link)'}
 Once you're in, send me a screenshot 👍`
 
+  useEffect(() => {
+    onDataChange({ greeting, pastExperience, leadGoal, consumeIt, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode, script_text: preview })
+  }, [greeting, pastExperience, leadGoal, consumeIt, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode])
+
   return (
     <GlassSection icon="ti-currency-dollar" title="Script 2 — Follow-up + Closing" defaultOpen={false}>
       {mode === null && (
@@ -404,10 +406,7 @@ function ScriptBookingWithoutLM_S1({ onDataChange }: { onDataChange: (data: Reco
   const [motivation3, setMotivation3] = useState('Support the people around me')
   const [motivation4, setMotivation4] = useState('Finally feel proud of myself')
 
-  useEffect(() => {
-    onDataChange({ greeting, trafficSource, leadGoal, pastExperience, currentLevelCheck, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, scratch, mode })
-  }, [greeting, trafficSource, leadGoal, pastExperience, currentLevelCheck, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, scratch, mode])
-
+  // ✅ preview defined BEFORE useEffect
   const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
 
 (Lead replies)
@@ -458,6 +457,10 @@ Do you feel like you could figure everything out alone…
 or would it be better to have some guidance and a clear plan?
 
 (Lead replies)`
+
+  useEffect(() => {
+    onDataChange({ greeting, trafficSource, leadGoal, pastExperience, currentLevelCheck, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, scratch, mode, script_text: preview })
+  }, [greeting, trafficSource, leadGoal, pastExperience, currentLevelCheck, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, scratch, mode])
 
   return (
     <GlassSection icon="ti-script" title="Script 1 — Lead Qualification" defaultOpen={false}>
@@ -515,10 +518,7 @@ function ScriptBookingWithoutLM_S2({ onDataChange }: { onDataChange: (data: Reco
   const [sessions, setSessions] = useState('6pm / 7pm / 8pm / 9pm')
   const [calendarLink, setCalendarLink] = useState('')
 
-  useEffect(() => {
-    onDataChange({ offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode })
-  }, [offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode])
-
+  // ✅ preview defined BEFORE useEffect
   const preview = `That makes sense 👍
 I can see you're serious about this.
 
@@ -555,6 +555,10 @@ Perfect 👍
 Here's the link to book your spot 👇
 ${calendarLink || '(your calendar link)'}
 Once you're in, send me a screenshot 👍`
+
+  useEffect(() => {
+    onDataChange({ offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode, script_text: preview })
+  }, [offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode])
 
   return (
     <GlassSection icon="ti-currency-dollar" title="Script 2 — Closing" defaultOpen={false}>
@@ -618,10 +622,7 @@ function ScriptCloseInChat_S2({ onDataChange }: { onDataChange: (data: Record<st
   const [condition3, setCondition3] = useState("You leave a review if you feel it's worth it")
   const [paymentLink, setPaymentLink] = useState('')
 
-  useEffect(() => {
-    onDataChange({ greeting, pastExperience, leadGoal, consumeIt, magnetType, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerName, offerDesc1, offerDesc2, offerDesc3, firstResult, fullPrice, discountedPrice, discountPct, condition1, condition2, condition3, paymentLink, scratch, mode })
-  }, [greeting, pastExperience, leadGoal, consumeIt, magnetType, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerName, offerDesc1, offerDesc2, offerDesc3, firstResult, fullPrice, discountedPrice, discountPct, condition1, condition2, condition3, paymentLink, scratch, mode])
-
+  // ✅ preview defined BEFORE useEffect
   const preview = `${greeting}
 Sorry I didn't verify earlier — did the link for the ${magnetType} work?
 
@@ -734,6 +735,10 @@ Perfect 👍
 Here's your link to get started 👇
 ${paymentLink || '(your payment link)'}
 Once you're in, send me a screenshot 👍`
+
+  useEffect(() => {
+    onDataChange({ greeting, pastExperience, leadGoal, consumeIt, magnetType, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerName, offerDesc1, offerDesc2, offerDesc3, firstResult, fullPrice, discountedPrice, discountPct, condition1, condition2, condition3, paymentLink, scratch, mode, script_text: preview })
+  }, [greeting, pastExperience, leadGoal, consumeIt, magnetType, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerName, offerDesc1, offerDesc2, offerDesc3, firstResult, fullPrice, discountedPrice, discountPct, condition1, condition2, condition3, paymentLink, scratch, mode])
 
   return (
     <GlassSection icon="ti-currency-dollar" title="Script 2 — Follow-up + Closing" defaultOpen={false}>
@@ -892,33 +897,33 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
       }
 
       // Save to Supabase
-const { data: flowConfig } = await supabase
-  .from('flow_config')
-  .upsert({
-    user_id: user?.id,
-    template_id: key,
-    agent_tone: selectedTone,
-    agent_name: agentName,
-    agent_personality: agentPersonality,
-    whatsapp_receive: receiveForm,
-    whatsapp_send: sendForm,
-    wait_time: waitTime,
-    script_1: s1Data,
-    script_2: s2Data,
-    status: 'pending',
-  }, { onConflict: 'user_id,template_id' })
-  .select()
-  .single()
+      const { data: flowConfig } = await supabase
+        .from('flow_config')
+        .upsert({
+          user_id: user?.id,
+          template_id: key,
+          agent_tone: selectedTone,
+          agent_name: agentName,
+          agent_personality: agentPersonality,
+          whatsapp_receive: receiveForm,
+          whatsapp_send: sendForm,
+          wait_time: waitTime,
+          script_1: s1Data,
+          script_2: s2Data,
+          status: 'pending',
+        }, { onConflict: 'user_id,template_id' })
+        .select()
+        .single()
 
-// Send to n8n with flow_config_id included
-const webhookUrl = WEBHOOKS[key]
-if (webhookUrl) {
-  await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, flow_config_id: flowConfig?.id }),
-  })
-}
+      // Send to n8n with flow_config_id included
+      const webhookUrl = WEBHOOKS[key]
+      if (webhookUrl) {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, flow_config_id: flowConfig?.id }),
+        })
+      }
 
       setShowSuccess(true)
     } catch (err) {
