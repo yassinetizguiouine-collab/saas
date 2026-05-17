@@ -773,11 +773,21 @@ or would it be better to have some guidance and a clear plan?
 function ScriptCloseInChat_S2() {
   const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
   const [scratch, setScratch] = useState('')
+  const [greeting, setGreeting] = useState('Salam my friend')
+  const [magnetType, setMagnetType] = useState('guide')
+  const [pastExperience, setPastExperience] = useState('making money online')
+  const [leadGoal, setLeadGoal] = useState('make money from home')
+  const [consumeIt, setConsumeIt] = useState('read it')
+  const [incomeGoal1, setIncomeGoal1] = useState('extra income on the side')
+  const [incomeGoal2, setIncomeGoal2] = useState('replace your income completely')
+  const [motivation1, setMotivation1] = useState('Feel more in control of my life')
+  const [motivation2, setMotivation2] = useState('Stop worrying about money')
+  const [motivation3, setMotivation3] = useState('Support the people around me')
+  const [motivation4, setMotivation4] = useState('Finally feel proud of myself')
   const [offerName, setOfferName] = useState('our program')
   const [offerDesc1, setOfferDesc1] = useState('What you get / module 1')
   const [offerDesc2, setOfferDesc2] = useState('What you get / module 2')
   const [offerDesc3, setOfferDesc3] = useState('What you get / module 3')
-  const [actionPlan, setActionPlan] = useState('simple 7-day action plan')
   const [firstResult, setFirstResult] = useState('your first $100 online')
   const [fullPrice, setFullPrice] = useState('$18')
   const [discountedPrice, setDiscountedPrice] = useState('$9')
@@ -787,26 +797,87 @@ function ScriptCloseInChat_S2() {
   const [condition3, setCondition3] = useState("You leave a review if you feel it's worth it")
   const [paymentLink, setPaymentLink] = useState('')
 
-  const preview = `That makes sense 👍
-
-I can see you're serious about this.
-
-So here's what I can do for you 👇
+  const preview = `${greeting}
+Sorry I didn't verify earlier — did the link for the ${magnetType} work?
 
 (Lead replies)
 
-So inside ${offerName}, here's what you get:
+Perfect 👍
+And did you have time to go through it or not yet?
 
+If not complete:
+No worries at all 👍
+Go finish it first, it'll make everything much clearer for you
+Message me after
+
+If complete:
+
+(Lead replies)
+
+Nice — I'm curious, how did you find it?
+Did it help you understand how ${pastExperience} actually works?
+
+(Lead replies)
+
+I'm glad it helped 🙏
+Quick question — What made you want to ${consumeIt} in the first place?
+Are you more just curious or actually looking to ${leadGoal}?
+
+(Lead replies)
+
+Ok I see 👍
+So you're actually serious about this
+And why does that matter to you?
+Why do you want to ${leadGoal}?
+Is it more like:
+${incomeGoal1}
+or ${incomeGoal2}?
+
+(Lead replies)
+
+Got it 👍
+And if that actually works out for you… what would that change in your life?
+Is it more like:
+1 — ${motivation1}
+2 — ${motivation2}
+3 — ${motivation3}
+4 — ${motivation4}
+
+(Lead replies)
+
+That's powerful
+
+Now be honest with me…
+If nothing changes, and you stay exactly where you are right now…
+how would you feel in a few months knowing you could've done more?
+
+(Lead replies)
+
+Yeah… I understand
+
+And that's exactly the problem most people face
+They understand the basics… but they don't have a clear plan to follow
+
+Because the truth is — ${pastExperience} isn't complicated
+but without knowing what to do step by step, people just stay stuck
+
+So let me ask you this:
+Do you feel like you could figure everything out alone…
+or would it be better to have some guidance and a clear plan to follow?
+
+(Lead replies)
+
+That makes sense 👍
+I can see you're serious about this
+
+So here's what I can do for you:
+
+Inside ${offerName}, here's what you get:
 1 — ${offerDesc1}
 2 — ${offerDesc2}
 3 — ${offerDesc3}
 
-(Lead replies)
-
-And by the end you'll have ${actionPlan}
-
-So you know exactly what to do to get ${firstResult}
-
+And by the end you'll know exactly what to do to get ${firstResult}
 No guessing, no confusion 👍
 
 Does that sound like something you want?
@@ -816,22 +887,17 @@ Does that sound like something you want?
 Perfect 👍
 
 So normally this is ${fullPrice}
+But since you actually took action and went through the guide,
+I can let you in for just ${discountedPrice} — so you save ${discountPct}
 
-But since you reached out today, I can let you in for just ${discountedPrice} — so you save ${discountPct}
-
-But under 3 conditions:
+But under 3 simple conditions:
 1 — ${condition1}
 2 — ${condition2}
 3 — ${condition3}
-
 Fair?
 
-(Lead replies)
-
 And just so you feel comfortable —
-
-If you're not 100% satisfied, I'll send you your money back.
-
+if you're not 100% satisfied, I'll send you your money back.
 No risk for you 👍
 
 Does that sound good?
@@ -842,11 +908,10 @@ Perfect 👍
 
 Here's your link to get started 👇
 ${paymentLink || '(your payment link)'}
-
 Once you're in, send me a screenshot 👍`
 
   return (
-    <GlassSection icon="ti-currency-dollar" title="Script 2 — Closing" defaultOpen={false}>
+    <GlassSection icon="ti-currency-dollar" title="Script 2 — Follow-up + Closing" defaultOpen={false}>
       {mode === null && (
         <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setMode('proven')} />
@@ -857,14 +922,32 @@ Once you're in, send me a screenshot 👍`
         <div style={{ marginTop: 16 }}>
           <BackButton onClick={() => setMode(null)} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Greeting" placeholder="e.g. Salam my friend, Hey..." value={greeting} onChange={setGreeting} />
+              <Field label="Lead magnet type" placeholder="e.g. guide, video, ebook..." value={magnetType} onChange={setMagnetType} />
+              <Field label="Consume it" placeholder="e.g. read it, watch it, go through it..." hint="Fill in: What made you want to ___ in the first place?" value={consumeIt} onChange={setConsumeIt} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Past experience" placeholder="e.g. making money online..." hint="Fill in: how ___ actually works?" value={pastExperience} onChange={setPastExperience} />
+              <Field label="Lead goal" placeholder="e.g. make money from home..." value={leadGoal} onChange={setLeadGoal} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Income goal option 1" placeholder="e.g. extra income on the side" value={incomeGoal1} onChange={setIncomeGoal1} />
+              <Field label="Income goal option 2" placeholder="e.g. replace your income completely" value={incomeGoal2} onChange={setIncomeGoal2} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Motivation 1" placeholder="e.g. Feel more in control of my life" value={motivation1} onChange={setMotivation1} />
+              <Field label="Motivation 2" placeholder="e.g. Stop worrying about money" value={motivation2} onChange={setMotivation2} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Motivation 3" placeholder="e.g. Support the people around me" value={motivation3} onChange={setMotivation3} />
+              <Field label="Motivation 4" placeholder="e.g. Finally feel proud of myself" value={motivation4} onChange={setMotivation4} />
+            </div>
             <Field label="Offer name" placeholder="e.g. our program, the course, the mentorship..." value={offerName} onChange={setOfferName} />
             <Field label="Offer description line 1" placeholder="e.g. Full system access" value={offerDesc1} onChange={setOfferDesc1} />
             <Field label="Offer description line 2" placeholder="e.g. Direct support from me" value={offerDesc2} onChange={setOfferDesc2} />
             <Field label="Offer description line 3" placeholder="e.g. First results in 30 days" value={offerDesc3} onChange={setOfferDesc3} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Action plan" placeholder="e.g. simple 7-day action plan" value={actionPlan} onChange={setActionPlan} />
-              <Field label="First result" placeholder="e.g. your first $100 online" value={firstResult} onChange={setFirstResult} />
-            </div>
+            <Field label="First result" placeholder="e.g. your first $100 online" value={firstResult} onChange={setFirstResult} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
               <Field label="Full price" placeholder="e.g. $18" value={fullPrice} onChange={setFullPrice} />
               <Field label="Discounted price" placeholder="e.g. $9" value={discountedPrice} onChange={setDiscountedPrice} />
@@ -882,7 +965,6 @@ Once you're in, send me a screenshot 👍`
     </GlassSection>
   )
 }
-
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
 const TEMPLATE_TITLES: Record<string, string> = {
