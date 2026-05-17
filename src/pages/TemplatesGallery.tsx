@@ -30,61 +30,13 @@ const TEMPLATES: Template[] = [
     id: 'close-in-chat',
     category: 'Closing',
     title: 'Close in WhatsApp Convo',
-    desc: 'Qualify leads, handle objections, and close the sale entirely inside WhatsApp — no call needed.',
+    desc: 'Qualify leads, deliver your guide, and close the sale entirely inside WhatsApp — no call needed.',
     icon: 'ti-message-2-check',
     tag: 'Closing',
   },
-  {
-    id: 'followup-post-call',
-    category: 'Follow Up',
-    title: 'Follow Up — Post Call',
-    desc: 'Re-engage leads who have already booked a call. Keep momentum going after the conversation.',
-    icon: 'ti-phone-check',
-    tag: 'Follow Up',
-  },
-  {
-    id: 'closing-with-lm',
-    category: 'Closing',
-    title: 'Closing Flow w/ Lead Magnet',
-    desc: 'Convert warm leads who have consumed your guide into paying clients.',
-    icon: 'ti-trophy',
-    tag: 'Closing',
-  },
-  {
-    id: 'closing-without-lm',
-    category: 'Closing',
-    title: 'Closing Flow w/o Lead Magnet',
-    desc: 'Close leads directly without a lead magnet. For high-intent prospects ready to buy.',
-    icon: 'ti-badge-check',
-    tag: 'Closing',
-  },
-  {
-    id: 'followup-reviews',
-    category: 'Follow Up',
-    title: 'Follow Up — Collect Reviews',
-    desc: 'Automatically ask happy clients for reviews at the right moment after delivery.',
-    icon: 'ti-star',
-    tag: 'Follow Up',
-  },
-  {
-    id: 'followup-referral',
-    category: 'Follow Up',
-    title: 'Follow Up — Referral',
-    desc: 'Turn satisfied clients into your best sales reps. Automate referral requests on WhatsApp.',
-    icon: 'ti-users-plus',
-    tag: 'Follow Up',
-  },
-  {
-    id: 'followup-warm',
-    category: 'Follow Up',
-    title: 'Follow Up — Keep List Warm',
-    desc: 'Constantly nurture your lead list so no one goes cold. Stay top of mind, always.',
-    icon: 'ti-flame',
-    tag: 'Follow Up',
-  },
 ]
 
-const FILTERS = ['All', 'Booking', 'Follow Up', 'Closing'] as const
+const FILTERS = ['All', 'Booking', 'Closing'] as const
 type Filter = typeof FILTERS[number]
 
 const TAG_STYLES: Record<string, { bg: string; color: string; border: string }> = {
