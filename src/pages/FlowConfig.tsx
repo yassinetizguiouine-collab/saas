@@ -891,14 +891,34 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
         script_2: s2Data,
       }
 
-      const webhookUrl = WEBHOOKS[key]
-      if (webhookUrl) {
-        await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-      }
+      // Save to Supabase
+const { data: flowConfig } = await supabase
+  .from('flow_config')
+  .upsert({
+    user_id: user?.id,
+    template_id: key,
+    agent_tone: selectedTone,
+    agent_name: agentName,
+    agent_personality: agentPersonality,
+    whatsapp_receive: receiveForm,
+    whatsapp_send: sendForm,
+    wait_time: waitTime,
+    script_1: s1Data,
+    script_2: s2Data,
+    status: 'pending',
+  }, { onConflict: 'user_id,template_id' })
+  .select()
+  .single()
+
+// Send to n8n with flow_config_id included
+const webhookUrl = WEBHOOKS[key]
+if (webhookUrl) {
+  await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, flow_config_id: flowConfig?.id }),
+  })
+}
 
       setShowSuccess(true)
     } catch (err) {
