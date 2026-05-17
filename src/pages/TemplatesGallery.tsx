@@ -57,7 +57,6 @@ const TAG_STYLES: Record<string, { bg: string; color: string; border: string }> 
   },
 }
 
-// Keyframe injection (runs once)
 const STYLE_ID = 'tg-keyframes'
 if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
   const s = document.createElement('style')
@@ -74,6 +73,10 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
     @keyframes tg-orb2 {
       0%,100% { transform: translate(0,0) scale(1); }
       50%     { transform: translate(-50px,-30px) scale(1.08); }
+    }
+    @keyframes tg-float {
+      0%,100% { transform: translateY(0px) rotate(-8deg); }
+      50%     { transform: translateY(-6px) rotate(-8deg); }
     }
   `
   document.head.appendChild(s)
@@ -128,30 +131,40 @@ function TemplateCard({
   template,
   onUseTemplate,
   animDelay,
+  isRecommended,
 }: {
   template: Template
   onUseTemplate: (id: string, title: string) => void
   animDelay: number
+  isRecommended: boolean
 }) {
   const [hovered, setHovered] = useState(false)
   const tagStyle = TAG_STYLES[template.tag]
 
   const card: CSSProperties = {
-    background: hovered ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.55)',
+    background: hovered
+      ? isRecommended ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.72)'
+      : isRecommended ? 'rgba(255,255,255,0.68)' : 'rgba(255,255,255,0.55)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
-    border: hovered ? '0.5px solid rgba(0,0,0,0.14)' : '0.5px solid rgba(255,255,255,0.95)',
+    border: isRecommended
+      ? hovered ? '1px solid rgba(37,211,102,0.45)' : '1px solid rgba(37,211,102,0.28)'
+      : hovered ? '0.5px solid rgba(0,0,0,0.14)' : '0.5px solid rgba(255,255,255,0.95)',
     borderRadius: 18,
-    boxShadow: hovered
-      ? '0 12px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)'
-      : '0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
+    boxShadow: isRecommended
+      ? hovered
+        ? '0 12px 40px rgba(37,211,102,0.13), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)'
+        : '0 4px 24px rgba(37,211,102,0.10), inset 0 1px 0 rgba(255,255,255,0.8)'
+      : hovered
+        ? '0 12px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)'
+        : '0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
     padding: '22px 20px 18px',
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
     gap: 14,
     position: 'relative',
-    overflow: 'hidden',
+    overflow: 'visible',
     transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
     transition: 'all 0.24s cubic-bezier(0.4,0,0.2,1)',
     animation: `tg-fadeUp 0.45s ease ${animDelay}s both`,
@@ -179,15 +192,64 @@ function TemplateCard({
       onMouseLeave={() => setHovered(false)}
       style={card}
     >
+      {/* Character sticker poking out of the top-right — only for recommended */}
+      {isRecommended && (
+        <img
+          src="/ChatGPT Image 17 mai 2026, 12_47_57.png"
+          alt="Recommended"
+          style={{
+            position: 'absolute',
+            top: -38,
+            right: -12,
+            width: 80,
+            height: 80,
+            objectFit: 'contain',
+            pointerEvents: 'none',
+            zIndex: 10,
+            animation: 'tg-float 3s ease-in-out infinite',
+            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+          }}
+        />
+      )}
+
       {/* Shine line */}
       <div style={{
         position: 'absolute', top: 0, left: '10%', right: '10%', height: 1,
         background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.9),transparent)',
         pointerEvents: 'none',
+        borderRadius: 18,
       }} />
 
-      {/* Top row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      {/* Recommended badge — top-left inside card */}
+      {isRecommended && (
+        <div style={{
+          position: 'absolute',
+          top: 12,
+          left: 12,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 5,
+          background: 'rgba(37,211,102,0.12)',
+          border: '0.5px solid rgba(37,211,102,0.35)',
+          borderRadius: 100,
+          padding: '3px 10px',
+          fontSize: 10.5,
+          fontWeight: 700,
+          color: '#1a8c4e',
+          letterSpacing: '0.01em',
+          zIndex: 1,
+        }}>
+          ✨ Recommended flow
+        </div>
+      )}
+
+      {/* Top row — push down if recommended badge is showing */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        marginTop: isRecommended ? 20 : 0,
+      }}>
         <div style={iconWrap}>
           <i
             className={`ti ${template.icon}`}
@@ -238,9 +300,10 @@ function TemplateCard({
 
 interface Props {
   onUseTemplate: (templateId: string, templateTitle: string) => void
+  recommendedTemplateId?: string | null
 }
 
-export default function TemplatesGallery({ onUseTemplate }: Props) {
+export default function TemplatesGallery({ onUseTemplate, recommendedTemplateId }: Props) {
   const [activeFilter, setActiveFilter] = useState<Filter>('All')
   const [search, setSearch] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
@@ -408,6 +471,7 @@ export default function TemplatesGallery({ onUseTemplate }: Props) {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
           gap: 18,
+          paddingTop: 24, // extra space so floating character doesn't get clipped
         }}>
           {filtered.map((t, i) => (
             <TemplateCard
@@ -415,6 +479,7 @@ export default function TemplatesGallery({ onUseTemplate }: Props) {
               template={t}
               onUseTemplate={onUseTemplate}
               animDelay={0.1 + i * 0.05}
+              isRecommended={t.id === recommendedTemplateId}
             />
           ))}
         </div>
