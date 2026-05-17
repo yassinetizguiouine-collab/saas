@@ -14,12 +14,6 @@ const TONES = [
   { id: 'warm', name: '🤗 Warm', preview: "Hi sweetheart! Before I send this over, can I get your name? 😊" },
 ]
 
-const WEBHOOKS: Record<string, string> = {
-  'booking-with-lm': 'https://rosegoldprojectai3.app.n8n.cloud/webhook/dcdb98bc-daf5-4cac-8c87-21d5289d51f5',
-  'booking-without-lm': '',
-  'close-in-chat': '',
-}
-
 function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.18)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
