@@ -122,7 +122,7 @@ function ScriptBookingWithLM_S1({ onDataChange }: { onDataChange: (data: Record<
 
   useEffect(() => {
     onDataChange({ greeting, trafficSource, leadGoal, magnetType, pastExperience, currentLevelCheck, outcomePromise, nextStepFraming, magnetLink, readTime, pageTeaser, scratch, mode })
-  }, [greeting, trafficSource, leadGoal, magnetType, pastExperience, currentLevelCheck, outcomePromise, nextStepFraming, magnetLink, readTime, pageTeaser, scratch, mode, script_text, preview])
+  }, [greeting, trafficSource, leadGoal, magnetType, pastExperience, currentLevelCheck, outcomePromise, nextStepFraming, magnetLink, readTime, pageTeaser, scratch, mode, preview])
   
   const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
 
