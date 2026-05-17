@@ -220,14 +220,8 @@ function ScriptBookingWithLM_S2() {
   const [offerDesc2, setOfferDesc2] = useState("How to use TikTok to bring people to you every day, even if you're starting from scratch")
   const [actionPlan, setActionPlan] = useState('simple 7-day action plan')
   const [firstResult, setFirstResult] = useState('your first $100 online')
-  const [fullPrice, setFullPrice] = useState('$18')
-  const [discountedPrice, setDiscountedPrice] = useState('$9')
-  const [discountPct, setDiscountPct] = useState('50%')
-  const [condition1, setCondition1] = useState('You actually apply what you learn')
-  const [condition2, setCondition2] = useState('You give me your feedback so I can improve it')
-  const [condition3, setCondition3] = useState("You leave a review if you feel it's worth it")
   const [sessions, setSessions] = useState('6pm / 7pm / 8pm / 9pm')
-  const [paymentLink, setPaymentLink] = useState('')
+  const [calendarLink, setCalendarLink] = useState('')
 
   const preview = `${greeting}
 Sorry I didn't verify earlier — did the link for the guide work?
@@ -322,34 +316,18 @@ Does that sound like something you'd want to join?
 
 Perfect 👍
 
-So normally, access to this is ${fullPrice}
-But since you actually took action and went through the guide,
-I can let you in for just ${discountedPrice} — so you save ${discountPct}
+And just so you know — the call is completely free 👍
+No catch, no pressure.
+I just want to make sure I can actually help you before anything else.
 
-But under 3 simple conditions:
-1 — ${condition1}
-2 — ${condition2}
-3 — ${condition3}
-Fair?
-
-And just so you feel comfortable —
-if after the call you're not 100% clear on what to do to get ${firstResult},
-I'll send you your money back
-No risk for you 👍
-
-Does that sound good?
-
-(Lead replies)
-
-Perfect 👍
 I have ${sessions}
 Which one works best for you?
 
 (Lead replies)
 
 Perfect 👍
-Here's the link to save your spot 👇
-${paymentLink || '(your payment link)'}
+Here's the link to book your spot 👇
+${calendarLink || '(your calendar link)'}
 Once you're in, send me a screenshot 👍`
 
   return (
@@ -394,16 +372,7 @@ Once you're in, send me a screenshot 👍`
               <Field label="Action plan" placeholder="e.g. simple 7-day action plan" value={actionPlan} onChange={setActionPlan} />
               <Field label="First result" placeholder="e.g. your first $100 online" value={firstResult} onChange={setFirstResult} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
-              <Field label="Full price" placeholder="e.g. $18" value={fullPrice} onChange={setFullPrice} />
-              <Field label="Discounted price" placeholder="e.g. $9" value={discountedPrice} onChange={setDiscountedPrice} />
-              <Field label="Discount %" placeholder="e.g. 50%" value={discountPct} onChange={setDiscountPct} />
-            </div>
-            <Field label="Condition 1" placeholder="e.g. You actually apply what you learn" value={condition1} onChange={setCondition1} />
-            <Field label="Condition 2" placeholder="e.g. You give me your feedback so I can improve it" value={condition2} onChange={setCondition2} />
-            <Field label="Condition 3" placeholder="e.g. You leave a review if you feel it's worth it" value={condition3} onChange={setCondition3} />
-            <Field label="Sessions" placeholder="e.g. 6pm / 7pm / 8pm / 9pm" hint="List all available time slots" value={sessions} onChange={setSessions} />
-            <Field label="Payment link" placeholder="https://..." type="url" value={paymentLink} onChange={setPaymentLink} />
+            <Field label="Calendar link" placeholder="https://calendly.com/..." type="url" value={calendarLink} onChange={setCalendarLink} />
             <LivePreview script={preview} />
           </div>
         </div>
