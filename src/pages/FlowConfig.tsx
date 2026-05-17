@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 
 interface Props {
   flowId?: string | null
@@ -12,6 +13,12 @@ const TONES = [
   { id: 'friendly', name: '😊 Friendly', preview: "Hey! I'd love to help you out — just share your name and I'll get started!" },
   { id: 'warm', name: '🤗 Warm', preview: "Hi sweetheart! Before I send this over, can I get your name? 😊" },
 ]
+
+const WEBHOOKS: Record<string, string> = {
+  'booking-with-lm': 'https://rosegoldprojectai3.app.n8n.cloud/webhook/dcdb98bc-daf5-4cac-8c87-21d5289d51f5',
+  'booking-without-lm': '',
+  'close-in-chat': '',
+}
 
 function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
@@ -96,20 +103,15 @@ function ScratchMode({ text, onChange, onBack }: { text: string; onChange: (v: s
   return (
     <div style={{ marginTop: 16 }}>
       <BackButton onClick={onBack} />
-      <textarea
-        placeholder="Write your script here..."
-        value={text}
-        onChange={e => onChange(e.target.value)}
-        rows={16}
-        style={{ width: '100%', background: 'rgba(255,255,255,0.7)', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 12, padding: '14px', fontSize: 13, color: '#111', outline: 'none', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.7, boxSizing: 'border-box' }}
-      />
+      <textarea placeholder="Write your script here..." value={text} onChange={e => onChange(e.target.value)} rows={16}
+        style={{ width: '100%', background: 'rgba(255,255,255,0.7)', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 12, padding: '14px', fontSize: 13, color: '#111', outline: 'none', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.7, boxSizing: 'border-box' }} />
     </div>
   )
 }
 
 // ─── BOOKING WITH LM — SCRIPT 1 ──────────────────────────────────────────────
 
-function ScriptBookingWithLM_S1() {
+function ScriptBookingWithLM_S1({ onDataChange }: { onDataChange: (data: Record<string, any>) => void }) {
   const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
   const [scratch, setScratch] = useState('')
   const [greeting, setGreeting] = useState('Wa alaykoum salam')
@@ -123,6 +125,10 @@ function ScriptBookingWithLM_S1() {
   const [magnetLink, setMagnetLink] = useState('')
   const [readTime, setReadTime] = useState('4 minutes')
   const [pageTeaser, setPageTeaser] = useState("don't skip page 14…👀")
+
+  useEffect(() => {
+    onDataChange({ greeting, trafficSource, leadGoal, magnetType, pastExperience, currentLevelCheck, outcomePromise, nextStepFraming, magnetLink, readTime, pageTeaser, scratch, mode })
+  }, [greeting, trafficSource, leadGoal, magnetType, pastExperience, currentLevelCheck, outcomePromise, nextStepFraming, magnetLink, readTime, pageTeaser, scratch, mode])
 
   const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
 
@@ -201,7 +207,7 @@ Ah and ${pageTeaser}`
 
 // ─── BOOKING WITH LM — SCRIPT 2 ──────────────────────────────────────────────
 
-function ScriptBookingWithLM_S2() {
+function ScriptBookingWithLM_S2({ onDataChange }: { onDataChange: (data: Record<string, any>) => void }) {
   const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
   const [scratch, setScratch] = useState('')
   const [greeting, setGreeting] = useState('Salam my friend')
@@ -222,6 +228,10 @@ function ScriptBookingWithLM_S2() {
   const [firstResult, setFirstResult] = useState('your first $100 online')
   const [sessions, setSessions] = useState('6pm / 7pm / 8pm / 9pm')
   const [calendarLink, setCalendarLink] = useState('')
+
+  useEffect(() => {
+    onDataChange({ greeting, pastExperience, leadGoal, consumeIt, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode })
+  }, [greeting, pastExperience, leadGoal, consumeIt, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode])
 
   const preview = `${greeting}
 Sorry I didn't verify earlier — did the link for the guide work?
@@ -372,6 +382,7 @@ Once you're in, send me a screenshot 👍`
               <Field label="Action plan" placeholder="e.g. simple 7-day action plan" value={actionPlan} onChange={setActionPlan} />
               <Field label="First result" placeholder="e.g. your first $100 online" value={firstResult} onChange={setFirstResult} />
             </div>
+            <Field label="Sessions" placeholder="e.g. 6pm / 7pm / 8pm / 9pm" hint="List all available time slots" value={sessions} onChange={setSessions} />
             <Field label="Calendar link" placeholder="https://calendly.com/..." type="url" value={calendarLink} onChange={setCalendarLink} />
             <LivePreview script={preview} />
           </div>
@@ -384,7 +395,7 @@ Once you're in, send me a screenshot 👍`
 
 // ─── BOOKING WITHOUT LM — SCRIPT 1 ───────────────────────────────────────────
 
-function ScriptBookingWithoutLM_S1() {
+function ScriptBookingWithoutLM_S1({ onDataChange }: { onDataChange: (data: Record<string, any>) => void }) {
   const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
   const [scratch, setScratch] = useState('')
   const [greeting, setGreeting] = useState('Hey')
@@ -398,6 +409,10 @@ function ScriptBookingWithoutLM_S1() {
   const [motivation2, setMotivation2] = useState('Stop worrying about money')
   const [motivation3, setMotivation3] = useState('Support the people around me')
   const [motivation4, setMotivation4] = useState('Finally feel proud of myself')
+
+  useEffect(() => {
+    onDataChange({ greeting, trafficSource, leadGoal, pastExperience, currentLevelCheck, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, scratch, mode })
+  }, [greeting, trafficSource, leadGoal, pastExperience, currentLevelCheck, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, scratch, mode])
 
   const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
 
@@ -492,30 +507,9 @@ or would it be better to have some guidance and a clear plan?
   )
 }
 
-// ─── WAIT TIME SELECTOR ───────────────────────────────────────────────────────
-
-function WaitTimeSelector() {
-  const [selected, setSelected] = useState('10min')
-  const OPTIONS = ['5min', '10min', '15min', '30min', '1h', '2h']
-  return (
-    <GlassSection icon="ti-clock" title="Wait Time Before Follow-up" defaultOpen={false}>
-      <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 14 }}>
-        How long after sending the lead magnet should your agent wait before sending Script 2?
-      </p>
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        {OPTIONS.map(opt => (
-          <div key={opt} onClick={() => setSelected(opt)}
-            style={{ padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer', background: selected === opt ? '#111' : 'rgba(255,255,255,0.6)', color: selected === opt ? '#fff' : '#444', border: selected === opt ? 'none' : '0.5px solid rgba(0,0,0,0.12)', transition: 'all 0.15s' }}>
-            {opt}
-          </div>
-        ))}
-      </div>
-    </GlassSection>
-  )
-}
-
 // ─── BOOKING WITHOUT LM — SCRIPT 2 ───────────────────────────────────────────
-function ScriptBookingWithoutLM_S2() {
+
+function ScriptBookingWithoutLM_S2({ onDataChange }: { onDataChange: (data: Record<string, any>) => void }) {
   const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
   const [scratch, setScratch] = useState('')
   const [offerType, setOfferType] = useState('live training')
@@ -526,6 +520,10 @@ function ScriptBookingWithoutLM_S2() {
   const [firstResult, setFirstResult] = useState('your first $100 online')
   const [sessions, setSessions] = useState('6pm / 7pm / 8pm / 9pm')
   const [calendarLink, setCalendarLink] = useState('')
+
+  useEffect(() => {
+    onDataChange({ offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode })
+  }, [offerType, offerDay, offerDesc1, offerDesc2, actionPlan, firstResult, sessions, calendarLink, scratch, mode])
 
   const preview = `That makes sense 👍
 I can see you're serious about this.
@@ -586,117 +584,8 @@ Once you're in, send me a screenshot 👍`
               <Field label="Action plan" placeholder="e.g. simple 7-day action plan" value={actionPlan} onChange={setActionPlan} />
               <Field label="First result" placeholder="e.g. your first $100 online" value={firstResult} onChange={setFirstResult} />
             </div>
+            <Field label="Sessions" placeholder="e.g. 6pm / 7pm / 8pm / 9pm" hint="List all available time slots" value={sessions} onChange={setSessions} />
             <Field label="Calendar link" placeholder="https://calendly.com/..." type="url" value={calendarLink} onChange={setCalendarLink} />
-            <LivePreview script={preview} />
-          </div>
-        </div>
-      )}
-      {mode === 'scratch' && <ScratchMode text={scratch} onChange={setScratch} onBack={() => setMode(null)} />}
-    </GlassSection>
-  )
-}
-
-// ─── CLOSE IN CHAT — SCRIPT 1 ────────────────────────────────────────────────
-
-function ScriptCloseInChat_S1() {
-  const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
-  const [scratch, setScratch] = useState('')
-  const [greeting, setGreeting] = useState('Hey')
-  const [trafficSource, setTrafficSource] = useState('TikTok')
-  const [leadGoal, setLeadGoal] = useState('make money from home')
-  const [pastExperience, setPastExperience] = useState('made money online')
-  const [currentLevelCheck, setCurrentLevelCheck] = useState('understand how it works')
-  const [incomeGoal1, setIncomeGoal1] = useState('extra income on the side')
-  const [incomeGoal2, setIncomeGoal2] = useState('replace your income completely')
-  const [motivation1, setMotivation1] = useState('Feel more in control of my life')
-  const [motivation2, setMotivation2] = useState('Stop worrying about money')
-  const [motivation3, setMotivation3] = useState('Support the people around me')
-  const [motivation4, setMotivation4] = useState('Finally feel proud of myself')
-
-  const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
-
-(Lead replies)
-
-Perfect 😊 What's your name?
-
-(Lead replies)
-
-Nice to meet you, (NAME) 👍
-Quick question — Have you ever ${pastExperience} before, or not yet?
-
-(Lead replies)
-
-And do you ${currentLevelCheck} fully, or are you just starting?
-
-(Lead replies)
-
-Got it 👍
-And why does that matter to you?
-Why do you want to ${leadGoal}?
-Is it more like:
-${incomeGoal1}
-or ${incomeGoal2}?
-
-(Lead replies)
-
-And if that actually works out for you… what would that change in your life?
-Is it more like:
-1 — ${motivation1}
-2 — ${motivation2}
-3 — ${motivation3}
-4 — ${motivation4}
-
-(Lead replies)
-
-That's powerful.
-Now be honest with me…
-If nothing changes and you stay exactly where you are right now…
-how would you feel in a few months knowing you could've done more?
-
-(Lead replies)
-
-Yeah… I understand.
-And that's exactly the problem most people face —
-they want to ${leadGoal} but don't have a clear plan to follow.
-So let me ask you this:
-Do you feel like you could figure everything out alone…
-or would it be better to have some guidance and a clear plan?
-
-(Lead replies)`
-
-  return (
-    <GlassSection icon="ti-script" title="Script 1 — Lead Qualification" defaultOpen={false}>
-      {mode === null && (
-        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <ScriptModeCard icon="ti-wand" title="Customize the proven script" desc="Start from our battle-tested template and fill in your details." onClick={() => setMode('proven')} />
-          <ScriptModeCard icon="ti-pencil" title="Start from scratch" desc="Write your own custom script from a blank page." onClick={() => setMode('scratch')} />
-        </div>
-      )}
-      {mode === 'proven' && (
-        <div style={{ marginTop: 16 }}>
-          <BackButton onClick={() => setMode(null)} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Greeting" placeholder="e.g. Hey, Salam..." value={greeting} onChange={setGreeting} />
-              <Field label="Traffic source" placeholder="e.g. TikTok, Instagram..." value={trafficSource} onChange={setTrafficSource} />
-            </div>
-            <Field label="Lead goal" placeholder="e.g. make money from home" hint="What does your lead want to achieve?" value={leadGoal} onChange={setLeadGoal} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Past experience" placeholder="e.g. made money online..." hint="Fill in: Have you ever ___ before?" value={pastExperience} onChange={setPastExperience} />
-              <Field label="Current level check" placeholder="e.g. understand how it works..." hint="Fill in: And do you ___ fully?" value={currentLevelCheck} onChange={setCurrentLevelCheck} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Income goal option 1" placeholder="e.g. extra income on the side" value={incomeGoal1} onChange={setIncomeGoal1} />
-              <Field label="Income goal option 2" placeholder="e.g. replace your income completely" value={incomeGoal2} onChange={setIncomeGoal2} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Motivation 1" placeholder="e.g. Feel more in control of my life" value={motivation1} onChange={setMotivation1} />
-              <Field label="Motivation 2" placeholder="e.g. Stop worrying about money" value={motivation2} onChange={setMotivation2} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Motivation 3" placeholder="e.g. Support the people around me" value={motivation3} onChange={setMotivation3} />
-              <Field label="Motivation 4" placeholder="e.g. Finally feel proud of myself" value={motivation4} onChange={setMotivation4} />
-            </div>
             <LivePreview script={preview} />
           </div>
         </div>
@@ -708,14 +597,14 @@ or would it be better to have some guidance and a clear plan?
 
 // ─── CLOSE IN CHAT — SCRIPT 2 ────────────────────────────────────────────────
 
-function ScriptCloseInChat_S2() {
+function ScriptCloseInChat_S2({ onDataChange }: { onDataChange: (data: Record<string, any>) => void }) {
   const [mode, setMode] = useState<null | 'proven' | 'scratch'>(null)
   const [scratch, setScratch] = useState('')
   const [greeting, setGreeting] = useState('Salam my friend')
-  const [magnetType, setMagnetType] = useState('guide')
   const [pastExperience, setPastExperience] = useState('making money online')
   const [leadGoal, setLeadGoal] = useState('make money from home')
   const [consumeIt, setConsumeIt] = useState('read it')
+  const [magnetType, setMagnetType] = useState('guide')
   const [incomeGoal1, setIncomeGoal1] = useState('extra income on the side')
   const [incomeGoal2, setIncomeGoal2] = useState('replace your income completely')
   const [motivation1, setMotivation1] = useState('Feel more in control of my life')
@@ -734,6 +623,10 @@ function ScriptCloseInChat_S2() {
   const [condition2, setCondition2] = useState('You give me your feedback so I can improve it')
   const [condition3, setCondition3] = useState("You leave a review if you feel it's worth it")
   const [paymentLink, setPaymentLink] = useState('')
+
+  useEffect(() => {
+    onDataChange({ greeting, pastExperience, leadGoal, consumeIt, magnetType, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerName, offerDesc1, offerDesc2, offerDesc3, firstResult, fullPrice, discountedPrice, discountPct, condition1, condition2, condition3, paymentLink, scratch, mode })
+  }, [greeting, pastExperience, leadGoal, consumeIt, magnetType, incomeGoal1, incomeGoal2, motivation1, motivation2, motivation3, motivation4, offerName, offerDesc1, offerDesc2, offerDesc3, firstResult, fullPrice, discountedPrice, discountPct, condition1, condition2, condition3, paymentLink, scratch, mode])
 
   const preview = `${greeting}
 Sorry I didn't verify earlier — did the link for the ${magnetType} work?
@@ -825,7 +718,7 @@ Does that sound like something you want?
 Perfect 👍
 
 So normally this is ${fullPrice}
-But since you actually took action and went through the guide,
+But since you actually took action and went through the ${magnetType},
 I can let you in for just ${discountedPrice} — so you save ${discountPct}
 
 But under 3 simple conditions:
@@ -863,12 +756,12 @@ Once you're in, send me a screenshot 👍`
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <Field label="Greeting" placeholder="e.g. Salam my friend, Hey..." value={greeting} onChange={setGreeting} />
               <Field label="Lead magnet type" placeholder="e.g. guide, video, ebook..." value={magnetType} onChange={setMagnetType} />
-              <Field label="Consume it" placeholder="e.g. read it, watch it, go through it..." hint="Fill in: What made you want to ___ in the first place?" value={consumeIt} onChange={setConsumeIt} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <Field label="Consume it" placeholder="e.g. read it, watch it, go through it..." hint="Fill in: What made you want to ___ in the first place?" value={consumeIt} onChange={setConsumeIt} />
               <Field label="Past experience" placeholder="e.g. making money online..." hint="Fill in: how ___ actually works?" value={pastExperience} onChange={setPastExperience} />
-              <Field label="Lead goal" placeholder="e.g. make money from home..." value={leadGoal} onChange={setLeadGoal} />
             </div>
+            <Field label="Lead goal" placeholder="e.g. make money from home..." value={leadGoal} onChange={setLeadGoal} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <Field label="Income goal option 1" placeholder="e.g. extra income on the side" value={incomeGoal1} onChange={setIncomeGoal1} />
               <Field label="Income goal option 2" placeholder="e.g. replace your income completely" value={incomeGoal2} onChange={setIncomeGoal2} />
@@ -903,6 +796,28 @@ Once you're in, send me a screenshot 👍`
     </GlassSection>
   )
 }
+
+// ─── WAIT TIME SELECTOR ───────────────────────────────────────────────────────
+
+function WaitTimeSelector({ selected, onChange }: { selected: string; onChange: (v: string) => void }) {
+  const OPTIONS = ['5min', '10min', '15min', '30min', '1h', '2h']
+  return (
+    <GlassSection icon="ti-clock" title="Wait Time Before Follow-up" defaultOpen={false}>
+      <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 14 }}>
+        How long after sending the lead magnet should your agent wait before sending Script 2?
+      </p>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {OPTIONS.map(opt => (
+          <div key={opt} onClick={() => onChange(opt)}
+            style={{ padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer', background: selected === opt ? '#111' : 'rgba(255,255,255,0.6)', color: selected === opt ? '#fff' : '#444', border: selected === opt ? 'none' : '0.5px solid rgba(0,0,0,0.12)', transition: 'all 0.15s' }}>
+            {opt}
+          </div>
+        ))}
+      </div>
+    </GlassSection>
+  )
+}
+
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
 const TEMPLATE_TITLES: Record<string, string> = {
@@ -920,6 +835,11 @@ const TEMPLATE_SAVE_LABELS: Record<string, string> = {
   'booking-without-lm': 'Save & activate booking flow',
   'close-in-chat': 'Save & activate closing flow',
 }
+const WEBHOOKS: Record<string, string> = {
+  'booking-with-lm': 'https://rosegoldprojectai3.app.n8n.cloud/webhook/dcdb98bc-daf5-4cac-8c87-21d5289d51f5',
+  'booking-without-lm': '',
+  'close-in-chat': '',
+}
 
 export default function FlowConfig({ onBack, flowId, templateId }: Props) {
   const [selectedTone, setSelectedTone] = useState('friendly')
@@ -932,11 +852,67 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
   const [agentName, setAgentName] = useState('')
   const [agentPersonality, setAgentPersonality] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [waitTime, setWaitTime] = useState('10min')
+  const [s1Data, setS1Data] = useState<Record<string, any>>({})
+  const [s2Data, setS2Data] = useState<Record<string, any>>({})
 
   const key = templateId || 'booking-with-lm'
   const title = TEMPLATE_TITLES[key] || TEMPLATE_TITLES['booking-with-lm']
   const subtitle = TEMPLATE_SUBTITLES[key] || TEMPLATE_SUBTITLES['booking-with-lm']
   const saveLabel = TEMPLATE_SAVE_LABELS[key] || TEMPLATE_SAVE_LABELS['booking-with-lm']
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: onboarding } = await supabase
+        .from('onboarding')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single()
+
+      const payload = {
+        // Onboarding
+        user_id: onboarding?.user_id,
+        business_name: onboarding?.business_name,
+        industry: onboarding?.industry,
+        ideal_client: onboarding?.ideal_client,
+        results_promised: onboarding?.results_promised,
+        product_type: onboarding?.product_type,
+        price: onboarding?.price,
+        offer_name: onboarding?.offer_name,
+        traffic_source: onboarding?.traffic_source,
+        closing_method: onboarding?.closing_method,
+        has_lead_magnet: onboarding?.has_lead_magnet,
+        // Flow config
+        template_id: key,
+        agent_tone: selectedTone,
+        agent_name: agentName,
+        agent_personality: agentPersonality,
+        whatsapp_receive: receiveForm,
+        whatsapp_send: sendForm,
+        wait_time: waitTime,
+        script_1: s1Data,
+        script_2: s2Data,
+      }
+
+      const webhookUrl = WEBHOOKS[key]
+      if (webhookUrl) {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      }
+
+      setShowSuccess(true)
+    } catch (err) {
+      console.error('Save failed:', err)
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div style={{ padding: '32px 48px', maxWidth: 860, margin: '0 auto' }}>
@@ -1002,16 +978,33 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
           </div>
         </GlassSection>
 
-        {key === 'booking-with-lm' && <><ScriptBookingWithLM_S1 /><WaitTimeSelector /><ScriptBookingWithLM_S2 /></>}
-        {key === 'booking-without-lm' && <><ScriptBookingWithoutLM_S1 /><ScriptBookingWithoutLM_S2 /></>}
-        {key === 'close-in-chat' && <><ScriptBookingWithLM_S1 /><WaitTimeSelector /><ScriptCloseInChat_S2 /></>}
+        {key === 'booking-with-lm' && (
+          <>
+            <ScriptBookingWithLM_S1 onDataChange={setS1Data} />
+            <WaitTimeSelector selected={waitTime} onChange={setWaitTime} />
+            <ScriptBookingWithLM_S2 onDataChange={setS2Data} />
+          </>
+        )}
+        {key === 'booking-without-lm' && (
+          <>
+            <ScriptBookingWithoutLM_S1 onDataChange={setS1Data} />
+            <ScriptBookingWithoutLM_S2 onDataChange={setS2Data} />
+          </>
+        )}
+        {key === 'close-in-chat' && (
+          <>
+            <ScriptBookingWithLM_S1 onDataChange={setS1Data} />
+            <WaitTimeSelector selected={waitTime} onChange={setWaitTime} />
+            <ScriptCloseInChat_S2 onDataChange={setS2Data} />
+          </>
+        )}
 
-        <button onClick={() => setShowSuccess(true)}
-          style={{ width: '100%', background: '#111', color: '#fff', border: 'none', borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.15s' }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '0.82')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-          <i className="ti ti-check" style={{ fontSize: 16 }} aria-hidden="true" />
-          {saveLabel}
+        <button onClick={handleSave} disabled={isSaving}
+          style={{ width: '100%', background: '#111', color: '#fff', border: 'none', borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 600, cursor: isSaving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.15s', opacity: isSaving ? 0.6 : 1 }}
+          onMouseEnter={e => { if (!isSaving) (e.currentTarget.style.opacity = '0.82') }}
+          onMouseLeave={e => { if (!isSaving) (e.currentTarget.style.opacity = '1') }}>
+          <i className={`ti ${isSaving ? 'ti-loader-2' : 'ti-check'}`} style={{ fontSize: 16 }} aria-hidden="true" />
+          {isSaving ? 'Activating...' : saveLabel}
         </button>
       </div>
 
