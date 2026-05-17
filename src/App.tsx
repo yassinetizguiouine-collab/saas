@@ -17,6 +17,7 @@ export default function App() {
   const [page, setPage] = useState<Page>('gallery')
   const [activeFlowId, setActiveFlowId] = useState<string | null>(null)
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null)
+  const [recommendedTemplateId, setRecommendedTemplateId] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -49,10 +50,15 @@ export default function App() {
       }
       const [{ data: ob }, { data: rec }] = await Promise.all([
         supabase.from('onboarding').select('completed').eq('user_id', userId).maybeSingle(),
-        supabase.from('recommended_flows').select('completed').eq('user_id', userId).maybeSingle(),
+        supabase.from('recommended_flows').select('completed, recommended_template_id').eq('user_id', userId).maybeSingle(),
       ])
       const obDone = ob?.completed ?? false
       const recDone = rec?.completed ?? false
+
+      // Store the recommended template id so gallery can highlight it
+      if (rec?.recommended_template_id) {
+        setRecommendedTemplateId(rec.recommended_template_id)
+      }
 
       if (!obDone) { setAppState('onboarding'); return }
       if (!recDone) { setAppState('recommender'); return }
@@ -68,7 +74,6 @@ export default function App() {
     await supabase.auth.signOut()
   }
 
-  // Called by FlowRecommender — creates the flow, marks rec done, then goes to PREVIEW first
   async function handleRecommendationComplete(templateId: string) {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -88,10 +93,10 @@ export default function App() {
           { onConflict: 'user_id' }
         )
 
-        // Store flow + template, show celebration screen first
+        setRecommendedTemplateId(templateId)
         setActiveFlowId(newFlow.id)
         setActiveTemplateId(templateId)
-        setAppState('found') // ← celebration screen before preview
+        setAppState('found')
       }
     } catch (e) {
       console.error('handleRecommendationComplete error:', e)
@@ -125,7 +130,6 @@ export default function App() {
     }
   }
 
-  // Called by FlowPreview "Configure my flow" button → goes to config
   function handlePreviewDeploy() {
     setPage('flow-config')
   }
@@ -159,8 +163,19 @@ export default function App() {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <Sidebar activePage={page} onNavigate={setPage} onSignOut={handleSignOut} />
       <main style={{ flex: 1, overflowY: 'auto' }}>
-        {page === 'gallery' && <TemplatesGallery onUseTemplate={handleUseTemplate} />}
-        {page === 'flow-preview' && <FlowPreview onDeploy={handlePreviewDeploy} templateId={activeTemplateId} />}
+        {page === 'gallery' && (
+          <TemplatesGallery
+            onUseTemplate={handleUseTemplate}
+            recommendedTemplateId={recommendedTemplateId}
+          />
+        )}
+        {page === 'flow-preview' && (
+          <FlowPreview
+            onDeploy={handlePreviewDeploy}
+            templateId={activeTemplateId}
+            isRecommended={activeTemplateId === recommendedTemplateId}
+          />
+        )}
         {page === 'my-flows' && <MyFlows onConfigureFlow={handleConfigureFlow} />}
         {page === 'flow-config' && <FlowConfig flowId={activeFlowId} templateId={activeTemplateId} onBack={() => setPage('my-flows')} />}
       </main>
