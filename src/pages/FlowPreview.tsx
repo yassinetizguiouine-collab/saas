@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 
 interface Props {
+  isRecommended?: boolean
   onDeploy: () => void
   templateId?: string | null
 }
@@ -235,7 +236,7 @@ const TEMPLATE_DATA = {
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
-export default function FlowPreview({ onDeploy, templateId }: Props) {
+export default function FlowPreview({ onDeploy, templateId, isRecommended = false }: Props) {
   const [demoOpen, setDemoOpen] = useState(false)
 
   const key = (templateId && templateId in TEMPLATE_DATA ? templateId : 'booking-with-lm') as keyof typeof TEMPLATE_DATA
@@ -265,17 +266,19 @@ export default function FlowPreview({ onDeploy, templateId }: Props) {
         .demo-thumb:hover { transform: scale(1.02); }
       `}</style>
 
-      {/* Badge */}
-      <div style={{ marginBottom: 6, animation: 'fp-up 0.4s ease both' }}>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: 'rgba(37,211,102,0.08)', border: '0.5px solid rgba(37,211,102,0.3)',
-          borderRadius: 20, padding: '4px 12px', fontSize: 11, color: '#1a8c4e', fontWeight: 500,
-        }}>
-          <i className="ti ti-brand-whatsapp" style={{ fontSize: 12 }} />
-          Your Recommended System
-        </span>
-      </div>
+      {/* Badge — only if this is the recommended flow */}
+      {isRecommended && (
+        <div style={{ marginBottom: 6, animation: 'fp-up 0.4s ease both' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'rgba(37,211,102,0.08)', border: '0.5px solid rgba(37,211,102,0.3)',
+            borderRadius: 20, padding: '4px 12px', fontSize: 11, color: '#1a8c4e', fontWeight: 500,
+          }}>
+            <i className="ti ti-brand-whatsapp" style={{ fontSize: 12 }} />
+            Your Recommended System
+          </span>
+        </div>
+      )}
 
       {/* ── HERO ROW: Title + Demo Thumbnail ─────────────────────────────── */}
       <div style={{
@@ -423,8 +426,9 @@ export default function FlowPreview({ onDeploy, templateId }: Props) {
         </div>
       </div>
 
-      {/* Why this matches */}
-      <div className="glass" style={{ borderRadius: 18, padding: '24px 28px', marginTop: 14, animation: 'fp-up 0.45s 0.2s ease both' }}>
+      {/* Why this matches — only for recommended flow */}
+      {isRecommended && (
+        <div className="glass" style={{ borderRadius: 18, padding: '24px 28px', marginTop: 14, animation: 'fp-up 0.45s 0.2s ease both' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <div style={{ width: 32, height: 32, background: 'rgba(0,0,0,0.05)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <i className="ti ti-sparkles" style={{ fontSize: 15, color: '#444' }} />
@@ -446,6 +450,7 @@ export default function FlowPreview({ onDeploy, templateId }: Props) {
           ))}
         </div>
       </div>
+      )}
 
       {/* CTA */}
       <div style={{ marginTop: 32, textAlign: 'center', animation: 'fp-up 0.45s 0.25s ease both' }}>
