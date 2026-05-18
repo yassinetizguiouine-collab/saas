@@ -22,7 +22,7 @@ export default function Sidebar({ activePage, onNavigate, onSignOut }: SidebarPr
         <img
           src="/ChatGPT Image 17 mai 2026, 21_20_43.png"
           alt="LeadFlow"
-          style={{ height: 200, width: 'auto', display: 'block' }}
+          style={{ height: 150, width: 'auto', display: 'block' }}
         />
       </div>
 
