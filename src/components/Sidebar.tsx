@@ -18,12 +18,15 @@ export default function Sidebar({ activePage, onNavigate, onSignOut }: SidebarPr
         borderRadius: 0,
       }}
     >
-      <div style={{ padding: '4px 10px', marginBottom: 32 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px', marginBottom: 32 }}>
         <img
-          src="/ChatGPT Image 17 mai 2026, 21_20_43.png"
-          alt="LeadFlow"
-          style={{ height: 44, width: 'auto', display: 'block' }}
+          src="/Création sans titre (25).png"
+          alt=""
+          style={{ height: 28, width: 28, objectFit: 'contain' }}
         />
+        <span style={{ fontSize: 20, fontWeight: 800, color: '#111', letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          LeadFlow
+        </span>
       </div>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
