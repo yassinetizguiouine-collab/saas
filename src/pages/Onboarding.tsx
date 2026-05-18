@@ -467,9 +467,13 @@ export default function Onboarding({ onComplete }: Props) {
         position: 'relative', zIndex: 1,
       }}>
         {/* Logo */}
-        <div style={{ fontSize: 20, fontWeight: 800, color: '#111', letterSpacing: '-0.03em', marginBottom: 36 }}>
-          LeadFlow
-        </div>
+        {/* Logo */}
+<div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 36 }}>
+  <img src="/Création sans titre (25).png" alt="" style={{ height: 28, width: 28, objectFit: 'contain' }} />
+  <span style={{ fontSize: 20, fontWeight: 800, color: '#111', letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    LeadFlow
+  </span>
+</div>
 
         {/* Progress — now based on visibleSteps */}
         <div style={{ display: 'flex', gap: 5, marginBottom: 48 }}>
