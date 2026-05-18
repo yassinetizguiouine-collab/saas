@@ -195,7 +195,7 @@ function TemplateCard({
       {/* Character sticker poking out of the top-right — only for recommended */}
       {isRecommended && (
         <img
-          src="/ChatGPT Image 17 mai 2026, 21_36_51.png"
+          src="/ChatGPT Image 17 mai 2026, 22_56_32.png"
           alt="Recommended"
           style={{
             position: 'absolute',
