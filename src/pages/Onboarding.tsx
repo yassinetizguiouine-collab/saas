@@ -591,7 +591,7 @@ export default function Onboarding({ onComplete }: Props) {
         {/* Image background */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'public/Création sans titre (26).png',
+          backgroundImage: 'url("/Création sans titre (26).png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           borderRadius: 28,
