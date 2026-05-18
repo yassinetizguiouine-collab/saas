@@ -20,7 +20,7 @@ export default function Sidebar({ activePage, onNavigate, onSignOut }: SidebarPr
     >
       <div style={{ padding: '4px 10px', marginBottom: 32 }}>
         <img
-          src="/Création sans titre (23).png"
+          src="/Création sans titre (24).png"
           alt="LeadFlow"
           style={{ height: 37, width: 'auto', display: 'block' }}
         />
