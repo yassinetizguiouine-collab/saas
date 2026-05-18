@@ -378,7 +378,7 @@ function Chip({ label, selected, onClick }: { label: string; selected: boolean; 
       onMouseLeave={e => {
         if (!selected) {
           const el = e.currentTarget as HTMLElement
-          el.style.background = 'rgba(255,255,255,0.72)'
+          el.style.background = 'rgba(255,255,255,0.85)'
           el.style.borderColor = 'rgba(0,0,0,0.13)'
           el.style.color = '#444'
         }
