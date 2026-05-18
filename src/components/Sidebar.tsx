@@ -18,7 +18,7 @@ export default function Sidebar({ activePage, onNavigate, onSignOut }: SidebarPr
         borderRadius: 0,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', marginBottom: 32 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '4px 10px', marginBottom: 32 }}>
         <img
           src="/Création sans titre (25).png"
           alt=""
