@@ -20,9 +20,9 @@ export default function Sidebar({ activePage, onNavigate, onSignOut }: SidebarPr
     >
       <div style={{ padding: '4px 10px', marginBottom: 32 }}>
         <img
-          src="/Création sans titre (24).png"
+          src="/ChatGPT Image 17 mai 2026, 21_20_43.png"
           alt="LeadFlow"
-          style={{ height: 45, width: 'auto', display: 'block' }}
+          style={{ height: 44, width: 'auto', display: 'block' }}
         />
       </div>
 
