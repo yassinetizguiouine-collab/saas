@@ -594,7 +594,7 @@ export default function Onboarding({ onComplete }: Props) {
         </div>
       </div>
 
-      {/* ── Right panel — fluid glass ── */}
+      {/* ── Right panel — image background ── */}
       <div style={{
         flex: 1, margin: '20px 20px 20px 0',
         borderRadius: 28, overflow: 'hidden',
@@ -602,60 +602,21 @@ export default function Onboarding({ onComplete }: Props) {
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
       }}>
-        <style>{`
-          @keyframes fluidA { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(60px,-40px) scale(1.15)} 66%{transform:translate(-30px,50px) scale(0.95)} }
-          @keyframes fluidB { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-50px,60px) scale(1.1)} 66%{transform:translate(70px,-30px) scale(1.2)} }
-          @keyframes fluidC { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,70px) scale(0.9)} 66%{transform:translate(-60px,-50px) scale(1.1)} }
-          @keyframes fluidD { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-70px,-60px) scale(1.2)} 66%{transform:translate(50px,40px) scale(0.95)} }
-        `}</style>
+        {/* Image background */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'public/Création sans titre (26).png',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          borderRadius: 28,
+        }} />
 
-        {/* Fluid color blobs background */}
-        <div style={{ position: 'absolute', inset: 0, background: '#f0f4ff', borderRadius: 28 }}>
-          {/* Blue blob */}
-          <div style={{
-            position: 'absolute', width: 420, height: 420, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(96,165,250,0.7) 0%, rgba(59,130,246,0.4) 50%, transparent 70%)',
-            filter: 'blur(50px)', top: '-80px', left: '-60px',
-            animation: 'fluidA 9s ease-in-out infinite',
-          }} />
-          {/* Green blob */}
-          <div style={{
-            position: 'absolute', width: 380, height: 380, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(52,211,153,0.65) 0%, rgba(16,185,129,0.35) 50%, transparent 70%)',
-            filter: 'blur(55px)', bottom: '-60px', right: '-40px',
-            animation: 'fluidB 11s ease-in-out infinite',
-          }} />
-          {/* Purple blob */}
-          <div style={{
-            position: 'absolute', width: 320, height: 320, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(167,139,250,0.6) 0%, rgba(139,92,246,0.3) 50%, transparent 70%)',
-            filter: 'blur(45px)', top: '40%', left: '20%',
-            animation: 'fluidC 8s ease-in-out infinite',
-          }} />
-          {/* Sky blob */}
-          <div style={{
-            position: 'absolute', width: 280, height: 280, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(125,211,252,0.55) 0%, rgba(56,189,248,0.25) 50%, transparent 70%)',
-            filter: 'blur(40px)', bottom: '20%', left: '-20px',
-            animation: 'fluidD 13s ease-in-out infinite',
-          }} />
-          {/* Frosted glass overlay */}
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: 28,
-            backdropFilter: 'blur(0px)',
-            background: 'rgba(255,255,255,0.18)',
-          }} />
-        </div>
-
-        {/* Content sits on top of the glass */}
+        {/* Content sits on top of the image */}
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {/* Liquid logo */}
-          <LiquidLogo />
-
           {/* LeadFlow label */}
           <div style={{
-            fontSize: 12, fontWeight: 700, color: 'rgba(60,60,100,0.4)',
-            letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4,
+            fontSize: 12, fontWeight: 700, color: 'rgba(60,60,100,0.5)',
+            letterSpacing: '0.14em', textTransform: 'uppercase',
           }}>
             LeadFlow
           </div>
