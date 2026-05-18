@@ -82,9 +82,12 @@ export default function AuthPage({ onAuth }: Props) {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#111', letterSpacing: '-0.04em', marginBottom: 6 }}>
-            LeadFlow
-          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 6 }}>
+  <img src="/Création sans titre (25).png" alt="" style={{ height: 32, width: 32, objectFit: 'contain' }} />
+  <span style={{ fontSize: 28, fontWeight: 800, color: '#111', letterSpacing: '-0.04em' }}>
+    LeadFlow
+  </span>
+</div>
           <div style={{ fontSize: 13.5, color: '#999' }}>
             {mode === 'signup' ? 'Create your account' : 'Welcome back'}
           </div>
