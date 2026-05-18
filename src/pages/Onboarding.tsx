@@ -370,7 +370,7 @@ function Chip({ label, selected, onClick }: { label: string; selected: boolean; 
       onMouseEnter={e => {
         if (!selected) {
           const el = e.currentTarget as HTMLElement
-          el.style.background = 'rgba(124,77,204,0.02)'
+          el.style.background = 'rgba(124,77,204,0.12)'
           el.style.borderColor = 'rgba(124,77,204,0.3)'
           el.style.color = '#7c4dcc'
         }
