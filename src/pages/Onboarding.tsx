@@ -142,20 +142,6 @@ const STEPS: Step[] = [
   },
 ]
 
-const QUOTES = [
-  'The agent adapts its tone to who you are and how you work.',
-  'Your AI agent will speak on behalf of your brand.',
-  'Industry context makes every message feel native to your market.',
-  'The more we know your client, the sharper the qualification.',
-  'We build urgency and desire around the outcome you deliver.',
-  'Delivery format shapes how the agent presents your offer.',
-  'Pricing context changes tone, urgency, and objection handling.',
-  'Your offer name makes every conversation feel personal and real.',
-  'Traffic source shapes how the agent opens the first message.',
-  'Knowing your close method lets us build the perfect handoff.',
-  'A lead magnet turns browsers into buyers before the call.',
-]
-
 // ─── Liquid Blob Animation ─────────────────────────────────────────────
 function LiquidLogo() {
   return (
@@ -605,35 +591,11 @@ export default function Onboarding({ onComplete }: Props) {
         {/* Image background */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url("/Création sans titre (26).png")',
+          backgroundImage: 'public/Création sans titre (26).png',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           borderRadius: 28,
         }} />
-
-        {/* Content sits on top of the image */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {/* LeadFlow label */}
-          <div style={{
-            fontSize: 12, fontWeight: 700, color: 'rgba(60,60,100,0.5)',
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-          }}>
-            LeadFlow
-          </div>
-
-          {/* Quote — changes per step */}
-          <div key={step} style={{
-            marginTop: 36, textAlign: 'center', padding: '0 44px',
-            animation: 'lf-up 0.4s ease both',
-          }}>
-            <div style={{
-              fontSize: 13, color: 'rgba(60,60,100,0.55)',
-              lineHeight: 1.7, fontStyle: 'italic',
-            }}>
-              {QUOTES[Math.min(step, QUOTES.length - 1)]}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
