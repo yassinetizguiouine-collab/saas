@@ -5,6 +5,7 @@ interface Props {
   flowId?: string | null
   templateId?: string | null
   onBack: () => void
+  onProvisioningStart: (userId: string, templateId: string) => void
 }
 
 const TONES = [
@@ -840,7 +841,7 @@ const WEBHOOKS: Record<string, string> = {
   'close-in-chat': '',
 }
 
-export default function FlowConfig({ onBack, flowId, templateId }: Props) {
+export default function FlowConfig({ onBack, flowId, templateId, onProvisioningStart }: Props) {
   const [selectedTone, setSelectedTone] = useState('friendly')
   const [receiveModal, setReceiveModal] = useState(false)
   const [sendModal, setSendModal] = useState(false)
@@ -850,7 +851,6 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
   const [sendForm, setSendForm] = useState({ accessToken: '', businessId: '' })
   const [agentName, setAgentName] = useState('')
   const [agentPersonality, setAgentPersonality] = useState('')
-  const [showSuccess, setShowSuccess] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [waitTime, setWaitTime] = useState('10min')
   const [s1Data, setS1Data] = useState<Record<string, any>>({})
@@ -925,7 +925,10 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
         })
       }
 
-      setShowSuccess(true)
+      // Start provisioning screen
+      if (user?.id) {
+        onProvisioningStart(user.id, key)
+      }
     } catch (err) {
       console.error('Save failed:', err)
     } finally {
@@ -1051,18 +1054,7 @@ export default function FlowConfig({ onBack, flowId, templateId }: Props) {
         </Modal>
       )}
 
-      {showSuccess && (
-        <Modal onClose={() => setShowSuccess(false)}>
-          <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <div style={{ width: 56, height: 56, background: 'rgba(37,211,102,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <i className="ti ti-check" style={{ fontSize: 28, color: '#25D366' }} aria-hidden="true" />
-            </div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111', marginBottom: 8 }}>Request sent!</h2>
-            <p style={{ fontSize: 13, color: '#888', lineHeight: 1.6, marginBottom: 24 }}>Your flow configuration has been saved. Your WhatsApp agent will be activated shortly.</p>
-            <button onClick={() => setShowSuccess(false)} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
-          </div>
-        </Modal>
-      )}
+
     </div>
   )
 }
