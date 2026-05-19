@@ -836,7 +836,7 @@ const TEMPLATE_SAVE_LABELS: Record<string, string> = {
   'close-in-chat': 'Save & activate closing flow',
 }
 const WEBHOOKS: Record<string, string> = {
-  'booking-with-lm': 'https://rosegoldprojectai3.app.n8n.cloud/webhook/dcdb98bc-daf5-4cac-8c87-21d5289d51f5',
+  'booking-with-lm': 'https://leadflowai2026.app.n8n.cloud/webhook/059191b2-f3fd-45ae-95bf-ba6a594b2df15',
   'booking-without-lm': '',
   'close-in-chat': '',
 }
