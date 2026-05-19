@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import Sidebar, { Page } from './components/Sidebar'
+import NotificationToast from './components/NotificationToast'
+import { useNotifications } from './hooks/useNotifications'
 import AuthPage from './pages/AuthPage'
 import Onboarding from './pages/Onboarding'
 import FlowRecommender from './pages/FlowRecommender'
@@ -9,18 +11,16 @@ import MyFlows from './pages/MyFlows'
 import FlowConfig from './pages/FlowConfig'
 import FlowPreview from './pages/FlowPreview'
 import FoundFlow from './pages/FoundFlow'
-import ProvisioningScreen from './pages/ProvisioningScreen'
 
-type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'found' | 'app' | 'provisioning'
+type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'found' | 'app'
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
   const [page, setPage] = useState<Page>('gallery')
+  const { toasts, dismiss } = useNotifications()
   const [activeFlowId, setActiveFlowId] = useState<string | null>(null)
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null)
   const [recommendedTemplateId, setRecommendedTemplateId] = useState<string | null>(null)
-  const [provisioningUserId, setProvisioningUserId] = useState<string | null>(null)
-  const [provisioningTemplateId, setProvisioningTemplateId] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -58,6 +58,7 @@ export default function App() {
       const obDone = ob?.completed ?? false
       const recDone = rec?.completed ?? false
 
+      // Store the recommended template id so gallery can highlight it
       if (rec?.recommended_template_id) {
         setRecommendedTemplateId(rec.recommended_template_id)
       }
@@ -142,17 +143,6 @@ export default function App() {
     setPage('flow-config')
   }
 
-  function handleProvisioningStart(userId: string, templateId: string) {
-    setProvisioningUserId(userId)
-    setProvisioningTemplateId(templateId)
-    setAppState('provisioning')
-  }
-
-  function handleProvisioningComplete() {
-    setAppState('app')
-    setPage('my-flows')
-  }
-
   if (appState === 'loading') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f9f9' }}>
@@ -169,14 +159,6 @@ export default function App() {
     <FoundFlow
       templateId={activeTemplateId || 'booking-with-lm'}
       onContinue={() => { setAppState('app'); setPage('flow-preview') }}
-    />
-  )
-
-  if (appState === 'provisioning') return (
-    <ProvisioningScreen
-      userId={provisioningUserId!}
-      templateId={provisioningTemplateId!}
-      onComplete={handleProvisioningComplete}
     />
   )
 
@@ -198,15 +180,9 @@ export default function App() {
           />
         )}
         {page === 'my-flows' && <MyFlows onConfigureFlow={handleConfigureFlow} />}
-        {page === 'flow-config' && (
-          <FlowConfig
-            flowId={activeFlowId}
-            templateId={activeTemplateId}
-            onBack={() => setPage('my-flows')}
-            onProvisioningStart={handleProvisioningStart}
-          />
-        )}
+        {page === 'flow-config' && <FlowConfig flowId={activeFlowId} templateId={activeTemplateId} onBack={() => setPage('my-flows')} />}
       </main>
+      <NotificationToast toasts={toasts} onDismiss={dismiss} />
     </div>
   )
 }
