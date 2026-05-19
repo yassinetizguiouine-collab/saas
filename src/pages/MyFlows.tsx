@@ -11,6 +11,7 @@ interface Flow {
 
 interface Props {
   onConfigureFlow: (flowId: string, templateId: string) => void
+  onViewAgent: (flowId: string, templateId: string) => void
 }
 
 const TEMPLATE_ICONS: Record<string, string> = {
@@ -30,7 +31,7 @@ const STATUS_STYLES = {
   paused: { bg: 'rgba(245,158,11,0.09)', color: '#b45309', label: '⏸ Paused' },
 }
 
-export default function MyFlows({ onConfigureFlow }: Props) {
+export default function MyFlows({ onConfigureFlow, onViewAgent }: Props) {
   const [flows, setFlows] = useState<Flow[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -125,6 +126,20 @@ export default function MyFlows({ onConfigureFlow }: Props) {
 
                 {/* Actions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <button
+                    onClick={() => onViewAgent(flow.id, flow.template_id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '8px 16px', borderRadius: 9, fontSize: 12.5, fontWeight: 600,
+                      background: 'rgba(37,211,102,0.09)', color: '#1a8c4e', border: 'none', cursor: 'pointer',
+                      fontFamily: 'inherit', transition: 'opacity 0.15s',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                  >
+                    <i className="ti ti-eye" style={{ fontSize: 13 }} />
+                    View
+                  </button>
                   <button
                     onClick={() => onConfigureFlow(flow.id, flow.template_id)}
                     style={{
