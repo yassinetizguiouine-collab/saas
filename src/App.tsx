@@ -10,10 +10,12 @@ import FlowConfig from './pages/FlowConfig'
 import FlowPreview from './pages/FlowPreview'
 import FoundFlow from './pages/FoundFlow'
 import ProvisioningScreen from './pages/ProvisioningScreen'
+import ViewAgent from './pages/ViewAgent'
+import CongratsScreen from './pages/CongratsScreen'
 import NotificationToast from './components/NotificationToast'
 import { useNotifications } from './hooks/useNotifications'
 
-type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'found' | 'app' | 'provisioning'
+type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'found' | 'app' | 'provisioning' | 'congrats'
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
@@ -145,6 +147,12 @@ export default function App() {
     setPage('flow-config')
   }
 
+  function handleViewAgent(flowId: string, templateId: string) {
+    setActiveFlowId(flowId)
+    setActiveTemplateId(templateId)
+    setPage('view-agent')
+  }
+
   function handleProvisioningStart(userId: string, templateId: string) {
     setProvisioningUserId(userId)
     setProvisioningTemplateId(templateId)
@@ -152,6 +160,10 @@ export default function App() {
   }
 
   function handleProvisioningComplete() {
+    setAppState('congrats')
+  }
+
+  function handleCongratsComplete() {
     setAppState('app')
     setPage('my-flows')
   }
@@ -183,6 +195,14 @@ export default function App() {
     />
   )
 
+  if (appState === 'congrats') return (
+    <CongratsScreen
+      userId={provisioningUserId!}
+      templateId={provisioningTemplateId!}
+      onContinue={handleCongratsComplete}
+    />
+  )
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <Sidebar activePage={page} onNavigate={setPage} onSignOut={handleSignOut} />
@@ -200,7 +220,14 @@ export default function App() {
             isRecommended={activeTemplateId === recommendedTemplateId}
           />
         )}
-        {page === 'my-flows' && <MyFlows onConfigureFlow={handleConfigureFlow} />}
+        {page === 'my-flows' && <MyFlows onConfigureFlow={handleConfigureFlow} onViewAgent={handleViewAgent} />}
+        {page === 'view-agent' && activeFlowId && activeTemplateId && (
+          <ViewAgent
+            flowId={activeFlowId}
+            templateId={activeTemplateId}
+            onBack={() => setPage('my-flows')}
+          />
+        )}
         {page === 'flow-config' && (
           <FlowConfig
             flowId={activeFlowId}
