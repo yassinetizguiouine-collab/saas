@@ -22,7 +22,7 @@ function Toast({ toast, onDismiss }: { toast: ToastNotification; onDismiss: () =
     return () => clearTimeout(t)
   }, [])
 
-  const cfg = typeConfig[toast.type ?? 'info']
+  const cfg = typeConfig[toast.type as keyof typeof typeConfig] ?? typeConfig['info']
 
   return (
     <div
