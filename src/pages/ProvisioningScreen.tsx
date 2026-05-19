@@ -163,7 +163,7 @@ export default function ProvisioningScreen({ userId, templateId, onComplete }: P
         <img
           src="/Création sans titre (25).png"
           alt=""
-          style={{ height: 28, width: 28, objectFit: 'contain' }}
+          style={{ height: 28, width: 28, objectFit: 'contain', mixBlendMode: 'multiply' }}
         />
         <span
           style={{
