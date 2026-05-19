@@ -161,7 +161,7 @@ export default function ProvisioningScreen({ userId, templateId, onComplete }: P
         }}
       >
         <img
-          src="/ChatGPT Image 18 mai 2026, 09_10_46.png"
+          src="/Création sans titre (25).png"
           alt=""
           style={{ height: 28, width: 28, objectFit: 'contain' }}
         />
