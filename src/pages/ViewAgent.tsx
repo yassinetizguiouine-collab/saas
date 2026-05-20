@@ -140,8 +140,7 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: userId, message: text }),
       })
-      const data = await res.json()
-      const reply = data?.reply || data?.message || data?.text || 'No response'
+      const reply = (await res.text()).trim() || 'No response'
       setMessages(prev => [...prev, { role: 'agent', text: reply, ts: Date.now() }])
     } catch {
       setMessages(prev => [...prev, { role: 'agent', text: '⚠️ Connection error. Check n8n.', ts: Date.now() }])
