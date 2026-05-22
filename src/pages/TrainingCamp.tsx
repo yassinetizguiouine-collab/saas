@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
+interface Persona {
+  name: string
+  age: number
+  source: string
+  personality: string
+  criteria: string
+  difficulty: 'Easy' | 'Medium' | 'Hard'
+  briefing: string
+}
+
 interface Props {
   userId: string
   templateId: string
@@ -366,6 +376,138 @@ function CriteriaScreen({
   )
 }
 
+// ─── PERSONAS SCREEN ─────────────────────────────────────────────────────────
+
+function PersonasScreen({
+  personas, agentName, onBack, onSelectPersona,
+}: {
+  personas: Persona[]
+  agentName: string
+  onBack: () => void
+  onSelectPersona: (persona: Persona) => void
+}) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => { setTimeout(() => setVisible(true), 80) }, [])
+
+  const difficultyStyle: Record<string, { bg: string; color: string }> = {
+    Easy: { bg: 'rgba(37,211,102,0.09)', color: '#1a8c4e' },
+    Medium: { bg: 'rgba(255,170,0,0.09)', color: '#b37700' },
+    Hard: { bg: 'rgba(220,50,50,0.09)', color: '#c0392b' },
+  }
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      padding: '40px 24px', maxWidth: 680, margin: '0 auto',
+      opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(16px)',
+      transition: 'opacity 0.5s ease, transform 0.5s ease',
+    }}>
+      {/* Back */}
+      <button
+        onClick={onBack}
+        style={{
+          alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6,
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: 13, color: '#aaa', fontFamily: 'inherit', fontWeight: 500,
+          marginBottom: 28, padding: 0, transition: 'color 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.color = '#111'}
+        onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
+      >
+        <i className="ti ti-arrow-left" style={{ fontSize: 14 }} />
+        Back
+      </button>
+
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: 32, width: '100%' }}>
+        <CampBadge />
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: '#111', letterSpacing: '-0.04em', marginBottom: 8 }}>
+          Choose your lead
+        </h2>
+        <p style={{ fontSize: 13.5, color: '#999', lineHeight: 1.6 }}>
+          Pick one persona to test {agentName} against. Each one will challenge a different scenario.
+        </p>
+      </div>
+
+      {/* Persona grid */}
+      <div style={{
+        width: '100%', display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)', gap: 12,
+      }}>
+        {personas.map((p, i) => {
+          const diff = difficultyStyle[p.difficulty] || difficultyStyle.Medium
+          return (
+            <div
+              key={i}
+              onClick={() => onSelectPersona(p)}
+              style={{
+                borderRadius: 16, padding: '18px 20px',
+                background: 'rgba(255,255,255,0.6)',
+                border: '0.5px solid rgba(0,0,0,0.07)',
+                cursor: 'pointer',
+                transition: 'transform 0.15s, box-shadow 0.15s',
+                animation: `fadeUp 0.3s ease ${i * 0.04}s both`,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+            >
+              {/* Top row */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {/* Avatar */}
+                  <div style={{
+                    width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                    background: 'rgba(0,0,0,0.06)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <i className="ti ti-user" style={{ fontSize: 17, color: '#888' }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{p.name}</p>
+                    <p style={{ fontSize: 11.5, color: '#aaa' }}>{p.age} · {p.source}</p>
+                  </div>
+                </div>
+                {/* Difficulty */}
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 100,
+                  background: diff.bg, color: diff.color,
+                  letterSpacing: '0.04em', textTransform: 'uppercase' as const, flexShrink: 0,
+                }}>
+                  {p.difficulty}
+                </span>
+              </div>
+
+              {/* Criteria tag */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                background: 'rgba(0,0,0,0.04)', borderRadius: 100,
+                padding: '4px 10px', marginBottom: 10,
+              }}>
+                <i className="ti ti-target" style={{ fontSize: 10, color: '#888' }} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#777' }}>{p.criteria}</span>
+              </div>
+
+              {/* Personality */}
+              <p style={{ fontSize: 12, color: '#888', lineHeight: 1.5, marginBottom: 12 }}>
+                <span style={{ fontWeight: 600, color: '#555' }}>{p.personality}</span> — {p.briefing.slice(0, 70)}...
+              </p>
+
+              {/* CTA */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 12, fontWeight: 700, color: '#111',
+              }}>
+                <i className="ti ti-player-play" style={{ fontSize: 12 }} />
+                Play this lead
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
 export default function TrainingCamp({ userId, templateId, agentName }: Props) {
@@ -427,6 +569,17 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
       `}</style>
       {screen === 'intro' && <IntroScreen onUnderstood={handleUnderstood} />}
       {screen === 'choose' && <ChooseScreen agentName={agentName} onFunTesting={() => setScreen('criteria')} />}
+      {screen === 'personas' && (
+        <PersonasScreen
+          personas={personas}
+          agentName={agentName}
+          onBack={() => setScreen('criteria')}
+          onSelectPersona={(persona) => {
+            console.log('Selected persona:', persona)
+            // Next: briefing screen
+          }}
+        />
+      )}
       {screen === 'criteria' && (
         <CriteriaScreen
           templateId={templateId}
