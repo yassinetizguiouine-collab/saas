@@ -85,7 +85,9 @@ export default function App() {
       if (!obDone) { setAppState('onboarding'); return }
       if (!recDone) { setAppState('recommender'); return }
       setAppState('app')
-      setPage('gallery')
+      // Restore last page from localStorage, fall back to gallery
+      const savedPage = localStorage.getItem('lf_page') as Page | null
+      setPage(savedPage || 'gallery')
     } catch (e) {
       console.error('checkUserProgress error:', e)
       setAppState('auth')
