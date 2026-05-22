@@ -7,20 +7,20 @@ interface Props {
   agentName: string
 }
 
-type Screen = 'intro' | 'choose' | 'criteria'
+type Screen = 'intro' | 'choose' | 'criteria' | 'personas'
 
-const CRITERIA_BY_TEMPLATE: Record<string, { emoji: string; label: string; desc: string }[]> = {
+const CRITERIA_BY_TEMPLATE: Record<string, { icon: string; label: string; desc: string }[]> = {
   'booking-with-lm': [
-    { emoji: '🧊', label: 'Break the ice', desc: 'Agent opens naturally and confirms lead source and goal' },
-    { emoji: '🎯', label: 'Qualify the lead', desc: 'Agent asks the right diagnostic questions' },
-    { emoji: '🎁', label: 'Deliver the lead magnet', desc: 'Agent sends the lead magnet at the right moment' },
-    { emoji: '📖', label: 'After lead magnet thanks', desc: 'Agent handles "thanks" without losing momentum' },
-    { emoji: '🔀', label: 'Off-topic lead', desc: 'Lead goes off-script, agent brings them back' },
-    { emoji: '😤', label: 'Angry or rude lead', desc: 'Lead is hostile, agent stays calm and professional' },
-    { emoji: '🐢', label: 'Disobedient lead', desc: 'Lead ignores instructions, agent handles it' },
-    { emoji: '🤔', label: '"I\'ll think about it"', desc: 'Agent handles hesitation after the lead magnet' },
-    { emoji: '💰', label: 'Price objection', desc: 'Lead asks price too early, agent deflects and refocuses' },
-    { emoji: '📅', label: 'Book the call', desc: 'Agent transitions from lead magnet to booking the call' },
+    { icon: 'ti-wave-sine', label: 'Break the ice', desc: 'Agent opens naturally and confirms lead source and goal' },
+    { icon: 'ti-list-check', label: 'Qualify the lead', desc: 'Agent asks the right diagnostic questions' },
+    { icon: 'ti-gift', label: 'Deliver the lead magnet', desc: 'Agent sends the lead magnet at the right moment' },
+    { icon: 'ti-message-check', label: 'After lead magnet thanks', desc: 'Agent handles "thanks" without losing momentum' },
+    { icon: 'ti-arrows-shuffle', label: 'Off-topic lead', desc: 'Lead goes off-script, agent brings them back' },
+    { icon: 'ti-mood-angry', label: 'Angry or rude lead', desc: 'Lead is hostile, agent stays calm and professional' },
+    { icon: 'ti-user-x', label: 'Disobedient lead', desc: 'Lead ignores instructions, agent handles it' },
+    { icon: 'ti-clock-pause', label: '"I\'ll think about it"', desc: 'Agent handles hesitation after the lead magnet' },
+    { icon: 'ti-coin', label: 'Price objection', desc: 'Lead asks price too early, agent deflects and refocuses' },
+    { icon: 'ti-calendar-check', label: 'Book the call', desc: 'Agent transitions from lead magnet to booking the call' },
   ],
 }
 
@@ -110,7 +110,7 @@ function IntroScreen({ onUnderstood }: { onUnderstood: () => void }) {
         onMouseEnter={e => { e.currentTarget.style.opacity = '0.82'; e.currentTarget.style.transform = 'scale(1.02)' }}
         onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)' }}
       >
-        Let's go 🔥
+        Let's go
         <i className="ti ti-arrow-right" style={{ fontSize: 15 }} />
       </button>
     </div>
@@ -125,14 +125,14 @@ function ChooseScreen({ agentName, onFunTesting }: { agentName: string; onFunTes
 
   const modes = [
     {
-      id: 'fun', emoji: '🎭', name: 'Fun Testing', tag: 'Recommended',
+      id: 'fun', icon: 'ti-mood-happy', name: 'Fun Testing', tag: 'Recommended',
       tagColor: '#1a8c4e', tagBg: 'rgba(37,211,102,0.09)',
       description: "Pick your criteria, get 10 real lead personas, and chat as one of them. You'll feel exactly what your leads feel.",
       highlights: ['10 custom lead personas', 'You play the lead', 'AI grades the result'],
       border: 'rgba(37,211,102,0.2)', comingSoon: false,
     },
     {
-      id: 'auto', emoji: '⚡', name: 'Automatic Testing', tag: 'Coming soon',
+      id: 'auto', icon: 'ti-bolt', name: 'Automatic Testing', tag: 'Coming soon',
       tagColor: '#888', tagBg: 'rgba(0,0,0,0.05)',
       description: 'Select criteria and let us run everything automatically. Get a full report card with scores and feedback in minutes.',
       highlights: ['Full automated run', 'Report card with scores', 'Fix weak points CTA'],
@@ -176,7 +176,7 @@ function ChooseScreen({ agentName, onFunTesting }: { agentName: string; onFunTes
                 width: 48, height: 48, borderRadius: 14, flexShrink: 0,
                 background: mode.comingSoon ? 'rgba(0,0,0,0.04)' : 'rgba(37,211,102,0.08)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-              }}>{mode.emoji}</div>
+              }}><i className={`ti ${mode.icon}`} style={{ fontSize: 22, color: mode.comingSoon ? '#aaa' : '#25D366' }} /></div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <h3 style={{ fontSize: 16, fontWeight: 800, color: '#111', letterSpacing: '-0.02em' }}>{mode.name}</h3>
@@ -325,7 +325,7 @@ function CriteriaScreen({
                   <i className="ti ti-check" style={{ fontSize: 10, color: '#fff' }} />
                 </div>
               )}
-              <div style={{ fontSize: 20, marginBottom: 8 }}>{c.emoji}</div>
+              <div style={{ width: 32, height: 32, borderRadius: 9, marginBottom: 10, background: 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className={`ti ${c.icon}`} style={{ fontSize: 16, color: '#555' }} /></div>
               <p style={{ fontSize: 13, fontWeight: 700, color: '#111', marginBottom: 3 }}>{c.label}</p>
               <p style={{ fontSize: 11.5, color: '#999', lineHeight: 1.5 }}>{c.desc}</p>
             </div>
@@ -357,7 +357,7 @@ function CriteriaScreen({
           </>
         ) : (
           <>
-            Generate {selected.length > 0 ? selected.length : ''} lead persona{selected.length !== 1 ? 's' : ''} 🎭
+            Generate {selected.length > 0 ? selected.length : ''} lead persona{selected.length !== 1 ? 's' : ''}
             <i className="ti ti-arrow-right" style={{ fontSize: 15 }} />
           </>
         )}
@@ -370,6 +370,9 @@ function CriteriaScreen({
 
 export default function TrainingCamp({ userId, templateId, agentName }: Props) {
   const [screen, setScreen] = useState<Screen | null>(null)
+  const [selectedCriteria, setSelectedCriteria] = useState<string[]>([])
+  const [personas, setPersonas] = useState<any[]>([])
+  const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
     async function checkIntro() {
@@ -391,9 +394,23 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
     setScreen('choose')
   }
 
-  function handleGenerate(criteria: string[]) {
-    // Next step: persona display — to be built
-    console.log('Generating personas for:', criteria)
+  async function handleGenerate(criteria: string[]) {
+    setGenerating(true)
+    setSelectedCriteria(criteria)
+    try {
+      const res = await fetch(PERSONAS_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, template_id: templateId, criteria }),
+      })
+      const data = await res.json()
+      setPersonas(data.personas || [])
+      setScreen('personas')
+    } catch {
+      alert('Failed to generate personas. Check n8n.')
+    } finally {
+      setGenerating(false)
+    }
   }
 
   if (!screen) return (
