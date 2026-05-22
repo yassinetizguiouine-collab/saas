@@ -19,13 +19,28 @@ type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'found' | 'a
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
-  const [page, setPage] = useState<Page>('gallery')
-  const [activeFlowId, setActiveFlowId] = useState<string | null>(null)
-  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null)
+  const [page, setPage] = useState<Page>(() => {
+    return (localStorage.getItem('lf_page') as Page) || 'gallery'
+  })
+  const [activeFlowId, setActiveFlowId] = useState<string | null>(() => {
+    return localStorage.getItem('lf_flow_id')
+  })
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(() => {
+    return localStorage.getItem('lf_template_id')
+  })
   const [recommendedTemplateId, setRecommendedTemplateId] = useState<string | null>(null)
   const [provisioningUserId, setProvisioningUserId] = useState<string | null>(null)
   const [provisioningTemplateId, setProvisioningTemplateId] = useState<string | null>(null)
   const { toasts, dismiss } = useNotifications()
+
+  // Persist navigation state
+  useEffect(() => {
+    if (appState === 'app') {
+      localStorage.setItem('lf_page', page)
+      if (activeFlowId) localStorage.setItem('lf_flow_id', activeFlowId)
+      if (activeTemplateId) localStorage.setItem('lf_template_id', activeTemplateId)
+    }
+  }, [page, activeFlowId, activeTemplateId, appState])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -78,6 +93,9 @@ export default function App() {
   }
 
   async function handleSignOut() {
+    localStorage.removeItem('lf_page')
+    localStorage.removeItem('lf_flow_id')
+    localStorage.removeItem('lf_template_id')
     await supabase.auth.signOut()
   }
 
