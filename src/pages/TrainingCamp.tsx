@@ -664,15 +664,30 @@ interface Message {
   text: string
 }
 
-function ChatScreen({ persona, userId, templateId, agentName, onEnd }: {
-  persona: Persona; userId: string; templateId: string; agentName: string; onEnd: () => void
+function ChatScreen({ persona, userId, templateId, agentName, sessionId, onEnd }: {
+  persona: Persona; userId: string; templateId: string; agentName: string; sessionId: string; onEnd: () => void
 }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [sessionId] = useState(() => `tc_${userId}_${Date.now()}`)
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  // ─── LOAD CHAT HISTORY FROM SUPABASE ──────────────────────────────────
+  useEffect(() => {
+    if (!sessionId) return
+    async function loadHistory() {
+      const { data } = await supabase
+        .from('training_camp_messages')
+        .select('role, message')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: true })
+      if (data && data.length > 0) {
+        setMessages(data.map(m => ({ role: m.role as 'user' | 'agent', text: m.message })))
+      }
+    }
+    loadHistory()
+  }, [sessionId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -685,6 +700,12 @@ function ChatScreen({ persona, userId, templateId, agentName, onEnd }: {
     const userMsg: Message = { role: 'user', text }
     setMessages(prev => [...prev, userMsg])
     setLoading(true)
+
+    // Persist user message
+    await supabase.from('training_camp_messages').insert({
+      user_id: userId, template_id: templateId,
+      session_id: sessionId, role: 'user', message: text,
+    })
 
     try {
       const res = await fetch(FUN_CHAT_WEBHOOK, {
@@ -702,6 +723,12 @@ function ChatScreen({ persona, userId, templateId, agentName, onEnd }: {
       })
       const data = await res.json()
       const agentText = data.reply || data.message || data.text || ''
+
+      // Persist agent reply
+      await supabase.from('training_camp_messages').insert({
+        user_id: userId, template_id: templateId,
+        session_id: sessionId, role: 'agent', message: agentText,
+      })
 
       if (data.is_conversation_complete === true || data.is_conversation_complete === 'true') {
         setMessages(prev => [...prev, { role: 'agent', text: agentText }])
@@ -956,24 +983,55 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
   const [personas, setPersonas] = useState<any[]>([])
   const [generating, setGenerating] = useState(false)
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null)
+  const [sessionId, setSessionId] = useState<string>('')
 
+  // ─── LOAD ALL STATE FROM SUPABASE ON MOUNT ──────────────────────────────
   useEffect(() => {
-    async function checkIntro() {
+    async function loadState() {
       const { data } = await supabase
         .from('training_camp_state')
-        .select('intro_seen')
+        .select('intro_seen, current_screen, personas, selected_criteria, selected_persona')
         .eq('user_id', userId)
         .eq('template_id', templateId)
         .maybeSingle()
-      setScreen(data?.intro_seen ? 'choose' : 'intro')
+
+      if (!data) { setScreen('intro'); return }
+
+      if (data.personas) setPersonas(data.personas)
+      if (data.selected_criteria) setSelectedCriteria(data.selected_criteria)
+      if (data.selected_persona) setSelectedPersona(data.selected_persona)
+
+      const savedScreen = (data.current_screen as Screen) || (data.intro_seen ? 'choose' : 'intro')
+      setScreen(savedScreen)
+
+      // If returning to chat, restore session id from latest session
+      if (savedScreen === 'chat' && data.selected_persona) {
+        const { data: msgs } = await supabase
+          .from('training_camp_messages')
+          .select('session_id')
+          .eq('user_id', userId)
+          .eq('template_id', templateId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+        if (msgs?.[0]?.session_id) setSessionId(msgs[0].session_id)
+        else setSessionId(`tc_${userId}_${Date.now()}`)
+      }
     }
-    checkIntro()
+    loadState()
   }, [userId, templateId])
+
+  // ─── PERSIST SCREEN CHANGES ─────────────────────────────────────────────
+  async function persistScreen(newScreen: Screen) {
+    setScreen(newScreen)
+    await supabase
+      .from('training_camp_state')
+      .upsert({ user_id: userId, template_id: templateId, current_screen: newScreen, intro_seen: true }, { onConflict: 'user_id,template_id' })
+  }
 
   async function handleUnderstood() {
     await supabase
       .from('training_camp_state')
-      .upsert({ user_id: userId, template_id: templateId, intro_seen: true }, { onConflict: 'user_id,template_id' })
+      .upsert({ user_id: userId, template_id: templateId, intro_seen: true, current_screen: 'choose' }, { onConflict: 'user_id,template_id' })
     setScreen('choose')
   }
 
@@ -987,13 +1045,53 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
         body: JSON.stringify({ user_id: userId, template_id: templateId, criteria }),
       })
       const data = await res.json()
-      setPersonas(data.personas || [])
+      const generated = data.personas || []
+      setPersonas(generated)
+      // Persist personas + criteria + new screen
+      await supabase
+        .from('training_camp_state')
+        .upsert({
+          user_id: userId, template_id: templateId,
+          intro_seen: true, current_screen: 'personas',
+          personas: generated, selected_criteria: criteria,
+        }, { onConflict: 'user_id,template_id' })
       setScreen('personas')
     } catch {
       alert('Failed to generate personas. Check n8n.')
     } finally {
       setGenerating(false)
     }
+  }
+
+  async function handleSelectPersona(persona: Persona) {
+    const newSessionId = `tc_${userId}_${Date.now()}`
+    setSelectedPersona(persona)
+    setSessionId(newSessionId)
+    await supabase
+      .from('training_camp_state')
+      .upsert({
+        user_id: userId, template_id: templateId,
+        intro_seen: true, current_screen: 'briefing',
+        selected_persona: persona,
+      }, { onConflict: 'user_id,template_id' })
+    setScreen('briefing')
+  }
+
+  async function handleStartChat() {
+    await persistScreen('chat')
+  }
+
+  async function handleEndSession() {
+    // Clear chat state, go back to choose
+    await supabase
+      .from('training_camp_state')
+      .upsert({
+        user_id: userId, template_id: templateId,
+        intro_seen: true, current_screen: 'choose',
+        selected_persona: null,
+      }, { onConflict: 'user_id,template_id' })
+    setSelectedPersona(null)
+    setScreen('choose')
   }
 
   if (!screen) return (
@@ -1009,24 +1107,21 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
         @keyframes spin { to { transform: rotate(360deg) } }
       `}</style>
       {screen === 'intro' && <IntroScreen onUnderstood={handleUnderstood} />}
-      {screen === 'choose' && <ChooseScreen agentName={agentName} onFunTesting={() => setScreen('criteria')} />}
+      {screen === 'choose' && <ChooseScreen agentName={agentName} onFunTesting={() => persistScreen('criteria')} />}
       {screen === 'personas' && (
         <PersonasScreen
           personas={personas}
           agentName={agentName}
-          onBack={() => setScreen('criteria')}
-          onSelectPersona={(persona) => {
-            setSelectedPersona(persona)
-            setScreen('briefing')
-          }}
+          onBack={() => persistScreen('criteria')}
+          onSelectPersona={handleSelectPersona}
         />
       )}
       {screen === 'briefing' && selectedPersona && (
         <BriefingScreen
           persona={selectedPersona}
           agentName={agentName}
-          onBack={() => setScreen('personas')}
-          onStart={() => setScreen('chat')}
+          onBack={() => persistScreen('personas')}
+          onStart={handleStartChat}
         />
       )}
       {screen === 'chat' && selectedPersona && (
@@ -1035,7 +1130,8 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
           userId={userId}
           templateId={templateId}
           agentName={agentName}
-          onEnd={() => setScreen('choose')}
+          sessionId={sessionId}
+          onEnd={handleEndSession}
         />
       )}
       {screen === 'criteria' && (
@@ -1043,7 +1139,7 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
           templateId={templateId}
           userId={userId}
           agentName={agentName}
-          onBack={() => setScreen('choose')}
+          onBack={() => persistScreen('choose')}
           onGenerate={handleGenerate}
         />
       )}
