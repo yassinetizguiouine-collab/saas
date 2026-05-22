@@ -700,13 +700,15 @@ function ChatScreen({ persona, userId, templateId, agentName, onEnd }: {
           persona_criteria: persona.criteria,
         }),
       })
-      const reply = await res.text()
-      // Try parsing JSON first (in case n8n returns JSON), else use raw text
-      let agentText = reply
-      try {
-        const parsed = JSON.parse(reply)
-        agentText = parsed.reply || parsed.message || parsed.text || reply
-      } catch { /* plain text is fine */ }
+      const data = await res.json()
+      const agentText = data.reply || data.message || data.text || ''
+
+      if (data.is_conversation_complete === true || data.is_conversation_complete === 'true') {
+        setMessages(prev => [...prev, { role: 'agent', text: agentText }])
+        setLoading(false)
+        setTimeout(() => onEnd(), 1500)
+        return
+      }
 
       setMessages(prev => [...prev, { role: 'agent', text: agentText }])
     } catch {
