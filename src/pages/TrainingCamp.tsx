@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 interface Persona {
@@ -17,7 +17,7 @@ interface Props {
   agentName: string
 }
 
-type Screen = 'intro' | 'choose' | 'criteria' | 'personas'
+type Screen = 'intro' | 'choose' | 'criteria' | 'personas' | 'briefing' | 'chat'
 
 const CRITERIA_BY_TEMPLATE: Record<string, { icon: string; label: string; desc: string }[]> = {
   'booking-with-lm': [
@@ -508,6 +508,444 @@ function PersonasScreen({
   )
 }
 
+
+// ─── BRIEFING SCREEN ─────────────────────────────────────────────────────────
+
+function BriefingScreen({ persona, agentName, onStart, onBack }: {
+  persona: Persona; agentName: string; onStart: () => void; onBack: () => void
+}) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => { setTimeout(() => setVisible(true), 80) }, [])
+
+  const diffColors: Record<string, { color: string; bg: string }> = {
+    Easy: { color: '#1a8c4e', bg: 'rgba(37,211,102,0.09)' },
+    Medium: { color: '#a36200', bg: 'rgba(255,170,0,0.10)' },
+    Hard: { color: '#c0392b', bg: 'rgba(231,76,60,0.10)' },
+  }
+  const diff = diffColors[persona.difficulty] || diffColors.Medium
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      padding: '40px 24px', maxWidth: 560, margin: '0 auto',
+      opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(16px)',
+      transition: 'opacity 0.5s ease, transform 0.5s ease',
+    }}>
+      {/* Back */}
+      <button onClick={onBack} style={{
+        alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 5,
+        background: 'none', border: 'none', cursor: 'pointer', fontSize: 13,
+        fontWeight: 600, color: '#aaa', padding: '0 0 28px', fontFamily: 'inherit',
+        transition: 'color 0.15s',
+      }}
+        onMouseEnter={e => e.currentTarget.style.color = '#111'}
+        onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
+      >
+        <i className="ti ti-arrow-left" style={{ fontSize: 14 }} />
+        Back
+      </button>
+
+      {/* Header badge */}
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 7,
+        background: 'rgba(0,0,0,0.04)', border: '0.5px solid rgba(0,0,0,0.08)',
+        borderRadius: 100, padding: '5px 14px', marginBottom: 28,
+      }}>
+        <i className="ti ti-id-badge-2" style={{ fontSize: 13, color: '#888' }} />
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: '#888', letterSpacing: '0.05em', textTransform: 'uppercase' as const }}>
+          Your Briefing
+        </span>
+      </div>
+
+      {/* Persona identity card */}
+      <div style={{
+        width: '100%', borderRadius: 20, padding: '28px 28px 24px',
+        background: 'rgba(255,255,255,0.8)', border: '0.5px solid rgba(0,0,0,0.08)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.06)', marginBottom: 16,
+      }}>
+        {/* Top: avatar + name + diff */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: '50%',
+              background: 'rgba(0,0,0,0.06)', border: '0.5px solid rgba(0,0,0,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <i className="ti ti-user" style={{ fontSize: 22, color: '#888' }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 18, fontWeight: 800, color: '#111', letterSpacing: '-0.03em' }}>
+                You are {persona.name}
+              </p>
+              <p style={{ fontSize: 12.5, color: '#aaa', marginTop: 2 }}>
+                {persona.age} years old · from {persona.source}
+              </p>
+            </div>
+          </div>
+          <span style={{
+            fontSize: 10.5, fontWeight: 700, padding: '4px 10px', borderRadius: 100,
+            background: diff.bg, color: diff.color,
+            letterSpacing: '0.05em', textTransform: 'uppercase' as const,
+          }}>
+            {persona.difficulty}
+          </span>
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 0.5, background: 'rgba(0,0,0,0.06)', marginBottom: 20 }} />
+
+        {/* Personality */}
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 10.5, fontWeight: 700, color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: 6 }}>
+            Your personality
+          </p>
+          <p style={{ fontSize: 13.5, fontWeight: 600, color: '#444' }}>{persona.personality}</p>
+        </div>
+
+        {/* Scenario */}
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 10.5, fontWeight: 700, color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: 6 }}>
+            Scenario to test
+          </p>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'rgba(0,0,0,0.04)', borderRadius: 100, padding: '5px 12px',
+          }}>
+            <i className="ti ti-target" style={{ fontSize: 11, color: '#777' }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>{persona.criteria}</span>
+          </div>
+        </div>
+
+        {/* Briefing */}
+        <div>
+          <p style={{ fontSize: 10.5, fontWeight: 700, color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: 6 }}>
+            How to act
+          </p>
+          <p style={{ fontSize: 13.5, color: '#555', lineHeight: 1.7 }}>{persona.briefing}</p>
+        </div>
+      </div>
+
+      {/* Tip box */}
+      <div style={{
+        width: '100%', borderRadius: 14, padding: '14px 18px',
+        background: 'rgba(255,170,0,0.06)', border: '0.5px solid rgba(255,170,0,0.15)',
+        display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 24,
+      }}>
+        <i className="ti ti-bulb" style={{ fontSize: 16, color: '#b37700', marginTop: 1 }} />
+        <p style={{ fontSize: 12.5, color: '#a36200', lineHeight: 1.6 }}>
+          Stay in character. The more realistic you act, the more valuable the test will be for your agent.
+        </p>
+      </div>
+
+      {/* Start button */}
+      <button onClick={onStart} style={{
+        width: '100%', padding: '15px', borderRadius: 14,
+        background: '#111', color: '#fff', border: 'none',
+        fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        transition: 'opacity 0.15s, transform 0.15s',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = '0.82'; e.currentTarget.style.transform = 'scale(1.01)' }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)' }}
+      >
+        <i className="ti ti-player-play" style={{ fontSize: 15 }} />
+        Start chat as {persona.name}
+      </button>
+    </div>
+  )
+}
+
+// ─── CHAT SCREEN ─────────────────────────────────────────────────────────────
+
+const FUN_CHAT_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/1e571318-78c8-4f64-9b7a-d21ee69e9ca3'
+
+interface Message {
+  role: 'user' | 'agent'
+  text: string
+}
+
+function ChatScreen({ persona, userId, templateId, agentName, onEnd }: {
+  persona: Persona; userId: string; templateId: string; agentName: string; onEnd: () => void
+}) {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [sessionId] = useState(() => `tc_${userId}_${Date.now()}`)
+  const [showEndConfirm, setShowEndConfirm] = useState(false)
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
+  async function sendMessage() {
+    const text = input.trim()
+    if (!text || loading) return
+    setInput('')
+    const userMsg: Message = { role: 'user', text }
+    setMessages(prev => [...prev, userMsg])
+    setLoading(true)
+
+    try {
+      const res = await fetch(FUN_CHAT_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          template_id: templateId,
+          session_id: sessionId,
+          message: text,
+          persona_name: persona.name,
+          persona_briefing: persona.briefing,
+          persona_criteria: persona.criteria,
+        }),
+      })
+      const reply = await res.text()
+      // Try parsing JSON first (in case n8n returns JSON), else use raw text
+      let agentText = reply
+      try {
+        const parsed = JSON.parse(reply)
+        agentText = parsed.reply || parsed.message || parsed.text || reply
+      } catch { /* plain text is fine */ }
+
+      setMessages(prev => [...prev, { role: 'agent', text: agentText }])
+    } catch {
+      setMessages(prev => [...prev, { role: 'agent', text: '⚠️ Connection error. Check n8n.' }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: 680, minHeight: 480 }}>
+      {/* Top bar */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '16px 20px', borderBottom: '0.5px solid rgba(0,0,0,0.07)',
+        background: 'rgba(255,255,255,0.7)', flexShrink: 0,
+      }}>
+        {/* Persona info */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(0,0,0,0.06)', border: '0.5px solid rgba(0,0,0,0.08)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <i className="ti ti-user" style={{ fontSize: 16, color: '#888' }} />
+          </div>
+          <div>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: '#111' }}>
+              You are <span style={{ color: '#333' }}>{persona.name}</span>
+            </p>
+            <p style={{ fontSize: 11, color: '#bbb' }}>Testing: {persona.criteria}</p>
+          </div>
+        </div>
+
+        {/* Agent indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6,
+            background: 'rgba(37,211,102,0.08)', border: '0.5px solid rgba(37,211,102,0.18)',
+            borderRadius: 100, padding: '4px 12px',
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#25d366' }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#1a8c4e' }}>{agentName}</span>
+          </div>
+
+          {/* End session */}
+          <button onClick={() => setShowEndConfirm(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            background: 'rgba(231,76,60,0.06)', border: '0.5px solid rgba(231,76,60,0.15)',
+            borderRadius: 100, padding: '4px 12px', cursor: 'pointer', fontFamily: 'inherit',
+            fontSize: 11, fontWeight: 700, color: '#c0392b', transition: 'opacity 0.15s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            <i className="ti ti-flag" style={{ fontSize: 11 }} />
+            End session
+          </button>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div style={{
+        flex: 1, overflowY: 'auto', padding: '20px 20px 8px',
+        display: 'flex', flexDirection: 'column', gap: 10,
+      }}>
+        {messages.length === 0 && (
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', padding: '40px 20px', textAlign: 'center',
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: '50%',
+              background: 'rgba(0,0,0,0.04)', border: '0.5px solid rgba(0,0,0,0.07)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14,
+            }}>
+              <i className="ti ti-message" style={{ fontSize: 20, color: '#ccc' }} />
+            </div>
+            <p style={{ fontSize: 13.5, fontWeight: 700, color: '#bbb', marginBottom: 6 }}>
+              You're {persona.name} now
+            </p>
+            <p style={{ fontSize: 12, color: '#ccc', lineHeight: 1.6, maxWidth: 280 }}>
+              {persona.briefing.slice(0, 100)}...
+            </p>
+            <p style={{ fontSize: 11.5, color: '#ddd', marginTop: 10 }}>Send your first message to start</p>
+          </div>
+        )}
+        {messages.map((msg, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+            animation: 'fadeUp 0.2s ease both',
+          }}>
+            {msg.role === 'agent' && (
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%', flexShrink: 0, marginRight: 8, marginTop: 4,
+                background: 'rgba(37,211,102,0.1)', border: '0.5px solid rgba(37,211,102,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <i className="ti ti-robot" style={{ fontSize: 13, color: '#1a8c4e' }} />
+              </div>
+            )}
+            <div style={{
+              maxWidth: '72%', padding: '10px 14px', borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+              background: msg.role === 'user' ? '#111' : 'rgba(255,255,255,0.9)',
+              border: msg.role === 'user' ? 'none' : '0.5px solid rgba(0,0,0,0.07)',
+              color: msg.role === 'user' ? '#fff' : '#222',
+              fontSize: 13.5, lineHeight: 1.6,
+              boxShadow: msg.role === 'agent' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+            }}>
+              {msg.text}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+              background: 'rgba(37,211,102,0.1)', border: '0.5px solid rgba(37,211,102,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <i className="ti ti-robot" style={{ fontSize: 13, color: '#1a8c4e' }} />
+            </div>
+            <div style={{
+              padding: '10px 16px', borderRadius: '16px 16px 16px 4px',
+              background: 'rgba(255,255,255,0.9)', border: '0.5px solid rgba(0,0,0,0.07)',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              {[0, 1, 2].map(dot => (
+                <div key={dot} style={{
+                  width: 6, height: 6, borderRadius: '50%', background: '#ccc',
+                  animation: `bounce 1.2s ease-in-out ${dot * 0.2}s infinite`,
+                }} />
+              ))}
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div style={{
+        padding: '12px 16px', borderTop: '0.5px solid rgba(0,0,0,0.07)',
+        background: 'rgba(255,255,255,0.7)', flexShrink: 0,
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'flex-end', gap: 10,
+          background: 'rgba(255,255,255,0.9)', borderRadius: 16,
+          border: '0.5px solid rgba(0,0,0,0.09)', padding: '10px 14px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        }}>
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={`Message as ${persona.name}...`}
+            rows={1}
+            style={{
+              flex: 1, border: 'none', outline: 'none', resize: 'none',
+              fontSize: 13.5, color: '#111', background: 'transparent',
+              fontFamily: 'inherit', lineHeight: 1.5, maxHeight: 100, overflowY: 'auto',
+            }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || loading}
+            style={{
+              width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+              background: !input.trim() || loading ? 'rgba(0,0,0,0.06)' : '#111',
+              border: 'none', cursor: !input.trim() || loading ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.15s',
+            }}
+          >
+            <i className="ti ti-send-2" style={{ fontSize: 15, color: !input.trim() || loading ? '#bbb' : '#fff' }} />
+          </button>
+        </div>
+        <p style={{ fontSize: 10.5, color: '#ccc', textAlign: 'center', marginTop: 8 }}>
+          Press Enter to send · Shift+Enter for new line
+        </p>
+      </div>
+
+      {/* End confirm modal */}
+      {showEndConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999,
+        }} onClick={() => setShowEndConfirm(false)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: '#fff', borderRadius: 20, padding: '28px 28px 24px',
+            maxWidth: 380, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+            border: '0.5px solid rgba(0,0,0,0.07)',
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: 'rgba(231,76,60,0.08)', border: '0.5px solid rgba(231,76,60,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+            }}>
+              <i className="ti ti-flag" style={{ fontSize: 20, color: '#c0392b' }} />
+            </div>
+            <p style={{ fontSize: 17, fontWeight: 800, color: '#111', letterSpacing: '-0.03em', marginBottom: 8 }}>
+              End this session?
+            </p>
+            <p style={{ fontSize: 13, color: '#888', lineHeight: 1.6, marginBottom: 24 }}>
+              You've exchanged {messages.length} messages as {persona.name}. Are you done testing this scenario?
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowEndConfirm(false)} style={{
+                flex: 1, padding: '12px', borderRadius: 12,
+                background: 'rgba(0,0,0,0.05)', border: 'none', cursor: 'pointer',
+                fontSize: 13.5, fontWeight: 700, color: '#555', fontFamily: 'inherit',
+              }}>
+                Keep going
+              </button>
+              <button onClick={onEnd} style={{
+                flex: 1, padding: '12px', borderRadius: 12,
+                background: '#111', border: 'none', cursor: 'pointer',
+                fontSize: 13.5, fontWeight: 700, color: '#fff', fontFamily: 'inherit',
+              }}>
+                End session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes bounce {
+          0%, 60%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-6px); }
+        }
+      `}</style>
+    </div>
+  )
+}
+
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
 export default function TrainingCamp({ userId, templateId, agentName }: Props) {
@@ -515,6 +953,7 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
   const [selectedCriteria, setSelectedCriteria] = useState<string[]>([])
   const [personas, setPersonas] = useState<any[]>([])
   const [generating, setGenerating] = useState(false)
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null)
 
   useEffect(() => {
     async function checkIntro() {
@@ -575,9 +1014,26 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
           agentName={agentName}
           onBack={() => setScreen('criteria')}
           onSelectPersona={(persona) => {
-            console.log('Selected persona:', persona)
-            // Next: briefing screen
+            setSelectedPersona(persona)
+            setScreen('briefing')
           }}
+        />
+      )}
+      {screen === 'briefing' && selectedPersona && (
+        <BriefingScreen
+          persona={selectedPersona}
+          agentName={agentName}
+          onBack={() => setScreen('personas')}
+          onStart={() => setScreen('chat')}
+        />
+      )}
+      {screen === 'chat' && selectedPersona && (
+        <ChatScreen
+          persona={selectedPersona}
+          userId={userId}
+          templateId={templateId}
+          agentName={agentName}
+          onEnd={() => setScreen('choose')}
         />
       )}
       {screen === 'criteria' && (
