@@ -861,6 +861,36 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
   const subtitle = TEMPLATE_SUBTITLES[key] || TEMPLATE_SUBTITLES['booking-with-lm']
   const saveLabel = TEMPLATE_SAVE_LABELS[key] || TEMPLATE_SAVE_LABELS['booking-with-lm']
 
+  // ─── LOAD SAVED CONFIG ON MOUNT ─────────────────────────────────────────
+  useEffect(() => {
+    async function loadConfig() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('flow_config')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('template_id', key)
+        .maybeSingle()
+      if (!data) return
+      if (data.agent_tone) setSelectedTone(data.agent_tone)
+      if (data.agent_name) setAgentName(data.agent_name)
+      if (data.agent_personality) setAgentPersonality(data.agent_personality)
+      if (data.whatsapp_receive) {
+        setReceiveForm(data.whatsapp_receive)
+        setReceiveConnected(!!(data.whatsapp_receive.clientId))
+      }
+      if (data.whatsapp_send) {
+        setSendForm(data.whatsapp_send)
+        setSendConnected(!!(data.whatsapp_send.accessToken))
+      }
+      if (data.wait_time) setWaitTime(data.wait_time)
+      if (data.script_1) setS1Data(data.script_1)
+      if (data.script_2) setS2Data(data.script_2)
+    }
+    loadConfig()
+  }, [key])
+
   const handleSave = async () => {
     setIsSaving(true)
     try {
