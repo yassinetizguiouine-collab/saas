@@ -20,8 +20,8 @@ function IntroScreen({ onUnderstood }: { onUnderstood: () => void }) {
 
   const steps = [
     { icon: 'ti-target', label: 'Pick your criteria', desc: 'Choose what you want to test your agent on' },
-    { icon: 'ti-users', label: 'Meet your leads', desc: 'We generate 10 realistic lead personas for you' },
-    { icon: 'ti-messages', label: 'Play the lead', desc: 'Chat as a real prospect and see how your agent responds' },
+    { icon: 'ti-layout-grid', label: 'Choose your mode', desc: 'Automatic report card or play the lead yourself' },
+    { icon: 'ti-trophy', label: 'Get your results', desc: 'See exactly where your agent wins or needs work' },
   ]
 
   return (
@@ -54,7 +54,7 @@ function IntroScreen({ onUnderstood }: { onUnderstood: () => void }) {
         fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 1.7,
         marginBottom: 36, maxWidth: 420,
       }}>
-        Select the scenarios you care about, get 10 realistic lead personas generated for your business, then chat as a real prospect to see exactly how your agent performs.
+        Pick the scenarios that matter to your business, then let us stress-test your agent — automatically or by playing a real lead yourself. Know it's ready before it talks to your first customer.
       </p>
 
       {/* Steps */}
