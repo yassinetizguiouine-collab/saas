@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import TrainingCamp from './TrainingCamp'
 
 interface Props {
   flowId: string
@@ -274,7 +275,7 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
 export default function ViewAgent({ flowId, templateId, onBack }: Props) {
   const [agent, setAgent] = useState<AgentData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'prompt' | 'chat'>('prompt')
+  const [tab, setTab] = useState<'prompt' | 'chat' | 'camp'>('prompt')
   const [userId, setUserId] = useState<string>('')
 
   useEffect(() => {
@@ -401,6 +402,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
         }}>
           <Tab label="System Prompt" icon="ti-code" active={tab === 'prompt'} onClick={() => setTab('prompt')} />
           <Tab label="Test Agent" icon="ti-message-circle" active={tab === 'chat'} onClick={() => setTab('chat')} />
+          <Tab label="Training Camp" icon="ti-flame" active={tab === 'camp'} onClick={() => setTab('camp')} />
         </div>
 
         {/* Content */}
@@ -417,6 +419,9 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
           )}
           {tab === 'chat' && (
             <ChatTab userId={userId} agentName={agent.agent_name} />
+          )}
+          {tab === 'camp' && (
+            <TrainingCamp userId={userId} templateId={templateId} agentName={agent.agent_name} />
           )}
         </div>
       </div>
