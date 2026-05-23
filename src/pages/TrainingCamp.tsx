@@ -182,7 +182,7 @@ function ChooseScreen({ agentName, onFunTesting, onAutoTesting }: { agentName: s
             onClick={() => { if (!mode.comingSoon) { mode.id === 'fun' ? onFunTesting() : onAutoTesting() } }}
             style={{
               borderRadius: 18, padding: '22px 24px',
-              background: 'rgba(255,255,255,0.6)',
+              background: mode.id === 'auto' ? 'rgba(124,58,237,0.03)' : 'rgba(255,255,255,0.6)',
               border: `0.5px solid ${mode.border}`,
               cursor: mode.comingSoon ? 'default' : 'pointer',
               opacity: mode.comingSoon ? 0.6 : 1,
@@ -195,7 +195,7 @@ function ChooseScreen({ agentName, onFunTesting, onAutoTesting }: { agentName: s
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
               <div style={{
                 width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-                background: mode.comingSoon ? 'rgba(0,0,0,0.04)' : 'rgba(37,211,102,0.08)',
+                background: mode.comingSoon ? 'rgba(0,0,0,0.04)' : mode.id === 'auto' ? 'rgba(124,58,237,0.08)' : 'rgba(37,211,102,0.08)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
               }}><i className={`ti ${mode.icon}`} style={{ fontSize: 22, color: mode.id === 'auto' ? '#7c3aed' : '#25D366' }} /></div>
               <div style={{ flex: 1 }}>
