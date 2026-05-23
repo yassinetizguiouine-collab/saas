@@ -423,14 +423,28 @@ function PersonasScreen({
     }}>
 
       {/* ── JUDGE REPORT MODAL ─────────────────────────────────────── */}
-      {reportPersona && (
+      {reportPersona && (() => {
+        // Parse strengths/weaknesses/overall from analysis if not stored separately
+        let strengths = reportPersona.strengths || ''
+        let weaknesses = reportPersona.weaknesses || ''
+        let overall = reportPersona.overall || ''
+        if ((!strengths || !weaknesses || !overall) && reportPersona.analysis) {
+          const a = reportPersona.analysis
+          const sMatch = a.match(/Strengths?:\s*([\s\S]*?)(?=\n\nWeaknesses?:|$)/i)
+          const wMatch = a.match(/Weaknesses?:\s*([\s\S]*?)(?=\n\nOverall:|$)/i)
+          const oMatch = a.match(/Overall:\s*([\s\S]*?)$/i)
+          strengths = sMatch?.[1]?.trim() || strengths
+          weaknesses = wMatch?.[1]?.trim() || weaknesses
+          overall = oMatch?.[1]?.trim() || overall
+        }
+        return (
         <div
           onClick={() => setReportPersona(null)}
           style={{
             position: 'fixed', inset: 0, zIndex: 1000,
-            background: 'rgba(0,0,0,0.35)',
-            backdropFilter: 'blur(18px)',
-            WebkitBackdropFilter: 'blur(18px)',
+            background: 'rgba(0,0,0,0.18)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '24px',
           }}
@@ -439,108 +453,110 @@ function PersonasScreen({
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%', maxWidth: 480,
-              background: 'rgba(255,255,255,0.15)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255,255,255,0.35)',
-              borderRadius: 28,
-              padding: '32px 28px',
-              boxShadow: '0 32px 80px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4)',
-              animation: 'fadeUp 0.25s ease',
+              background: '#fff',
+              border: '0.5px solid rgba(0,0,0,0.08)',
+              borderRadius: 24,
+              padding: '28px 24px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+              animation: 'fadeUp 0.2s ease',
+              maxHeight: '85vh',
+              overflowY: 'auto',
             }}
           >
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
-                  width: 44, height: 44, borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '1px solid rgba(255,255,255,0.3)',
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.05)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <i className="ti ti-user" style={{ fontSize: 20, color: '#fff' }} />
+                  <i className="ti ti-user" style={{ fontSize: 18, color: '#666' }} />
                 </div>
                 <div>
-                  <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>{reportPersona.name}</p>
-                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{reportPersona.criteria} · {reportPersona.difficulty}</p>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: '#111', letterSpacing: '-0.03em' }}>{reportPersona.name}</p>
+                  <p style={{ fontSize: 11.5, color: '#aaa' }}>{reportPersona.criteria} · {reportPersona.difficulty}</p>
                 </div>
               </div>
               <button
                 onClick={() => setReportPersona(null)}
                 style={{
-                  background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: '50%', width: 32, height: 32,
+                  background: 'rgba(0,0,0,0.05)', border: 'none',
+                  borderRadius: '50%', width: 30, height: 30,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: '#fff',
+                  cursor: 'pointer', color: '#888',
                 }}
               >
-                <i className="ti ti-x" style={{ fontSize: 14 }} />
+                <i className="ti ti-x" style={{ fontSize: 13 }} />
               </button>
             </div>
 
             {/* Score */}
             <div style={{
-              background: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              borderRadius: 18, padding: '20px 24px',
+              background: (reportPersona.score ?? 0) >= 75
+                ? 'rgba(37,211,102,0.06)' : (reportPersona.score ?? 0) >= 50
+                ? 'rgba(255,170,0,0.06)' : 'rgba(220,50,50,0.06)',
+              border: `0.5px solid ${(reportPersona.score ?? 0) >= 75
+                ? 'rgba(37,211,102,0.2)' : (reportPersona.score ?? 0) >= 50
+                ? 'rgba(255,170,0,0.2)' : 'rgba(220,50,50,0.2)'}`,
+              borderRadius: 16, padding: '18px 20px',
               marginBottom: 20, textAlign: 'center',
             }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Judge Score</p>
+              <p style={{ fontSize: 10.5, fontWeight: 700, color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Judge Score</p>
               <p style={{
-                fontSize: 52, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1,
-                color: (reportPersona.score ?? 0) >= 75 ? '#4ade80' : (reportPersona.score ?? 0) >= 50 ? '#fbbf24' : '#f87171',
+                fontSize: 48, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1,
+                color: (reportPersona.score ?? 0) >= 75 ? '#1a8c4e' : (reportPersona.score ?? 0) >= 50 ? '#b37700' : '#c0392b',
               }}>
-                {reportPersona.score}<span style={{ fontSize: 22, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>/100</span>
+                {reportPersona.score}<span style={{ fontSize: 20, fontWeight: 600, color: '#ccc' }}>/100</span>
               </p>
             </div>
 
             {/* Strengths */}
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(74,222,128,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className="ti ti-thumb-up" style={{ fontSize: 12, color: '#4ade80' }} />
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(37,211,102,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="ti ti-thumb-up" style={{ fontSize: 11, color: '#1a8c4e' }} />
                 </div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Strengths</p>
+                <p style={{ fontSize: 10.5, fontWeight: 700, color: '#bbb', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Strengths</p>
               </div>
-              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, paddingLeft: 4 }}>
-                {reportPersona.strengths || '—'}
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.65, paddingLeft: 2 }}>
+                {strengths || '—'}
               </p>
             </div>
 
-            {/* Divider */}
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.15)', margin: '16px 0' }} />
+            <div style={{ height: '0.5px', background: 'rgba(0,0,0,0.06)', margin: '16px 0' }} />
 
             {/* Weaknesses */}
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className="ti ti-thumb-down" style={{ fontSize: 12, color: '#f87171' }} />
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(220,50,50,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="ti ti-thumb-down" style={{ fontSize: 11, color: '#c0392b' }} />
                 </div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Weaknesses</p>
+                <p style={{ fontSize: 10.5, fontWeight: 700, color: '#bbb', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Weaknesses</p>
               </div>
-              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, paddingLeft: 4 }}>
-                {reportPersona.weaknesses || '—'}
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.65, paddingLeft: 2 }}>
+                {weaknesses || '—'}
               </p>
             </div>
 
-            {/* Divider */}
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.15)', margin: '16px 0' }} />
+            <div style={{ height: '0.5px', background: 'rgba(0,0,0,0.06)', margin: '16px 0' }} />
 
             {/* Overall */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(251,191,36,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className="ti ti-sparkles" style={{ fontSize: 12, color: '#fbbf24' }} />
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(255,170,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="ti ti-sparkles" style={{ fontSize: 11, color: '#b37700' }} />
                 </div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Overall</p>
+                <p style={{ fontSize: 10.5, fontWeight: 700, color: '#bbb', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Overall</p>
               </div>
-              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, paddingLeft: 4 }}>
-                {reportPersona.overall || '—'}
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.65, paddingLeft: 2 }}>
+                {overall || '—'}
               </p>
             </div>
           </div>
         </div>
-      )}
+        )
+      })()}
       {/* Create new personas button */}
       <button
         onClick={onRegenerate}
