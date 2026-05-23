@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../lib/supabase'
 
 interface Persona {
@@ -437,7 +438,7 @@ function PersonasScreen({
           weaknesses = wMatch?.[1]?.trim() || weaknesses
           overall = oMatch?.[1]?.trim() || overall
         }
-        return (
+        return createPortal(
         <div
           onClick={() => setReportPersona(null)}
           style={{
@@ -555,7 +556,7 @@ function PersonasScreen({
             </div>
           </div>
         </div>
-        )
+        , document.body)
       })()}
       {/* Create new personas button */}
       <button
