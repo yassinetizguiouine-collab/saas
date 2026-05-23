@@ -1001,6 +1001,12 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
       if (data.selected_criteria) setSelectedCriteria(data.selected_criteria)
       if (data.selected_persona) setSelectedPersona(data.selected_persona)
 
+      // If personas exist, go straight to personas — don't let them regenerate
+      if (data.personas && data.personas.length > 0) {
+        setScreen('personas')
+        return
+      }
+
       const savedScreen = (data.current_screen as Screen) || (data.intro_seen ? 'choose' : 'intro')
       setScreen(savedScreen)
 
@@ -1082,16 +1088,16 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
   }
 
   async function handleEndSession() {
-    // Clear chat state, go back to choose
+    // Clear selected persona only, keep them on personas screen so they can pick another
     await supabase
       .from('training_camp_state')
       .upsert({
         user_id: userId, template_id: templateId,
-        intro_seen: true, current_screen: 'choose',
+        intro_seen: true, current_screen: 'personas',
         selected_persona: null,
       }, { onConflict: 'user_id,template_id' })
     setSelectedPersona(null)
-    setScreen('choose')
+    setScreen('personas')
   }
 
   if (!screen) return (
@@ -1112,7 +1118,7 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
         <PersonasScreen
           personas={personas}
           agentName={agentName}
-          onBack={() => persistScreen('criteria')}
+          onBack={() => persistScreen('choose')}
           onSelectPersona={handleSelectPersona}
         />
       )}
