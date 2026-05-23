@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-const AUTO_TEST_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/auto-test-placeholder'
+const AUTO_TEST_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/7702f93e-e54b-40fe-bc69-03e81003e60f'
 
 const CRITERIA_OPTIONS = [
   { id: 'price_objection', label: 'Price objection', icon: '💸', desc: 'Too expensive' },
