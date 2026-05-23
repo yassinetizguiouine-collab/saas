@@ -6,6 +6,7 @@ interface Props {
   flowId: string
   templateId: string
   onBack: () => void
+  onAutoTesting: () => void
 }
 
 interface AgentData {
@@ -272,7 +273,7 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
-export default function ViewAgent({ flowId, templateId, onBack }: Props) {
+export default function ViewAgent({ flowId, templateId, onBack, onAutoTesting }: Props) {
   const [agent, setAgent] = useState<AgentData | null>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'prompt' | 'chat' | 'camp'>('prompt')
@@ -421,7 +422,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
             <ChatTab userId={userId} agentName={agent.agent_name} />
           )}
           {tab === 'camp' && (
-            <TrainingCamp userId={userId} templateId={templateId} agentName={agent.agent_name} />
+            <TrainingCamp userId={userId} templateId={templateId} agentName={agent.agent_name} onAutoTesting={onAutoTesting} />
           )}
         </div>
       </div>
