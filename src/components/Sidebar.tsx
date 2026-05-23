@@ -1,4 +1,4 @@
-export type Page = 'gallery' | 'my-flows' | 'flow-config' | 'flow-preview' | 'view-agent' | 'training-camp' | 'auto-testing'
+export type Page = 'gallery' | 'my-flows' | 'flow-config' | 'flow-preview' | 'view-agent'
 
 interface SidebarProps {
   activePage: Page
@@ -32,7 +32,6 @@ export default function Sidebar({ activePage, onNavigate, onSignOut }: SidebarPr
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <NavItem icon="ti-layout-grid" label="Templates" active={activePage === 'gallery'} onClick={() => onNavigate('gallery')} />
         <NavItem icon="ti-bolt" label="My Flows" active={activePage === 'my-flows'} onClick={() => onNavigate('my-flows')} />
-        <NavItem icon="ti-barbell" label="Training Camp" active={activePage === 'training-camp' || activePage === 'auto-testing'} onClick={() => onNavigate('training-camp')} />
       </nav>
 
       <div style={{ marginTop: 'auto', borderTop: '0.5px solid rgba(0,0,0,.07)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 2 }}>
