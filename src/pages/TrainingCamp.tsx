@@ -13,6 +13,9 @@ interface Persona {
   session_id?: string
   score?: number
   analysis?: string
+  strengths?: string
+  weaknesses?: string
+  overall?: string
   judged?: boolean
 }
 
@@ -396,6 +399,7 @@ function PersonasScreen({
 }) {
   const [visible, setVisible] = useState(false)
   const [judgingName, setJudgingName] = useState<string | null>(null)
+  const [reportPersona, setReportPersona] = useState<Persona | null>(null)
   useEffect(() => { setTimeout(() => setVisible(true), 80) }, [])
 
   const difficultyStyle: Record<string, { bg: string; color: string }> = {
@@ -417,6 +421,126 @@ function PersonasScreen({
       opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(16px)',
       transition: 'opacity 0.5s ease, transform 0.5s ease',
     }}>
+
+      {/* ── JUDGE REPORT MODAL ─────────────────────────────────────── */}
+      {reportPersona && (
+        <div
+          onClick={() => setReportPersona(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(18px)',
+            WebkitBackdropFilter: 'blur(18px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: 480,
+              background: 'rgba(255,255,255,0.15)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255,255,255,0.35)',
+              borderRadius: 28,
+              padding: '32px 28px',
+              boxShadow: '0 32px 80px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4)',
+              animation: 'fadeUp 0.25s ease',
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <i className="ti ti-user" style={{ fontSize: 20, color: '#fff' }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>{reportPersona.name}</p>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{reportPersona.criteria} · {reportPersona.difficulty}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setReportPersona(null)}
+                style={{
+                  background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: '50%', width: 32, height: 32,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#fff',
+                }}
+              >
+                <i className="ti ti-x" style={{ fontSize: 14 }} />
+              </button>
+            </div>
+
+            {/* Score */}
+            <div style={{
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: 18, padding: '20px 24px',
+              marginBottom: 20, textAlign: 'center',
+            }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Judge Score</p>
+              <p style={{
+                fontSize: 52, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1,
+                color: (reportPersona.score ?? 0) >= 75 ? '#4ade80' : (reportPersona.score ?? 0) >= 50 ? '#fbbf24' : '#f87171',
+              }}>
+                {reportPersona.score}<span style={{ fontSize: 22, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>/100</span>
+              </p>
+            </div>
+
+            {/* Strengths */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(74,222,128,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="ti ti-thumb-up" style={{ fontSize: 12, color: '#4ade80' }} />
+                </div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Strengths</p>
+              </div>
+              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, paddingLeft: 4 }}>
+                {reportPersona.strengths || '—'}
+              </p>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.15)', margin: '16px 0' }} />
+
+            {/* Weaknesses */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="ti ti-thumb-down" style={{ fontSize: 12, color: '#f87171' }} />
+                </div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Weaknesses</p>
+              </div>
+              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, paddingLeft: 4 }}>
+                {reportPersona.weaknesses || '—'}
+              </p>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.15)', margin: '16px 0' }} />
+
+            {/* Overall */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(251,191,36,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="ti ti-sparkles" style={{ fontSize: 12, color: '#fbbf24' }} />
+                </div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Overall</p>
+              </div>
+              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, paddingLeft: 4 }}>
+                {reportPersona.overall || '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Create new personas button */}
       <button
         onClick={onRegenerate}
@@ -561,9 +685,17 @@ function PersonasScreen({
                   }
                 </button>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#1a8c4e' }}>
-                  <i className="ti ti-circle-check" style={{ fontSize: 13 }} />
-                  Judged
+                <div
+                  onClick={e => { e.stopPropagation(); setReportPersona(p) }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#1a8c4e' }}>
+                    <i className="ti ti-circle-check" style={{ fontSize: 13 }} />
+                    Judged
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#aaa', fontWeight: 500 }}>
+                    View report <i className="ti ti-chevron-right" style={{ fontSize: 11 }} />
+                  </div>
                 </div>
               )}
             </div>
@@ -1232,7 +1364,10 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
 
       const data = await res.json()
       const score = data.score || 0
-      const analysis = data.analysis || data.feedback || ''
+      const strengths = data.strengths || ''
+      const weaknesses = data.weaknesses || ''
+      const overall = data.overall || ''
+      const analysis = data.analysis || `Strengths: ${strengths}\n\nWeaknesses: ${weaknesses}\n\nOverall: ${overall}`
 
       // Save to fun_testing_results
       await supabase.from('fun_testing_results').insert({
@@ -1248,7 +1383,7 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
       // Update persona in state with score
       const updatedPersonas = personas.map(p =>
         p.name === persona.name
-          ? { ...p, judged: true, score, analysis }
+          ? { ...p, judged: true, score, analysis, strengths, weaknesses, overall }
           : p
       )
       setPersonas(updatedPersonas)
