@@ -9,6 +9,11 @@ interface Persona {
   criteria: string
   difficulty: 'Easy' | 'Medium' | 'Hard'
   briefing: string
+  tested?: boolean
+  session_id?: string
+  score?: number
+  analysis?: string
+  judged?: boolean
 }
 
 interface Props {
@@ -37,6 +42,7 @@ const CRITERIA_BY_TEMPLATE: Record<string, { icon: string; label: string; desc: 
 const DEFAULT_SELECTED = ['Break the ice', 'Qualify the lead', 'Book the call']
 
 const PERSONAS_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/6a8b392d-0028-44ae-8879-e6fe07cfe4ea'
+const JUDGE_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/30ab772b-a6d5-4894-b1e3-6816f9154f63'
 
 // ─── BADGE ───────────────────────────────────────────────────────────────────
 
@@ -379,21 +385,29 @@ function CriteriaScreen({
 // ─── PERSONAS SCREEN ─────────────────────────────────────────────────────────
 
 function PersonasScreen({
-  personas, agentName, onBack, onSelectPersona, onRegenerate,
+  personas, agentName, onBack, onSelectPersona, onRegenerate, onJudge,
 }: {
   personas: Persona[]
   agentName: string
   onBack: () => void
   onSelectPersona: (persona: Persona) => void
   onRegenerate: () => void
+  onJudge: (persona: Persona) => void
 }) {
   const [visible, setVisible] = useState(false)
+  const [judgingName, setJudgingName] = useState<string | null>(null)
   useEffect(() => { setTimeout(() => setVisible(true), 80) }, [])
 
   const difficultyStyle: Record<string, { bg: string; color: string }> = {
     Easy: { bg: 'rgba(37,211,102,0.09)', color: '#1a8c4e' },
     Medium: { bg: 'rgba(255,170,0,0.09)', color: '#b37700' },
     Hard: { bg: 'rgba(220,50,50,0.09)', color: '#c0392b' },
+  }
+
+  async function handleJudge(p: Persona) {
+    setJudgingName(p.name)
+    await onJudge(p)
+    setJudgingName(null)
   }
 
   return (
@@ -437,19 +451,23 @@ function PersonasScreen({
       }}>
         {personas.map((p, i) => {
           const diff = difficultyStyle[p.difficulty] || difficultyStyle.Medium
+          const isTested = !!p.tested
+          const isJudged = !!p.judged
+          const isJudging = judgingName === p.name
+
           return (
             <div
               key={i}
-              onClick={() => onSelectPersona(p)}
               style={{
                 borderRadius: 16, padding: '18px 20px',
-                background: 'rgba(255,255,255,0.6)',
-                border: '0.5px solid rgba(0,0,0,0.07)',
-                cursor: 'pointer',
+                background: isTested ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.6)',
+                border: isTested ? '0.5px solid rgba(0,0,0,0.1)' : '0.5px solid rgba(0,0,0,0.07)',
                 transition: 'transform 0.15s, box-shadow 0.15s',
                 animation: `fadeUp 0.3s ease ${i * 0.04}s both`,
+                cursor: isTested ? 'default' : 'pointer',
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}
+              onClick={() => !isTested && onSelectPersona(p)}
+              onMouseEnter={e => { if (!isTested) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}}
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
             >
               {/* Top row */}
@@ -458,17 +476,17 @@ function PersonasScreen({
                   {/* Avatar */}
                   <div style={{
                     width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-                    background: 'rgba(0,0,0,0.06)',
+                    background: isTested ? 'rgba(37,211,102,0.1)' : 'rgba(0,0,0,0.06)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <i className="ti ti-user" style={{ fontSize: 17, color: '#888' }} />
+                    <i className={`ti ${isTested ? 'ti-check' : 'ti-user'}`} style={{ fontSize: 17, color: isTested ? '#1a8c4e' : '#888' }} />
                   </div>
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{p.name}</p>
                     <p style={{ fontSize: 11.5, color: '#aaa' }}>{p.age} · {p.source}</p>
                   </div>
                 </div>
-                {/* Difficulty */}
+                {/* Difficulty badge */}
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 100,
                   background: diff.bg, color: diff.color,
@@ -493,14 +511,61 @@ function PersonasScreen({
                 <span style={{ fontWeight: 600, color: '#555' }}>{p.personality}</span> — {p.briefing.slice(0, 70)}...
               </p>
 
+              {/* Score (if judged) */}
+              {isJudged && p.score !== undefined && (
+                <div style={{
+                  background: 'rgba(0,0,0,0.03)', borderRadius: 10,
+                  padding: '10px 12px', marginBottom: 12,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Judge Score</span>
+                    <span style={{
+                      fontSize: 15, fontWeight: 800,
+                      color: p.score >= 75 ? '#1a8c4e' : p.score >= 50 ? '#b37700' : '#c0392b'
+                    }}>
+                      {p.score}/100
+                    </span>
+                  </div>
+                  {p.analysis && (
+                    <p style={{ fontSize: 11, color: '#888', lineHeight: 1.5, margin: 0 }}>
+                      {p.analysis.slice(0, 100)}...
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* CTA */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                fontSize: 12, fontWeight: 700, color: '#111',
-              }}>
-                <i className="ti ti-player-play" style={{ fontSize: 12 }} />
-                Play this lead
-              </div>
+              {!isTested ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#111' }}>
+                  <i className="ti ti-player-play" style={{ fontSize: 12 }} />
+                  Play this lead
+                </div>
+              ) : !isJudged ? (
+                <button
+                  onClick={e => { e.stopPropagation(); handleJudge(p) }}
+                  disabled={isJudging}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    background: isJudging ? 'rgba(0,0,0,0.04)' : 'rgba(255,170,0,0.1)',
+                    border: '0.5px solid rgba(255,170,0,0.3)',
+                    borderRadius: 8, padding: '7px 12px',
+                    fontSize: 12, fontWeight: 700, color: isJudging ? '#aaa' : '#b37700',
+                    cursor: isJudging ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit', width: '100%', justifyContent: 'center',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {isJudging
+                    ? <><i className="ti ti-loader-2" style={{ fontSize: 13, animation: 'spin 1s linear infinite' }} /> Judging...</>
+                    : <><i className="ti ti-gavel" style={{ fontSize: 13 }} /> Judge this session</>
+                  }
+                </button>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#1a8c4e' }}>
+                  <i className="ti ti-circle-check" style={{ fontSize: 13 }} />
+                  Judged
+                </div>
+              )}
             </div>
           )
         })}
@@ -679,7 +744,7 @@ function ChatScreen({ persona, userId, templateId, agentName, sessionId, onEnd }
     if (!sessionId) return
     async function loadHistory() {
       const { data } = await supabase
-        .from('training_camp_messages')
+        .from('training_camp_chat_memory')
         .select('role, message')
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true })
@@ -703,8 +768,7 @@ function ChatScreen({ persona, userId, templateId, agentName, sessionId, onEnd }
     setLoading(true)
 
     // Persist user message
-    await supabase.from('training_camp_messages').insert({
-      user_id: userId, template_id: templateId,
+    await supabase.from('training_camp_chat_memory').insert({
       session_id: sessionId, role: 'user', message: text,
     })
 
@@ -726,8 +790,7 @@ function ChatScreen({ persona, userId, templateId, agentName, sessionId, onEnd }
       const agentText = data.reply || data.message || data.text || ''
 
       // Persist agent reply
-      await supabase.from('training_camp_messages').insert({
-        user_id: userId, template_id: templateId,
+      await supabase.from('training_camp_chat_memory').insert({
         session_id: sessionId, role: 'agent', message: agentText,
       })
 
@@ -1002,27 +1065,27 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
       if (data.selected_criteria) setSelectedCriteria(data.selected_criteria)
       if (data.selected_persona) setSelectedPersona(data.selected_persona)
 
-      // If personas exist, go straight to personas — don't let them regenerate
+      // If personas exist, go straight to personas screen — skip criteria
       if (data.personas && data.personas.length > 0) {
         setScreen('personas')
+        // If they were mid-chat, restore session_id from metadata
+        if (data.current_screen === 'chat' && data.selected_persona) {
+          const { data: meta } = await supabase
+            .from('training_camp_testing_metadata')
+            .select('session_id')
+            .eq('user_id', userId)
+            .eq('template_id', templateId)
+            .order('started_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          if (meta?.session_id) setSessionId(meta.session_id)
+          setScreen('chat')
+        }
         return
       }
 
       const savedScreen = (data.current_screen as Screen) || (data.intro_seen ? 'choose' : 'intro')
       setScreen(savedScreen)
-
-      // If returning to chat, restore session id from latest session
-      if (savedScreen === 'chat' && data.selected_persona) {
-        const { data: msgs } = await supabase
-          .from('training_camp_messages')
-          .select('session_id')
-          .eq('user_id', userId)
-          .eq('template_id', templateId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-        if (msgs?.[0]?.session_id) setSessionId(msgs[0].session_id)
-        else setSessionId(`tc_${userId}_${Date.now()}`)
-      }
     }
     loadState()
   }, [userId, templateId])
@@ -1074,6 +1137,16 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
     const newSessionId = `tc_${userId}_${Date.now()}`
     setSelectedPersona(persona)
     setSessionId(newSessionId)
+
+    // Create metadata row linking session to user/persona
+    await supabase.from('training_camp_testing_metadata').insert({
+      user_id: userId, template_id: templateId,
+      session_id: newSessionId,
+      persona_name: persona.name,
+      criteria: persona.criteria,
+      difficulty: persona.difficulty,
+    })
+
     await supabase
       .from('training_camp_state')
       .upsert({
@@ -1084,27 +1157,109 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
     setScreen('briefing')
   }
 
-  async function handleRegenerate() {
-    // Go back to criteria screen with current criteria still selected
-    // so they can tweak it or regenerate fresh personas
-    await persistScreen('criteria')
+  async function handleEndSession() {
+    if (!selectedPersona || !sessionId) return
+
+    // Mark persona as tested in the personas array
+    const updatedPersonas = personas.map(p =>
+      p.name === selectedPersona.name
+        ? { ...p, tested: true, session_id: sessionId }
+        : p
+    )
+    setPersonas(updatedPersonas)
+
+    // Update metadata ended_at
+    await supabase
+      .from('training_camp_testing_metadata')
+      .update({ ended_at: new Date().toISOString() })
+      .eq('session_id', sessionId)
+
+    // Persist updated personas + go back to personas screen
+    await supabase
+      .from('training_camp_state')
+      .upsert({
+        user_id: userId, template_id: templateId,
+        intro_seen: true, current_screen: 'personas',
+        personas: updatedPersonas,
+        selected_persona: null,
+      }, { onConflict: 'user_id,template_id' })
+
+    setSelectedPersona(null)
+    setScreen('personas')
   }
 
   async function handleStartChat() {
     await persistScreen('chat')
   }
 
-  async function handleEndSession() {
-    // Clear selected persona only, keep them on personas screen so they can pick another
-    await supabase
-      .from('training_camp_state')
-      .upsert({
-        user_id: userId, template_id: templateId,
-        intro_seen: true, current_screen: 'personas',
-        selected_persona: null,
-      }, { onConflict: 'user_id,template_id' })
-    setSelectedPersona(null)
-    setScreen('personas')
+  async function handleJudge(persona: Persona) {
+    if (!persona.session_id) return
+
+    // Get best scenario description from criteria list
+    const criteriaInfo = (CRITERIA_BY_TEMPLATE[templateId] || [])
+      .find(c => c.label === persona.criteria)
+    const bestScenario = criteriaInfo?.desc || persona.criteria
+
+    try {
+      const res = await fetch(JUDGE_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          template_id: templateId,
+          session_id: persona.session_id,
+          persona: {
+            name: persona.name,
+            age: persona.age,
+            source: persona.source,
+            personality: persona.personality,
+            criteria: persona.criteria,
+            difficulty: persona.difficulty,
+            briefing: persona.briefing,
+          },
+          best_scenario: bestScenario,
+          agent_name: agentName,
+        }),
+      })
+
+      const data = await res.json()
+      const score = data.score || 0
+      const analysis = data.analysis || data.feedback || ''
+
+      // Save to fun_testing_results
+      await supabase.from('fun_testing_results').insert({
+        user_id: userId,
+        template_id: templateId,
+        session_id: persona.session_id,
+        persona_name: persona.name,
+        criteria: persona.criteria,
+        score,
+        analysis,
+      })
+
+      // Update persona in state with score
+      const updatedPersonas = personas.map(p =>
+        p.name === persona.name
+          ? { ...p, judged: true, score, analysis }
+          : p
+      )
+      setPersonas(updatedPersonas)
+
+      // Persist updated personas
+      await supabase
+        .from('training_camp_state')
+        .upsert({
+          user_id: userId, template_id: templateId,
+          intro_seen: true, personas: updatedPersonas,
+        }, { onConflict: 'user_id,template_id' })
+
+    } catch {
+      alert('Judge failed. Check n8n webhook.')
+    }
+  }
+
+  async function handleRegenerate() {
+    await persistScreen('criteria')
   }
 
   if (!screen) return (
@@ -1128,6 +1283,7 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
           onBack={() => persistScreen('choose')}
           onSelectPersona={handleSelectPersona}
           onRegenerate={handleRegenerate}
+          onJudge={handleJudge}
         />
       )}
       {screen === 'briefing' && selectedPersona && (
