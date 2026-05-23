@@ -24,6 +24,7 @@ interface Props {
   userId: string
   templateId: string
   agentName: string
+  onAutoTesting: () => void
 }
 
 type Screen = 'intro' | 'choose' | 'criteria' | 'personas' | 'briefing' | 'chat'
@@ -139,7 +140,7 @@ function IntroScreen({ onUnderstood }: { onUnderstood: () => void }) {
 
 // ─── CHOOSE SCREEN ───────────────────────────────────────────────────────────
 
-function ChooseScreen({ agentName, onFunTesting }: { agentName: string; onFunTesting: () => void }) {
+function ChooseScreen({ agentName, onFunTesting, onAutoTesting }: { agentName: string; onFunTesting: () => void; onAutoTesting: () => void }) {
   const [visible, setVisible] = useState(false)
   useEffect(() => { setTimeout(() => setVisible(true), 80) }, [])
 
@@ -152,11 +153,11 @@ function ChooseScreen({ agentName, onFunTesting }: { agentName: string; onFunTes
       border: 'rgba(37,211,102,0.2)', comingSoon: false,
     },
     {
-      id: 'auto', icon: 'ti-bolt', name: 'Automatic Testing', tag: 'Coming soon',
-      tagColor: '#888', tagBg: 'rgba(0,0,0,0.05)',
+      id: 'auto', icon: 'ti-bolt', name: 'Automatic Testing', tag: 'New',
+      tagColor: '#7c3aed', tagBg: 'rgba(124,58,237,0.09)',
       description: 'Select criteria and let us run everything automatically. Get a full report card with scores and feedback in minutes.',
       highlights: ['Full automated run', 'Report card with scores', 'Fix weak points CTA'],
-      border: 'rgba(0,0,0,0.07)', comingSoon: true,
+      border: 'rgba(124,58,237,0.2)', comingSoon: false,
     },
   ]
 
@@ -178,7 +179,7 @@ function ChooseScreen({ agentName, onFunTesting }: { agentName: string; onFunTes
         {modes.map((mode, i) => (
           <div
             key={mode.id}
-            onClick={() => { if (!mode.comingSoon) onFunTesting() }}
+            onClick={() => { if (!mode.comingSoon) { mode.id === 'fun' ? onFunTesting() : onAutoTesting() } }}
             style={{
               borderRadius: 18, padding: '22px 24px',
               background: 'rgba(255,255,255,0.6)',
@@ -196,7 +197,7 @@ function ChooseScreen({ agentName, onFunTesting }: { agentName: string; onFunTes
                 width: 48, height: 48, borderRadius: 14, flexShrink: 0,
                 background: mode.comingSoon ? 'rgba(0,0,0,0.04)' : 'rgba(37,211,102,0.08)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-              }}><i className={`ti ${mode.icon}`} style={{ fontSize: 22, color: mode.comingSoon ? '#aaa' : '#25D366' }} /></div>
+              }}><i className={`ti ${mode.icon}`} style={{ fontSize: 22, color: mode.id === 'auto' ? '#7c3aed' : '#25D366' }} /></div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <h3 style={{ fontSize: 16, fontWeight: 800, color: '#111', letterSpacing: '-0.02em' }}>{mode.name}</h3>
@@ -1198,7 +1199,7 @@ function ChatScreen({ persona, userId, templateId, agentName, sessionId, onEnd }
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
-export default function TrainingCamp({ userId, templateId, agentName }: Props) {
+export default function TrainingCamp({ userId, templateId, agentName, onAutoTesting }: Props) {
   const [screen, setScreen] = useState<Screen | null>(null)
   const [selectedCriteria, setSelectedCriteria] = useState<string[]>([])
   const [personas, setPersonas] = useState<any[]>([])
@@ -1435,7 +1436,7 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
         @keyframes spin { to { transform: rotate(360deg) } }
       `}</style>
       {screen === 'intro' && <IntroScreen onUnderstood={handleUnderstood} />}
-      {screen === 'choose' && <ChooseScreen agentName={agentName} onFunTesting={() => persistScreen('criteria')} />}
+      {screen === 'choose' && <ChooseScreen agentName={agentName} onFunTesting={() => persistScreen('criteria')} onAutoTesting={onAutoTesting} />}
       {screen === 'personas' && (
         <PersonasScreen
           personas={personas}
