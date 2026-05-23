@@ -4,16 +4,16 @@ import { supabase } from '../lib/supabase'
 const AUTO_TEST_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/auto-test-placeholder'
 
 const CRITERIA_OPTIONS = [
-  { id: 'price_objection', label: 'Price objection', icon: '💸', desc: '"It's too expensive"' },
-  { id: 'im_busy', label: "I'm busy", icon: '⏰', desc: '"Not a good time right now"' },
-  { id: 'ill_think', label: "I'll think about it", icon: '🤔', desc: '"Let me think and get back to you"' },
-  { id: 'talk_to_wife', label: "I'll talk to my wife/partner", icon: '👫', desc: '"Need to check with someone first"' },
-  { id: 'mad_client', label: 'Angry / frustrated lead', icon: '😤', desc: '"This is a waste of my time"' },
-  { id: 'not_interested', label: 'Not interested', icon: '🚫', desc: '"I'm good, thanks"' },
-  { id: 'too_good', label: 'Too good to be true', icon: '🤨', desc: '"Sounds like a scam"' },
-  { id: 'already_tried', label: 'Already tried something similar', icon: '😞', desc: '"I tried before and it didn\'t work"' },
-  { id: 'send_info', label: 'Send me more info', icon: '📩', desc: '"Just send me details first"' },
-  { id: 'not_right_time', label: 'Not the right time', icon: '📅', desc: '"Maybe later, not now"' },
+  { id: 'price_objection', label: 'Price objection', icon: '💸', desc: 'Too expensive' },
+  { id: 'im_busy', label: 'Im busy', icon: '⏰', desc: 'Not a good time right now' },
+  { id: 'ill_think', label: 'Ill think about it', icon: '🤔', desc: 'Let me think and get back to you' },
+  { id: 'talk_to_wife', label: 'Ill talk to my partner', icon: '👫', desc: 'Need to check with someone first' },
+  { id: 'mad_client', label: 'Angry or frustrated lead', icon: '😤', desc: 'This is a waste of my time' },
+  { id: 'not_interested', label: 'Not interested', icon: '🚫', desc: 'Im good, thanks' },
+  { id: 'too_good', label: 'Too good to be true', icon: '🤨', desc: 'Sounds like a scam' },
+  { id: 'already_tried', label: 'Already tried something similar', icon: '😞', desc: 'I tried before and it did not work' },
+  { id: 'send_info', label: 'Send me more info', icon: '📩', desc: 'Just send me details first' },
+  { id: 'not_right_time', label: 'Not the right time', icon: '📅', desc: 'Maybe later, not now' },
 ]
 
 interface Props {
