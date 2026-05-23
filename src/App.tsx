@@ -258,6 +258,8 @@ export default function App() {
             flowId={activeFlowId}
             templateId={activeTemplateId}
             onBack={() => setPage('my-flows')}
+            onAutoTesting={() => setPage('auto-testing')}
+          />
           />
         )}
         {page === 'flow-config' && (
