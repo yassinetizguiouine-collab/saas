@@ -14,6 +14,8 @@ import ViewAgent from './pages/ViewAgent'
 import CongratsScreen from './pages/CongratsScreen'
 import NotificationToast from './components/NotificationToast'
 import { useNotifications } from './hooks/useNotifications'
+import TrainingCamp from './pages/TrainingCamp'
+import AutoTesting from './pages/AutoTesting'
 
 type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'found' | 'app' | 'provisioning' | 'congrats'
 
@@ -28,6 +30,8 @@ export default function App() {
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(() => {
     return localStorage.getItem('lf_template_id')
   })
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [currentAgentName, setCurrentAgentName] = useState<string>('Your Agent')
   const [recommendedTemplateId, setRecommendedTemplateId] = useState<string | null>(null)
   const [provisioningUserId, setProvisioningUserId] = useState<string | null>(null)
   const [provisioningTemplateId, setProvisioningTemplateId] = useState<string | null>(null)
@@ -71,6 +75,14 @@ export default function App() {
         if (!user) { setAppState('auth'); return }
         userId = user.id
       }
+      setCurrentUserId(userId)
+      // Fetch agent name from generated_prompts
+      supabase.from('generated_prompts').select('system_prompt').eq('user_id', userId).maybeSingle().then(({ data }) => {
+        if (data?.system_prompt) {
+          const match = data.system_prompt.match(/You are ([A-Z][a-z]+)\./)
+          if (match?.[1]) setCurrentAgentName(match[1])
+        }
+      })
       const [{ data: ob }, { data: rec }] = await Promise.all([
         supabase.from('onboarding').select('completed').eq('user_id', userId).maybeSingle(),
         supabase.from('recommended_flows').select('completed, recommended_template_id').eq('user_id', userId).maybeSingle(),
@@ -254,6 +266,22 @@ export default function App() {
             templateId={activeTemplateId}
             onBack={() => setPage('my-flows')}
             onProvisioningStart={handleProvisioningStart}
+          />
+        )}
+        {page === 'training-camp' && currentUserId && activeTemplateId && (
+          <TrainingCamp
+            userId={currentUserId}
+            templateId={activeTemplateId}
+            agentName={currentAgentName}
+            onAutoTesting={() => setPage('auto-testing')}
+          />
+        )}
+        {page === 'auto-testing' && currentUserId && activeTemplateId && (
+          <AutoTesting
+            userId={currentUserId}
+            templateId={activeTemplateId}
+            agentName={currentAgentName}
+            onBack={() => setPage('training-camp')}
           />
         )}
       </main>
