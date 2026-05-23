@@ -745,11 +745,26 @@ function ChatScreen({ persona, userId, templateId, agentName, sessionId, onEnd }
     async function loadHistory() {
       const { data } = await supabase
         .from('training_camp_chat_memory')
-        .select('role, message')
+        .select('message')
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true })
       if (data && data.length > 0) {
-        setMessages(data.map(m => ({ role: m.role as 'user' | 'agent', text: m.message })))
+        const parsed = data.map(row => {
+          try {
+            const msg = typeof row.message === 'string' ? JSON.parse(row.message) : row.message
+            const role = msg.type === 'human' ? 'user' : 'agent'
+            // Agent content is the full JSON string from our agent — extract just reply
+            let text = msg.content || ''
+            if (role === 'agent') {
+              try {
+                const inner = JSON.parse(text)
+                text = inner.reply || text
+              } catch { /* plain text is fine */ }
+            }
+            return { role: role as 'user' | 'agent', text }
+          } catch { return null }
+        }).filter(Boolean)
+        setMessages(parsed as { role: 'user' | 'agent'; text: string }[])
       }
     }
     loadHistory()
@@ -767,10 +782,8 @@ function ChatScreen({ persona, userId, templateId, agentName, sessionId, onEnd }
     setMessages(prev => [...prev, userMsg])
     setLoading(true)
 
-    // Persist user message
-    await supabase.from('training_camp_chat_memory').insert({
-      session_id: sessionId, role: 'user', message: text,
-    })
+    // n8n handles all memory writes via Postgres Chat Memory node
+    // React only manages display state
 
     try {
       const res = await fetch(FUN_CHAT_WEBHOOK, {
@@ -788,11 +801,6 @@ function ChatScreen({ persona, userId, templateId, agentName, sessionId, onEnd }
       })
       const data = await res.json()
       const agentText = data.reply || data.message || data.text || ''
-
-      // Persist agent reply
-      await supabase.from('training_camp_chat_memory').insert({
-        session_id: sessionId, role: 'agent', message: agentText,
-      })
 
       if (data.is_conversation_complete === true || data.is_conversation_complete === 'true') {
         setMessages(prev => [...prev, { role: 'agent', text: agentText }])
