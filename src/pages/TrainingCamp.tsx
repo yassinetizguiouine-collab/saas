@@ -443,24 +443,23 @@ function PersonasScreen({
           style={{
             position: 'fixed', inset: 0, zIndex: 1000,
             background: 'rgba(0,0,0,0.18)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '24px',
           }}
         >
           <div
             onClick={e => e.stopPropagation()}
+            className="glass-strong"
             style={{
               width: '100%', maxWidth: 480,
-              background: '#fff',
-              border: '0.5px solid rgba(0,0,0,0.08)',
-              borderRadius: 24,
-              padding: '28px 24px',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+              borderRadius: 20,
+              padding: '28px 32px',
               animation: 'fadeUp 0.2s ease',
               maxHeight: '85vh',
               overflowY: 'auto',
+              position: 'relative',
             }}
           >
             {/* Header */}
@@ -481,26 +480,27 @@ function PersonasScreen({
               <button
                 onClick={() => setReportPersona(null)}
                 style={{
-                  background: 'rgba(0,0,0,0.05)', border: 'none',
-                  borderRadius: '50%', width: 30, height: 30,
+                  position: 'absolute', top: 16, right: 16,
+                  background: 'none', border: 'none',
+                  cursor: 'pointer', color: '#aaa', fontSize: 18,
+                  fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: '#888',
                 }}
               >
-                <i className="ti ti-x" style={{ fontSize: 13 }} />
+                <i className="ti ti-x" aria-hidden="true" />
               </button>
             </div>
 
             {/* Score */}
-            <div style={{
-              background: (reportPersona.score ?? 0) >= 75
-                ? 'rgba(37,211,102,0.06)' : (reportPersona.score ?? 0) >= 50
-                ? 'rgba(255,170,0,0.06)' : 'rgba(220,50,50,0.06)',
-              border: `0.5px solid ${(reportPersona.score ?? 0) >= 75
-                ? 'rgba(37,211,102,0.2)' : (reportPersona.score ?? 0) >= 50
-                ? 'rgba(255,170,0,0.2)' : 'rgba(220,50,50,0.2)'}`,
+            <div className="glass" style={{
               borderRadius: 16, padding: '18px 20px',
               marginBottom: 20, textAlign: 'center',
+              background: (reportPersona.score ?? 0) >= 75
+                ? 'rgba(37,211,102,0.08)' : (reportPersona.score ?? 0) >= 50
+                ? 'rgba(255,170,0,0.08)' : 'rgba(220,50,50,0.08)',
+              border: `0.5px solid ${(reportPersona.score ?? 0) >= 75
+                ? 'rgba(37,211,102,0.25)' : (reportPersona.score ?? 0) >= 50
+                ? 'rgba(255,170,0,0.25)' : 'rgba(220,50,50,0.25)'}`,
             }}>
               <p style={{ fontSize: 10.5, fontWeight: 700, color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Judge Score</p>
               <p style={{
