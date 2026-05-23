@@ -260,7 +260,6 @@ export default function App() {
             onBack={() => setPage('my-flows')}
             onAutoTesting={() => setPage('auto-testing')}
           />
-          />
         )}
         {page === 'flow-config' && (
           <FlowConfig
