@@ -379,12 +379,13 @@ function CriteriaScreen({
 // ─── PERSONAS SCREEN ─────────────────────────────────────────────────────────
 
 function PersonasScreen({
-  personas, agentName, onBack, onSelectPersona,
+  personas, agentName, onBack, onSelectPersona, onRegenerate,
 }: {
   personas: Persona[]
   agentName: string
   onBack: () => void
   onSelectPersona: (persona: Persona) => void
+  onRegenerate: () => void
 }) {
   const [visible, setVisible] = useState(false)
   useEffect(() => { setTimeout(() => setVisible(true), 80) }, [])
@@ -402,9 +403,9 @@ function PersonasScreen({
       opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(16px)',
       transition: 'opacity 0.5s ease, transform 0.5s ease',
     }}>
-      {/* Back */}
+      {/* Create new personas button */}
       <button
-        onClick={onBack}
+        onClick={onRegenerate}
         style={{
           alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6,
           background: 'none', border: 'none', cursor: 'pointer',
@@ -414,8 +415,8 @@ function PersonasScreen({
         onMouseEnter={e => e.currentTarget.style.color = '#111'}
         onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
       >
-        <i className="ti ti-arrow-left" style={{ fontSize: 14 }} />
-        Back
+        <i className="ti ti-plus" style={{ fontSize: 14 }} />
+        Create new personas
       </button>
 
       {/* Header */}
@@ -1083,6 +1084,12 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
     setScreen('briefing')
   }
 
+  async function handleRegenerate() {
+    // Go back to criteria screen with current criteria still selected
+    // so they can tweak it or regenerate fresh personas
+    await persistScreen('criteria')
+  }
+
   async function handleStartChat() {
     await persistScreen('chat')
   }
@@ -1120,6 +1127,7 @@ export default function TrainingCamp({ userId, templateId, agentName }: Props) {
           agentName={agentName}
           onBack={() => persistScreen('choose')}
           onSelectPersona={handleSelectPersona}
+          onRegenerate={handleRegenerate}
         />
       )}
       {screen === 'briefing' && selectedPersona && (
