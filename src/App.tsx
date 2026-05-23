@@ -268,18 +268,18 @@ export default function App() {
             onProvisioningStart={handleProvisioningStart}
           />
         )}
-        {page === 'training-camp' && currentUserId && activeTemplateId && (
+        {page === 'training-camp' && currentUserId && (
           <TrainingCamp
             userId={currentUserId}
-            templateId={activeTemplateId}
+            templateId={activeTemplateId || 'booking-with-lm'}
             agentName={currentAgentName}
             onAutoTesting={() => setPage('auto-testing')}
           />
         )}
-        {page === 'auto-testing' && currentUserId && activeTemplateId && (
+        {page === 'auto-testing' && currentUserId && (
           <AutoTesting
             userId={currentUserId}
-            templateId={activeTemplateId}
+            templateId={activeTemplateId || 'booking-with-lm'}
             agentName={currentAgentName}
             onBack={() => setPage('training-camp')}
           />
