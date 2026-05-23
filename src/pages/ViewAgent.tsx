@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import TrainingCamp from './TrainingCamp'
+import AutoTesting from './AutoTesting'
 
 interface Props {
   flowId: string
   templateId: string
   onBack: () => void
-  onAutoTesting: () => void
+  onAutoTesting?: () => void
 }
 
 interface AgentData {
@@ -276,7 +277,7 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
 export default function ViewAgent({ flowId, templateId, onBack, onAutoTesting }: Props) {
   const [agent, setAgent] = useState<AgentData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'prompt' | 'chat' | 'camp'>('prompt')
+  const [tab, setTab] = useState<'prompt' | 'chat' | 'camp' | 'auto'>('prompt')
   const [userId, setUserId] = useState<string>('')
 
   useEffect(() => {
@@ -422,7 +423,10 @@ export default function ViewAgent({ flowId, templateId, onBack, onAutoTesting }:
             <ChatTab userId={userId} agentName={agent.agent_name} />
           )}
           {tab === 'camp' && (
-            <TrainingCamp userId={userId} templateId={templateId} agentName={agent.agent_name} onAutoTesting={onAutoTesting} />
+            <TrainingCamp userId={userId} templateId={templateId} agentName={agent.agent_name} onAutoTesting={() => setTab('auto')} />
+          )}
+          {tab === 'auto' && (
+            <AutoTesting userId={userId} templateId={templateId} agentName={agent.agent_name} onBack={() => setTab('camp')} />
           )}
         </div>
       </div>
