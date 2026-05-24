@@ -419,46 +419,32 @@ function CinematicScreen({
         </span>
       </div>
 
-      {/* Center — logo bounce + phase label */}
+      {/* Center — 3D tower + phase label */}
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        position: 'relative', zIndex: 1, gap: 0,
+        position: 'relative', zIndex: 1,
       }}>
-        {/* Bouncing logo */}
-        <div style={{ position: 'relative', width: 64, height: 64, margin: 'auto' }}>
-          {/* shadow */}
-          <div style={{
-            position: 'absolute',
-            top: 78, left: 0,
-            width: 64, height: 6,
-            background: 'rgba(255,255,255,0.08)',
-            borderRadius: '50%',
-            animation: 'shadow324 0.5s linear infinite',
-          }} />
-          {/* logo */}
-          <img
-            src="/Création sans titre (25).png"
-            alt="logo"
-            style={{
-              position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%',
-              borderRadius: 8,
-              objectFit: 'cover',
-              animation: 'jump7456 0.5s linear infinite',
-            }}
-          />
+        {/* Tower loader */}
+        <div style={{ scale: '3', height: '50px', width: '40px' }}>
+          {(['box-1','box-2','box-3','box-4'] as const).map((cls, i) => (
+            <div key={i} className={`box ${cls}`} style={{ position: 'relative', opacity: 0, left: 10 }}>
+              <div className="side-top" />
+              <div className="side-left" />
+              <div className="side-right" />
+            </div>
+          ))}
         </div>
 
         {/* Phase label */}
         <p style={{
-          marginTop: 64,
-          fontSize: 15,
+          marginTop: 72,
+          fontSize: 13,
           fontWeight: 400,
-          color: 'rgba(255,255,255,0.45)',
-          letterSpacing: '0.02em',
+          color: 'rgba(255,255,255,0.4)',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
           textAlign: 'center',
-          animation: 'fadeInLine 0.4s ease both',
         }}>
           {phaseLabel}
         </p>
@@ -477,16 +463,41 @@ function CinematicScreen({
       </div>
 
       <style>{`
-        @keyframes jump7456 {
-          15% { border-bottom-right-radius: 3px; }
-          25% { transform: translateY(9px) rotate(22.5deg); }
-          50% { transform: translateY(18px) scale(1, .9) rotate(45deg); border-bottom-right-radius: 40px; }
-          75% { transform: translateY(9px) rotate(67.5deg); }
-          100% { transform: translateY(0) rotate(90deg); }
+        .box { position: relative; opacity: 0; left: 10px; }
+        .side-left {
+          position: absolute; width: 19px; height: 5px;
+          background-color: rgba(255,255,255,0.55);
+          transform: skew(0deg,-25deg); top: 14px; left: 10px;
         }
-        @keyframes shadow324 {
-          0%, 100% { transform: scale(1, 1); }
-          50% { transform: scale(1.2, 1); }
+        .side-right {
+          position: absolute; width: 19px; height: 5px;
+          background-color: rgba(255,255,255,0.75);
+          transform: skew(0deg,25deg); top: 14px; left: -9px;
+        }
+        .side-top {
+          position: absolute; width: 20px; height: 20px;
+          background-color: rgba(255,255,255,0.95);
+          rotate: 45deg; transform: skew(-20deg,-20deg);
+        }
+        .box-1 { animation: from-left 4s infinite; }
+        .box-2 { animation: from-right 4s infinite; animation-delay: 1s; }
+        .box-3 { animation: from-left 4s infinite; animation-delay: 2s; }
+        .box-4 { animation: from-right 4s infinite; animation-delay: 3s; }
+        @keyframes from-left {
+          0%   { z-index:20; opacity:0; translate:-20px -6px; }
+          20%  { z-index:10; opacity:1; translate:0px 0px; }
+          40%  { z-index:9;  translate:0px 4px; }
+          60%  { z-index:8;  translate:0px 8px; }
+          80%  { z-index:7;  opacity:1; translate:0px 12px; }
+          100% { z-index:5;  translate:0px 30px; opacity:0; }
+        }
+        @keyframes from-right {
+          0%   { z-index:20; opacity:0; translate:20px -6px; }
+          20%  { z-index:10; opacity:1; translate:0px 0px; }
+          40%  { z-index:9;  translate:0px 4px; }
+          60%  { z-index:8;  translate:0px 8px; }
+          80%  { z-index:7;  opacity:1; translate:0px 12px; }
+          100% { z-index:5;  translate:0px 30px; opacity:0; }
         }
         @keyframes fadeInLine { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
