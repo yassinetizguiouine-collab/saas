@@ -417,7 +417,7 @@ function CinematicScreen({
         <img
           src="/ChatGPT Image 24 mai 2026, 10_44_14.png"
           alt="logo"
-          style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }}
+          style={{ width: 38, height: 38, objectFit: 'contain', borderRadius: 6 }}
         />
         <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           LeadflowCode
