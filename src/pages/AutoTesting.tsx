@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../lib/supabase'
 
@@ -248,35 +248,7 @@ function CriteriaScreen({
   )
 }
 
-// ─── TYPING TEXT ──────────────────────────────────────────────────────────────
-
-function TypingText({ text, speed = 38, onDone }: { text: string; speed?: number; onDone?: () => void }) {
-  const [displayed, setDisplayed] = useState('')
-  const [done, setDone] = useState(false)
-  useEffect(() => {
-    setDisplayed('')
-    setDone(false)
-    let i = 0
-    const interval = setInterval(() => {
-      i++
-      setDisplayed(text.slice(0, i))
-      if (i >= text.length) {
-        clearInterval(interval)
-        setDone(true)
-        onDone?.()
-      }
-    }, speed)
-    return () => clearInterval(interval)
-  }, [text])
-  return (
-    <span>
-      {displayed}
-      {!done && <span style={{ opacity: 0.5, animation: 'blink 1s step-end infinite' }}>|</span>}
-    </span>
-  )
-}
-
-// ─── CINEMATIC SCREEN ─────────────────────────────────────────────────────────
+// ─── AUTO TESTING RUN SCREEN ──────────────────────────────────────────────────
 
 type RunData = {
   status: string
@@ -287,72 +259,39 @@ type RunData = {
   overall_score: number
 }
 
-// ─── Cinematic dot grid (dark, purple hover glow) ─────────────────────────
-function CinematicDotGrid() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const mouse = useRef({ x: -999, y: -999 })
-  const raf = useRef<number>(0)
+function useTypingEffect(text: string, speed = 22) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+  const prevText = useRef('')
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')!
-    const DOT_SPACING = 22
-    const GLOW_RADIUS = 130
+    if (text === prevText.current) return
+    prevText.current = text
+    setDone(false)
+    setDisplayed('')
+    let i = 0
+    const interval = setInterval(() => {
+      i++
+      setDisplayed(text.slice(0, i))
+      if (i >= text.length) { clearInterval(interval); setDone(true) }
+    }, speed)
+    return () => clearInterval(interval)
+  }, [text, speed])
 
-    function resize() {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    resize()
-    window.addEventListener('resize', resize)
+  return { displayed, done }
+}
 
-    function onMove(e: MouseEvent) {
-      mouse.current = { x: e.clientX, y: e.clientY }
-    }
-    window.addEventListener('mousemove', onMove)
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      const cols = Math.ceil(canvas.width / DOT_SPACING) + 1
-      const rows = Math.ceil(canvas.height / DOT_SPACING) + 1
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const x = c * DOT_SPACING
-          const y = r * DOT_SPACING
-          const dx = x - mouse.current.x
-          const dy = y - mouse.current.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          const proximity = Math.max(0, 1 - dist / GLOW_RADIUS)
-          if (proximity > 0) {
-            ctx.beginPath()
-            ctx.arc(x, y, 1 + proximity * 2.8, 0, Math.PI * 2)
-            ctx.fillStyle = `rgba(124, 77, 204, ${0.15 + proximity * 0.7})`
-            ctx.fill()
-          } else {
-            ctx.beginPath()
-            ctx.arc(x, y, 1, 0, Math.PI * 2)
-            ctx.fillStyle = 'rgba(255,255,255,0.07)'
-            ctx.fill()
-          }
-        }
-      }
-      raf.current = requestAnimationFrame(draw)
-    }
-    draw()
-
-    return () => {
-      cancelAnimationFrame(raf.current)
-      window.removeEventListener('resize', resize)
-      window.removeEventListener('mousemove', onMove)
-    }
-  }, [])
-
+function PulsingDot() {
   return (
-    <canvas ref={canvasRef} style={{
-      position: 'absolute', inset: 0, zIndex: 0,
-      pointerEvents: 'none',
-    }} />
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 6 }}>
+      {[0, 1, 2].map(i => (
+        <span key={i} style={{
+          width: 5, height: 5, borderRadius: '50%', background: '#111',
+          opacity: 0.25, display: 'inline-block',
+          animation: `atPulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+        }} />
+      ))}
+    </span>
   )
 }
 
@@ -372,6 +311,21 @@ function CinematicScreen({
   const [totalScenarios, setTotalScenarios] = useState(10)
   const doneRef = useRef(false)
 
+  const phaseText = {
+    generating: 'Generating test scenarios for your agent...',
+    simulating: `Running scenario ${currentScenario} of ${totalScenarios} — simulating lead conversation...`,
+    judging: 'Judging all conversations and scoring results...',
+    complete: 'All scenarios tested. Report is ready! 🎉',
+  }[phase]
+
+  const { displayed, done } = useTypingEffect(phaseText, 22)
+
+  const isComplete = phase === 'complete'
+
+  const progressWidth = phase === 'generating' ? '15%'
+    : phase === 'simulating' ? `${15 + (currentScenario / totalScenarios) * 65}%`
+    : phase === 'judging' ? '85%' : '100%'
+
   useEffect(() => {
     const channel = supabase
       .channel(`auto_test_${runId}`)
@@ -389,7 +343,7 @@ function CinematicScreen({
 
         if (newPhase === 'complete' && !doneRef.current) {
           doneRef.current = true
-          setTimeout(() => onDone(data.results, data.overall_score), 1200)
+          setTimeout(() => onDone(data.results, data.overall_score), 2200)
         }
       })
       .subscribe()
@@ -397,115 +351,137 @@ function CinematicScreen({
     return () => { supabase.removeChannel(channel) }
   }, [runId, onDone])
 
-  const phaseLabel = {
-    generating: 'Generating scenarios...',
-    simulating: `Testing scenario ${currentScenario} of ${totalScenarios}`,
-    judging: 'Judging all responses...',
-    complete: 'Done!',
-  }[phase]
-
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      background: '#060606', display: 'flex', flexDirection: 'column',
+      position: 'fixed' as const, inset: 0, zIndex: 9999,
+      minHeight: '100vh', width: '100%',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      background: '#f9f9f9',
+      backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.10) 1px, transparent 1px)',
+      backgroundSize: '18px 18px',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
+      overflow: 'hidden',
     }}>
-      <CinematicDotGrid />
+      <style>{`
+        @keyframes atPulse {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.3); }
+        }
+        @keyframes atSpin { to { transform: rotate(360deg); } }
+        @keyframes atFadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes atCheckPop {
+          0% { transform: scale(0.5); opacity: 0; }
+          70% { transform: scale(1.15); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes atGlowPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0.06); }
+          50% { box-shadow: 0 0 32px 8px rgba(0,0,0,0.07); }
+        }
+        @keyframes atProgressSlide {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(300%); }
+        }
+      `}</style>
 
-      {/* Header — logo + LeadflowCode */}
-      <div style={{ padding: '20px 32px', position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+      {/* Top-left logo */}
+      <div style={{
+        position: 'absolute', top: 28, left: 36,
+        display: 'flex', alignItems: 'center', gap: 6,
+        animation: 'atFadeIn 0.5s ease both',
+      }}>
         <img
-          src="/ChatGPT Image 24 mai 2026, 10_44_14.png"
-          alt="logo"
-          style={{ width: 38, height: 38, objectFit: 'contain', borderRadius: 6 }}
+          src="/Création sans titre (25).png"
+          alt=""
+          style={{ height: 28, width: 28, objectFit: 'contain', mixBlendMode: 'darken' }}
         />
-        <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          LeadflowCode
+        <span style={{ fontSize: 20, fontWeight: 800, color: '#111', letterSpacing: '-0.03em' }}>
+          LeadFlow
         </span>
       </div>
 
-      {/* Center — 3D tower + phase label */}
-      <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        position: 'relative', zIndex: 1,
-      }}>
-        {/* Tower loader */}
-        <div style={{ scale: '3', height: '50px', width: '40px' }}>
-          {(['box-1','box-2','box-3','box-4'] as const).map((cls, i) => (
-            <div key={i} className={`box ${cls}`} style={{ position: 'relative', opacity: 0, left: 10 }}>
-              <div className="side-top" />
-              <div className="side-left" />
-              <div className="side-right" />
-            </div>
-          ))}
+      {/* Center card */}
+      <div
+        className="glass-strong"
+        style={{
+          borderRadius: 28, padding: '52px 56px',
+          width: '100%', maxWidth: 520,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: 32,
+          animation: 'atGlowPulse 3s ease-in-out infinite',
+        }}
+      >
+        {/* Icon */}
+        <div style={{
+          width: 72, height: 72, borderRadius: '50%',
+          background: isComplete ? 'rgba(37,211,102,0.10)' : 'rgba(0,0,0,0.05)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'background 0.4s ease',
+        }}>
+          {isComplete ? (
+            <i className="ti ti-check" style={{
+              fontSize: 34, color: '#25D366',
+              animation: 'atCheckPop 0.4s ease both',
+            }} />
+          ) : (
+            <img
+              src="/ChatGPT Image 18 mai 2026, 09_10_46.png"
+              alt=""
+              style={{ height: 36, width: 36, objectFit: 'contain', animation: 'atSpin 3s linear infinite' }}
+            />
+          )}
         </div>
 
-        {/* Phase label */}
-        <p style={{
-          marginTop: 72,
-          fontSize: 13,
-          fontWeight: 400,
-          color: 'rgba(255,255,255,0.4)',
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          textAlign: 'center',
-        }}>
-          {phaseLabel}
-        </p>
-      </div>
+        {/* Title */}
+        <div style={{ textAlign: 'center' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111', letterSpacing: '-0.5px', marginBottom: 8 }}>
+            {isComplete ? 'Testing complete 🎉' : 'Running auto test...'}
+          </h1>
+          <p style={{ fontSize: 13, color: '#aaa', fontWeight: 400 }}>
+            {isComplete
+              ? 'Taking you to your report now'
+              : 'Sit back — your agent is being stress-tested automatically.'}
+          </p>
+        </div>
 
-      {/* Progress bar */}
-      <div style={{ height: 2, background: 'rgba(255,255,255,0.05)', position: 'relative', zIndex: 1 }}>
+        {/* Typing step */}
         <div style={{
-          height: '100%',
-          background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 0%, #fff 100%)',
-          width: phase === 'generating' ? '15%'
-            : phase === 'simulating' ? `${15 + (currentScenario / totalScenarios) * 65}%`
-            : phase === 'judging' ? '85%' : '100%',
-          transition: 'width 1s cubic-bezier(0.4,0,0.2,1)',
-        }} />
+          width: '100%', background: 'rgba(0,0,0,0.03)',
+          borderRadius: 16, padding: '20px 24px', minHeight: 64,
+          display: 'flex', alignItems: 'center',
+        }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#111', lineHeight: 1.6, margin: 0, letterSpacing: '-0.1px' }}>
+            {displayed}
+            {!done && !isComplete && <PulsingDot />}
+          </p>
+        </div>
+
+        {/* Progress bar */}
+        {!isComplete && (
+          <div style={{ width: '100%', height: 3, background: 'rgba(0,0,0,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: progressWidth,
+              background: '#111', borderRadius: 99,
+              transition: 'width 1s cubic-bezier(0.4,0,0.2,1)',
+            }} />
+          </div>
+        )}
       </div>
 
-      <style>{`
-        .box { position: relative; opacity: 0; left: 10px; }
-        .side-left {
-          position: absolute; width: 19px; height: 5px;
-          background-color: rgba(124,77,204,0.7);
-          transform: skew(0deg,-25deg); top: 14px; left: 10px;
-        }
-        .side-right {
-          position: absolute; width: 19px; height: 5px;
-          background-color: rgba(150,100,230,0.85);
-          transform: skew(0deg,25deg); top: 14px; left: -9px;
-        }
-        .side-top {
-          position: absolute; width: 20px; height: 20px;
-          background-color: rgba(180,130,255,1);
-          rotate: 45deg; transform: skew(-20deg,-20deg);
-        }
-        .box-1 { animation: from-left 4s infinite; }
-        .box-2 { animation: from-right 4s infinite; animation-delay: 1s; }
-        .box-3 { animation: from-left 4s infinite; animation-delay: 2s; }
-        .box-4 { animation: from-right 4s infinite; animation-delay: 3s; }
-        @keyframes from-left {
-          0%   { z-index:20; opacity:0; translate:-20px -6px; }
-          20%  { z-index:10; opacity:1; translate:0px 0px; }
-          40%  { z-index:9;  translate:0px 4px; }
-          60%  { z-index:8;  translate:0px 8px; }
-          80%  { z-index:7;  opacity:1; translate:0px 12px; }
-          100% { z-index:5;  translate:0px 30px; opacity:0; }
-        }
-        @keyframes from-right {
-          0%   { z-index:20; opacity:0; translate:20px -6px; }
-          20%  { z-index:10; opacity:1; translate:0px 0px; }
-          40%  { z-index:9;  translate:0px 4px; }
-          60%  { z-index:8;  translate:0px 8px; }
-          80%  { z-index:7;  opacity:1; translate:0px 12px; }
-          100% { z-index:5;  translate:0px 30px; opacity:0; }
-        }
-        @keyframes fadeInLine { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-      `}</style>
+      {/* Bottom hint */}
+      {!isComplete && (
+        <p style={{
+          position: 'absolute', bottom: 28,
+          fontSize: 12, color: '#ccc',
+          animation: 'atFadeIn 0.5s ease 0.6s both',
+        }}>
+          Powered by LeadFlow AI
+        </p>
+      )}
     </div>
   )
 }
