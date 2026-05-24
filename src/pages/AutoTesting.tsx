@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../lib/supabase'
 
 const AUTO_TEST_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/7702f93e-e54b-40fe-bc69-03e81003e60f'
@@ -685,22 +686,24 @@ export default function AutoTesting({ userId, templateId, agentName, onBack }: P
           onBack={onBack}
         />
       )}
-      {screen === 'cinematic' && runId && (
+      {screen === 'cinematic' && runId && createPortal(
         <CinematicScreen
           runId={runId}
           userId={userId}
           agentName={agentName}
           onDone={handleCinematicDone}
-        />
+        />,
+        document.body
       )}
-      {screen === 'report' && reportData && (
+      {screen === 'report' && reportData && createPortal(
         <ReportScreen
           results={reportData.results}
           overallScore={reportData.overallScore}
           agentName={agentName}
           onRetake={() => setScreen('criteria')}
           onSatisfied={onBack}
-        />
+        />,
+        document.body
       )}
     </>
   )
