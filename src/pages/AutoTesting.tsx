@@ -412,9 +412,14 @@ function CinematicScreen({
     }}>
       <CinematicDotGrid />
 
-      {/* Header — just LeadflowCode, light weight, no border */}
-      <div style={{ padding: '28px 48px', position: 'relative', zIndex: 1 }}>
-        <span style={{ fontSize: 26, fontWeight: 300, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.9)' }}>
+      {/* Header — logo + LeadflowCode */}
+      <div style={{ padding: '20px 32px', position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <img
+          src="/ChatGPT Image 24 mai 2026, 10_44_14.png"
+          alt="logo"
+          style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }}
+        />
+        <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           LeadflowCode
         </span>
       </div>
@@ -466,17 +471,17 @@ function CinematicScreen({
         .box { position: relative; opacity: 0; left: 10px; }
         .side-left {
           position: absolute; width: 19px; height: 5px;
-          background-color: rgba(255,255,255,0.55);
+          background-color: rgba(124,77,204,0.7);
           transform: skew(0deg,-25deg); top: 14px; left: 10px;
         }
         .side-right {
           position: absolute; width: 19px; height: 5px;
-          background-color: rgba(255,255,255,0.75);
+          background-color: rgba(150,100,230,0.85);
           transform: skew(0deg,25deg); top: 14px; left: -9px;
         }
         .side-top {
           position: absolute; width: 20px; height: 20px;
-          background-color: rgba(255,255,255,0.95);
+          background-color: rgba(180,130,255,1);
           rotate: 45deg; transform: skew(-20deg,-20deg);
         }
         .box-1 { animation: from-left 4s infinite; }
