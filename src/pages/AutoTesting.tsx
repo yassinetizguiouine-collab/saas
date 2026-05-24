@@ -5,16 +5,16 @@ import { supabase } from '../lib/supabase'
 const AUTO_TEST_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/7702f93e-e54b-40fe-bc69-03e81003e60f'
 
 const CRITERIA_OPTIONS = [
-  { id: 'price_objection', label: 'Price objection', icon: '💸', desc: 'Too expensive' },
-  { id: 'im_busy', label: 'Im busy', icon: '⏰', desc: 'Not a good time right now' },
-  { id: 'ill_think', label: 'Ill think about it', icon: '🤔', desc: 'Let me think and get back to you' },
-  { id: 'talk_to_wife', label: 'Ill talk to my partner', icon: '👫', desc: 'Need to check with someone first' },
-  { id: 'mad_client', label: 'Angry or frustrated lead', icon: '😤', desc: 'This is a waste of my time' },
-  { id: 'not_interested', label: 'Not interested', icon: '🚫', desc: 'Im good, thanks' },
-  { id: 'too_good', label: 'Too good to be true', icon: '🤨', desc: 'Sounds like a scam' },
-  { id: 'already_tried', label: 'Already tried something similar', icon: '😞', desc: 'I tried before and it did not work' },
-  { id: 'send_info', label: 'Send me more info', icon: '📩', desc: 'Just send me details first' },
-  { id: 'not_right_time', label: 'Not the right time', icon: '📅', desc: 'Maybe later, not now' },
+  { id: 'price_objection', label: 'Price objection', icon: 'ti-coin', desc: 'Too expensive' },
+  { id: 'im_busy', label: 'Im busy', icon: 'ti-clock', desc: 'Not a good time right now' },
+  { id: 'ill_think', label: 'Ill think about it', icon: 'ti-bulb', desc: 'Let me think and get back to you' },
+  { id: 'talk_to_wife', label: 'Ill talk to my partner', icon: 'ti-users', desc: 'Need to check with someone first' },
+  { id: 'mad_client', label: 'Angry or frustrated lead', icon: 'ti-mood-angry', desc: 'This is a waste of my time' },
+  { id: 'not_interested', label: 'Not interested', icon: 'ti-ban', desc: 'Im good, thanks' },
+  { id: 'too_good', label: 'Too good to be true', icon: 'ti-shield-question', desc: 'Sounds like a scam' },
+  { id: 'already_tried', label: 'Already tried something similar', icon: 'ti-rotate-clockwise', desc: 'I tried before and it did not work' },
+  { id: 'send_info', label: 'Send me more info', icon: 'ti-send', desc: 'Just send me details first' },
+  { id: 'not_right_time', label: 'Not the right time', icon: 'ti-calendar-x', desc: 'Maybe later, not now' },
 ]
 
 interface Props {
@@ -196,7 +196,7 @@ function CriteriaScreen({
                 {isSelected && <i className="ti ti-check" style={{ fontSize: 11, color: '#fff' }} />}
               </div>
 
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{c.icon}</span>
+              <i className={`ti ${c.icon}`} style={{ fontSize: 20, color: '#7c3aed', flexShrink: 0 }} />
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 13.5, fontWeight: 700, color: '#111', marginBottom: 2 }}>{c.label}</p>
@@ -287,6 +287,75 @@ type RunData = {
   overall_score: number
 }
 
+// ─── Cinematic dot grid (dark, purple hover glow) ─────────────────────────
+function CinematicDotGrid() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const mouse = useRef({ x: -999, y: -999 })
+  const raf = useRef<number>(0)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')!
+    const DOT_SPACING = 22
+    const GLOW_RADIUS = 130
+
+    function resize() {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    function onMove(e: MouseEvent) {
+      mouse.current = { x: e.clientX, y: e.clientY }
+    }
+    window.addEventListener('mousemove', onMove)
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      const cols = Math.ceil(canvas.width / DOT_SPACING) + 1
+      const rows = Math.ceil(canvas.height / DOT_SPACING) + 1
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = c * DOT_SPACING
+          const y = r * DOT_SPACING
+          const dx = x - mouse.current.x
+          const dy = y - mouse.current.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          const proximity = Math.max(0, 1 - dist / GLOW_RADIUS)
+          if (proximity > 0) {
+            ctx.beginPath()
+            ctx.arc(x, y, 1 + proximity * 2.8, 0, Math.PI * 2)
+            ctx.fillStyle = `rgba(124, 77, 204, ${0.15 + proximity * 0.7})`
+            ctx.fill()
+          } else {
+            ctx.beginPath()
+            ctx.arc(x, y, 1, 0, Math.PI * 2)
+            ctx.fillStyle = 'rgba(255,255,255,0.07)'
+            ctx.fill()
+          }
+        }
+      }
+      raf.current = requestAnimationFrame(draw)
+    }
+    draw()
+
+    return () => {
+      cancelAnimationFrame(raf.current)
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('mousemove', onMove)
+    }
+  }, [])
+
+  return (
+    <canvas ref={canvasRef} style={{
+      position: 'absolute', inset: 0, zIndex: 0,
+      pointerEvents: 'none',
+    }} />
+  )
+}
+
 function CinematicScreen({
   runId,
   userId,
@@ -368,45 +437,48 @@ function CinematicScreen({
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999,
-      background: '#000', display: 'flex', flexDirection: 'column',
+      background: '#060606', display: 'flex', flexDirection: 'column',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
-      {/* Header */}
-      <div style={{
-        padding: '24px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-      }}>
+      <CinematicDotGrid />
+      {/* Header - no border, badge pinned top-right */}
+      <div style={{ padding: '28px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
         <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: '#fff' }}>
           LeadflowCode
         </span>
 
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          background: 'rgba(34,197,94,0.1)',
-          border: '1px solid rgba(34,197,94,0.28)',
-          borderRadius: 999, padding: '7px 18px',
-        }}>
+        {/* Scenario counter left of badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {phase === 'simulating' && (
+            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', fontVariantNumeric: 'tabular-nums' }}>
+              {currentScenario} / {totalScenarios}
+            </span>
+          )}
           <div style={{
-            width: 8, height: 8, borderRadius: '50%',
-            background: '#22c55e',
-            animation: phase !== 'complete' ? 'pulse 1.2s ease-in-out infinite' : 'none',
-            boxShadow: '0 0 8px rgba(34,197,94,0.7)',
-            flexShrink: 0,
-          }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#22c55e', letterSpacing: '0.01em' }}>
-            {phaseLabel}
-          </span>
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: 'rgba(34,197,94,0.1)',
+            border: '1px solid rgba(34,197,94,0.28)',
+            borderRadius: 999, padding: '7px 18px',
+          }}>
+            <div style={{
+              width: 8, height: 8, borderRadius: '50%',
+              background: '#22c55e',
+              animation: phase !== 'complete' ? 'pulse 1.2s ease-in-out infinite' : 'none',
+              boxShadow: '0 0 8px rgba(34,197,94,0.7)',
+              flexShrink: 0,
+            }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#22c55e', letterSpacing: '0.01em' }}>
+              {phaseLabel}
+            </span>
+          </div>
         </div>
-
-        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', fontVariantNumeric: 'tabular-nums', minWidth: 60, textAlign: 'right' as const }}>
-          {phase === 'simulating' ? `${currentScenario} / ${totalScenarios}` : ''}
-        </span>
       </div>
 
       {/* Body */}
       <div style={{
         flex: 1, overflowY: 'auto', padding: '44px 64px',
         display: 'flex', flexDirection: 'column',
+        position: 'relative', zIndex: 1,
       }}>
         {(phase === 'generating' || lines.length === 0) && (
           <div style={{ marginBottom: 32 }}>
@@ -479,7 +551,7 @@ function CinematicScreen({
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 2, background: 'rgba(255,255,255,0.05)' }}>
+      <div style={{ height: 2, background: 'rgba(255,255,255,0.05)', position: 'relative', zIndex: 1 }}>
         <div style={{
           height: '100%',
           background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 0%, #fff 100%)',
@@ -523,7 +595,7 @@ function ReportScreen({
       opacity: visible ? 1 : 0, transition: 'opacity 0.6s ease',
     }}>
       {/* Header */}
-      <div style={{ padding: '20px 32px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ padding: '20px 32px' }}>
         <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>
           LeadflowCode
         </span>
