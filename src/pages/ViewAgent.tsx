@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import TrainingCamp from './TrainingCamp'
+import PreLaunchChecklist from './PreLaunchChecklist'
 
 interface Props {
   flowId: string
@@ -24,15 +24,19 @@ interface ChatMessage {
 const CHAT_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/aa83d08b-9a28-45fc-b782-562f7ffac7b4'
 
 const TONE_LABELS: Record<string, string> = {
-  bro: '😎 Bro',
-  pro: '💼 Pro',
-  friendly: '😊 Friendly',
-  warm: '🤗 Warm',
+  bro: 'Bro',
+  pro: 'Pro',
+  friendly: 'Friendly',
+  warm: 'Warm',
 }
 
 // ─── TAB BUTTON ──────────────────────────────────────────────────────────────
 
-function Tab({ label, icon, active, onClick }: { label: string; icon: string; active: boolean; onClick: () => void }) {
+function Tab({
+  label, icon, active, onClick, locked,
+}: {
+  label: string; icon: string; active: boolean; onClick: () => void; locked?: boolean
+}) {
   return (
     <button
       onClick={onClick}
@@ -40,16 +44,17 @@ function Tab({ label, icon, active, onClick }: { label: string; icon: string; ac
         display: 'flex', alignItems: 'center', gap: 7,
         padding: '9px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600,
         background: active ? '#111' : 'transparent',
-        color: active ? '#fff' : '#888',
+        color: active ? '#fff' : locked ? '#ccc' : '#888',
         border: active ? 'none' : '0.5px solid transparent',
-        cursor: 'pointer', fontFamily: 'inherit',
-        transition: 'all 0.15s',
+        cursor: locked ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+        transition: 'all 0.15s', opacity: locked ? 0.6 : 1,
       }}
-      onMouseEnter={e => { if (!active) e.currentTarget.style.color = '#111' }}
-      onMouseLeave={e => { if (!active) e.currentTarget.style.color = '#888' }}
+      onMouseEnter={e => { if (!active && !locked) e.currentTarget.style.color = '#111' }}
+      onMouseLeave={e => { if (!active && !locked) e.currentTarget.style.color = '#888' }}
     >
       <i className={`ti ${icon}`} style={{ fontSize: 14 }} />
       {label}
+      {locked && <i className="ti ti-lock" style={{ fontSize: 11, marginLeft: 2, color: '#ccc' }} />}
     </button>
   )
 }
@@ -69,7 +74,6 @@ function PromptTab({ prompt }: { prompt: string }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Stats row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
@@ -95,8 +99,6 @@ function PromptTab({ prompt }: { prompt: string }) {
           {copied ? 'Copied!' : 'Copy prompt'}
         </button>
       </div>
-
-      {/* Prompt box */}
       <div style={{
         background: 'rgba(0,0,0,0.03)', borderRadius: 14,
         padding: '20px 22px', maxHeight: 480, overflowY: 'auto',
@@ -130,11 +132,9 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
     const text = input.trim()
     if (!text || loading) return
     setInput('')
-
     const userMsg: ChatMessage = { role: 'user', text, ts: Date.now() }
     setMessages(prev => [...prev, userMsg])
     setLoading(true)
-
     try {
       const res = await fetch(CHAT_WEBHOOK, {
         method: 'POST',
@@ -144,7 +144,7 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
       const reply = (await res.text()).trim() || 'No response'
       setMessages(prev => [...prev, { role: 'agent', text: reply, ts: Date.now() }])
     } catch {
-      setMessages(prev => [...prev, { role: 'agent', text: '⚠️ Connection error. Check n8n.', ts: Date.now() }])
+      setMessages(prev => [...prev, { role: 'agent', text: 'Connection error. Check n8n.', ts: Date.now() }])
     } finally {
       setLoading(false)
     }
@@ -156,7 +156,6 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, height: 520 }}>
-      {/* Chat area */}
       <div style={{
         flex: 1, overflowY: 'auto', padding: '20px 0',
         display: 'flex', flexDirection: 'column', gap: 12,
@@ -168,7 +167,6 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
             <p style={{ fontSize: 12, marginTop: 4 }}>It'll respond using the generated system prompt</p>
           </div>
         )}
-
         {messages.map((msg, i) => (
           <div key={i} style={{
             display: 'flex',
@@ -186,8 +184,7 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
               </div>
             )}
             <div style={{
-              maxWidth: '72%',
-              padding: '10px 14px',
+              maxWidth: '72%', padding: '10px 14px',
               borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
               background: msg.role === 'user' ? '#111' : 'rgba(0,0,0,0.05)',
               color: msg.role === 'user' ? '#fff' : '#111',
@@ -197,7 +194,6 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
             </div>
           </div>
         ))}
-
         {loading && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, animation: 'fadeUp 0.2s ease both' }}>
             <div style={{
@@ -222,15 +218,11 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
             </div>
           </div>
         )}
-
         <div ref={bottomRef} />
       </div>
-
-      {/* Input */}
       <div style={{
         display: 'flex', gap: 8, alignItems: 'flex-end',
-        padding: '14px 0 0',
-        borderTop: '0.5px solid rgba(0,0,0,0.07)',
+        padding: '14px 0 0', borderTop: '0.5px solid rgba(0,0,0,0.07)',
       }}>
         <textarea
           value={input}
@@ -242,8 +234,7 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
             flex: 1, resize: 'none', padding: '10px 14px',
             borderRadius: 12, fontSize: 13.5, color: '#111',
             background: 'rgba(0,0,0,0.04)', border: '0.5px solid rgba(0,0,0,0.1)',
-            outline: 'none', fontFamily: 'inherit', lineHeight: 1.5,
-            overflowY: 'hidden',
+            outline: 'none', fontFamily: 'inherit', lineHeight: 1.5, overflowY: 'hidden',
           }}
           onInput={e => {
             const el = e.currentTarget
@@ -270,13 +261,68 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
   )
 }
 
+// ─── FULL WORKFLOW TAB (LOCKED) ───────────────────────────────────────────────
+
+function FullWorkflowLocked() {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: '72px 24px', textAlign: 'center',
+      animation: 'fadeUp 0.4s ease both',
+    }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: '50%',
+        background: 'rgba(0,0,0,0.04)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 20, border: '0.5px solid rgba(0,0,0,0.08)',
+      }}>
+        <i className="ti ti-lock" style={{ fontSize: 28, color: '#ccc' }} />
+      </div>
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111', letterSpacing: '-0.03em', marginBottom: 8 }}>
+        Full Workflow is locked
+      </h3>
+      <p style={{ fontSize: 13.5, color: '#999', lineHeight: 1.65, maxWidth: 320 }}>
+        Complete your Pre-Launch Checklist and confirm all fields to unlock your full workflow.
+      </p>
+    </div>
+  )
+}
+
+// ─── FULL WORKFLOW TAB (UNLOCKED) ────────────────────────────────────────────
+
+function FullWorkflowUnlocked({ agentName }: { agentName: string }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: '72px 24px', textAlign: 'center',
+      animation: 'fadeUp 0.4s ease both',
+    }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: '50%',
+        background: 'rgba(37,211,102,0.09)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 20, border: '0.5px solid rgba(37,211,102,0.2)',
+      }}>
+        <i className="ti ti-rocket" style={{ fontSize: 28, color: '#25D366' }} />
+      </div>
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111', letterSpacing: '-0.03em', marginBottom: 8 }}>
+        {agentName} is ready to launch
+      </h3>
+      <p style={{ fontSize: 13.5, color: '#999', lineHeight: 1.65, maxWidth: 320 }}>
+        Your full workflow configuration will appear here. Coming soon.
+      </p>
+    </div>
+  )
+}
+
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
 export default function ViewAgent({ flowId, templateId, onBack }: Props) {
   const [agent, setAgent] = useState<AgentData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'prompt' | 'chat' | 'camp'>('prompt')
+  const [tab, setTab] = useState<'prompt' | 'chat' | 'checklist' | 'workflow'>('prompt')
   const [userId, setUserId] = useState<string>('')
+  const [workflowUnlocked, setWorkflowUnlocked] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -284,7 +330,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
       if (!user) return
       setUserId(user.id)
 
-      const [{ data: config }, { data: prompt }] = await Promise.all([
+      const [{ data: config }, { data: prompt }, { data: checklist }] = await Promise.all([
         supabase
           .from('flow_config')
           .select('agent_name, agent_tone, agent_personality')
@@ -297,6 +343,12 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
           .eq('user_id', user.id)
           .eq('template_id', templateId)
           .maybeSingle(),
+        supabase
+          .from('pre_launch_checklist')
+          .select('workflow_unlocked')
+          .eq('user_id', user.id)
+          .eq('template_id', templateId)
+          .maybeSingle(),
       ])
 
       setAgent({
@@ -305,10 +357,15 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
         agent_personality: config?.agent_personality || '',
         system_prompt: prompt?.system_prompt || '',
       })
+      setWorkflowUnlocked(checklist?.workflow_unlocked ?? false)
       setLoading(false)
     }
     load()
   }, [flowId, templateId])
+
+  function handleWorkflowUnlocked() {
+    setWorkflowUnlocked(true)
+  }
 
   if (loading) return (
     <div style={{ padding: '80px 40px', textAlign: 'center', color: '#ccc' }}>
@@ -330,6 +387,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
           0%, 100% { opacity: 0.3; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.3); }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
       {/* Back */}
@@ -339,8 +397,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
           display: 'flex', alignItems: 'center', gap: 6,
           background: 'none', border: 'none', cursor: 'pointer',
           fontSize: 13, color: '#aaa', fontFamily: 'inherit', fontWeight: 500,
-          marginBottom: 28, padding: 0,
-          transition: 'color 0.15s',
+          marginBottom: 28, padding: 0, transition: 'color 0.15s',
         }}
         onMouseEnter={e => e.currentTarget.style.color = '#111'}
         onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
@@ -402,7 +459,14 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
         }}>
           <Tab label="System Prompt" icon="ti-code" active={tab === 'prompt'} onClick={() => setTab('prompt')} />
           <Tab label="Test Agent" icon="ti-message-circle" active={tab === 'chat'} onClick={() => setTab('chat')} />
-          <Tab label="Training Camp" icon="ti-flame" active={tab === 'camp'} onClick={() => setTab('camp')} />
+          <Tab label="Pre-Launch" icon="ti-clipboard-check" active={tab === 'checklist'} onClick={() => setTab('checklist')} />
+          <Tab
+            label="Full Workflow"
+            icon="ti-rocket"
+            active={tab === 'workflow'}
+            onClick={() => { if (workflowUnlocked) setTab('workflow') }}
+            locked={!workflowUnlocked}
+          />
         </div>
 
         {/* Content */}
@@ -420,8 +484,18 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
           {tab === 'chat' && (
             <ChatTab userId={userId} agentName={agent.agent_name} />
           )}
-          {tab === 'camp' && (
-            <TrainingCamp userId={userId} templateId={templateId} agentName={agent.agent_name} />
+          {tab === 'checklist' && (
+            <PreLaunchChecklist
+              userId={userId}
+              templateId={templateId}
+              agentName={agent.agent_name}
+              onWorkflowUnlocked={handleWorkflowUnlocked}
+            />
+          )}
+          {tab === 'workflow' && (
+            workflowUnlocked
+              ? <FullWorkflowUnlocked agentName={agent.agent_name} />
+              : <FullWorkflowLocked />
           )}
         </div>
       </div>
