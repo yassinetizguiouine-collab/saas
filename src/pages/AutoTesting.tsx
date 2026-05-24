@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AUTO_TEST_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/7702f93e-e54b-40fe-bc69-03e81003e60f'
@@ -247,10 +247,357 @@ function CriteriaScreen({
   )
 }
 
+// ─── TYPING TEXT ──────────────────────────────────────────────────────────────
+
+function TypingText({ text, speed = 38, onDone }: { text: string; speed?: number; onDone?: () => void }) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    setDisplayed('')
+    setDone(false)
+    let i = 0
+    const interval = setInterval(() => {
+      i++
+      setDisplayed(text.slice(0, i))
+      if (i >= text.length) {
+        clearInterval(interval)
+        setDone(true)
+        onDone?.()
+      }
+    }, speed)
+    return () => clearInterval(interval)
+  }, [text])
+  return (
+    <span>
+      {displayed}
+      {!done && <span style={{ opacity: 0.5, animation: 'blink 1s step-end infinite' }}>|</span>}
+    </span>
+  )
+}
+
+// ─── CINEMATIC SCREEN ─────────────────────────────────────────────────────────
+
+type RunData = {
+  status: string
+  current_phase: string
+  current_scenario: number
+  scenarios: any[]
+  results: any[]
+  overall_score: number
+}
+
+function CinematicScreen({
+  runId,
+  userId,
+  agentName,
+  onDone,
+}: {
+  runId: string
+  userId: string
+  agentName: string
+  onDone: (results: any[], overallScore: number) => void
+}) {
+  const [phase, setPhase] = useState<'generating' | 'simulating' | 'judging' | 'complete'>('generating')
+  const [currentScenario, setCurrentScenario] = useState(0)
+  const [totalScenarios, setTotalScenarios] = useState(10)
+  const [lines, setLines] = useState<{ text: string; type: 'system' | 'agent' | 'lead' | 'judge' }[]>([])
+  const [judgeLines, setJudgeLines] = useState<string[]>([])
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const doneRef = useRef(false)
+
+  const addLine = useCallback((text: string, type: 'system' | 'agent' | 'lead' | 'judge') => {
+    setLines(prev => [...prev, { text, type }])
+  }, [])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [lines, judgeLines])
+
+  useEffect(() => {
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel(`auto_test_${runId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'auto_test_runs',
+        filter: `id=eq.${runId}`,
+      }, (payload) => {
+        const data = payload.new as RunData
+        const newPhase = data.current_phase as any
+        setPhase(newPhase)
+        setCurrentScenario(data.current_scenario || 0)
+        if (data.scenarios?.length) setTotalScenarios(data.scenarios.length)
+
+        if (newPhase === 'simulating' && data.current_scenario > 0) {
+          const scenarios = data.scenarios || []
+          const idx = data.current_scenario - 1
+          const s = scenarios[idx]
+          if (s) {
+            addLine(`Scenario ${data.current_scenario}/${scenarios.length} — ${s.criteria.replace(/_/g, ' ')}`, 'system')
+            addLine(s.trigger_message, 'lead')
+          }
+        }
+
+        if (newPhase === 'judging') {
+          addLine('Sending all responses to judge...', 'system')
+        }
+
+        if (newPhase === 'complete' && !doneRef.current) {
+          doneRef.current = true
+          const results = data.results || []
+          results.forEach((r: any) => {
+            setJudgeLines(prev => [...prev, `Scenario ${r.scenario_id} · ${r.criteria.replace(/_/g, ' ')} → ${r.score}/100`])
+          })
+          setTimeout(() => onDone(data.results, data.overall_score), results.length * 600 + 1200)
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [runId, addLine, onDone])
+
+  const phaseLabel = {
+    generating: 'Generating scenarios...',
+    simulating: `Testing scenario ${currentScenario} of ${totalScenarios}`,
+    judging: 'Judge is grading all responses...',
+    complete: 'Complete',
+  }[phase]
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: '#000', display: 'flex', flexDirection: 'column',
+      fontFamily: '"SF Mono", "Fira Code", "Cascadia Code", monospace',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', color: '#fff' }}>
+          Leadflow<span style={{ color: '#7c3aed' }}>Code</span>
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 7, height: 7, borderRadius: '50%',
+            background: phase === 'complete' ? '#25d366' : '#7c3aed',
+            animation: phase !== 'complete' ? 'pulse 1.4s ease-in-out infinite' : 'none',
+          }} />
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em' }}>
+            {phaseLabel}
+          </span>
+        </div>
+      </div>
+
+      {/* Terminal body */}
+      <div style={{
+        flex: 1, overflowY: 'auto', padding: '32px',
+        display: 'flex', flexDirection: 'column', gap: 0,
+      }}>
+        {/* Phase generating */}
+        {(phase === 'generating' || lines.length === 0) && (
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ fontSize: 13, color: 'rgba(124,58,237,0.8)', marginBottom: 8 }}>
+              <TypingText text={`> Initializing auto test for ${agentName}...`} speed={30} />
+            </p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
+              <TypingText text="> Building realistic scenarios from your criteria..." speed={28} />
+            </p>
+          </div>
+        )}
+
+        {/* Conversation lines */}
+        {lines.map((line, i) => (
+          <div key={i} style={{ marginBottom: 12, animation: 'fadeInLine 0.3s ease both' }}>
+            {line.type === 'system' && (
+              <p style={{ fontSize: 11, color: 'rgba(124,58,237,0.6)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8, marginTop: 20 }}>
+                ── {line.text} ──
+              </p>
+            )}
+            {line.type === 'lead' && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 2, flexShrink: 0 }}>LEAD</span>
+                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6 }}>
+                  <TypingText text={line.text} speed={22} />
+                </p>
+              </div>
+            )}
+            {line.type === 'agent' && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingLeft: 40 }}>
+                <span style={{ fontSize: 11, color: 'rgba(37,211,102,0.5)', marginTop: 2, flexShrink: 0 }}>{agentName.toUpperCase()}</span>
+                <p style={{ fontSize: 13.5, color: 'rgba(37,211,102,0.85)', lineHeight: 1.6 }}>
+                  <TypingText text={line.text} speed={18} />
+                </p>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Judge lines */}
+        {judgeLines.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <p style={{ fontSize: 11, color: 'rgba(255,200,0,0.5)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+              ── Judge Results ──
+            </p>
+            {judgeLines.map((line, i) => (
+              <p key={i} style={{
+                fontSize: 13, color: 'rgba(255,200,0,0.85)', marginBottom: 6,
+                animation: `fadeInLine 0.4s ease ${i * 0.5}s both`,
+              }}>
+                {line}
+              </p>
+            ))}
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ height: 2, background: 'rgba(255,255,255,0.06)' }}>
+        <div style={{
+          height: '100%', background: '#7c3aed',
+          width: phase === 'generating' ? '15%'
+            : phase === 'simulating' ? `${15 + (currentScenario / totalScenarios) * 65}%`
+            : phase === 'judging' ? '85%' : '100%',
+          transition: 'width 0.8s ease',
+        }} />
+      </div>
+
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes fadeInLine { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+    </div>
+  )
+}
+
+// ─── REPORT SCREEN ────────────────────────────────────────────────────────────
+
+function ReportScreen({
+  results,
+  overallScore,
+  agentName,
+  onRetake,
+  onSatisfied,
+}: {
+  results: any[]
+  overallScore: number
+  agentName: string
+  onRetake: () => void
+  onSatisfied: () => void
+}) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => { setTimeout(() => setVisible(true), 80) }, [])
+
+  const scoreColor = overallScore >= 75 ? '#25d366' : overallScore >= 50 ? '#f59e0b' : '#ef4444'
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999, background: '#000',
+      overflowY: 'auto', fontFamily: '"SF Mono", "Fira Code", monospace',
+      opacity: visible ? 1 : 0, transition: 'opacity 0.6s ease',
+    }}>
+      {/* Header */}
+      <div style={{ padding: '20px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', color: '#fff' }}>
+          Leadflow<span style={{ color: '#7c3aed' }}>Code</span>
+        </span>
+      </div>
+
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: '48px 32px' }}>
+        {/* Overall score */}
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
+            Overall Score
+          </p>
+          <div style={{ fontSize: 88, fontWeight: 800, color: scoreColor, lineHeight: 1, marginBottom: 12 }}>
+            {overallScore}
+          </div>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>/100 · {results.length} scenarios tested</p>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 16 }}>
+            {agentName}'s performance report
+          </p>
+        </div>
+
+        {/* Individual results */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 48 }}>
+          {results.map((r: any, i: number) => {
+            const c = r.score >= 75 ? '#25d366' : r.score >= 50 ? '#f59e0b' : '#ef4444'
+            return (
+              <div key={i} style={{
+                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 12, padding: '16px 20px',
+                display: 'flex', alignItems: 'center', gap: 16,
+                animation: `fadeInLine 0.4s ease ${i * 0.06}s both`,
+              }}>
+                <div style={{
+                  fontSize: 22, fontWeight: 800, color: c,
+                  minWidth: 48, textAlign: 'center', flexShrink: 0,
+                }}>
+                  {r.score}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 4 }}>
+                    {r.criteria.replace(/_/g, ' ')}
+                  </p>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>
+                    {r.verdict || r.weaknesses || '—'}
+                  </p>
+                </div>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                  background: `${c}18`, border: `1px solid ${c}40`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <i className={`ti ${r.score >= 75 ? 'ti-check' : r.score >= 50 ? 'ti-minus' : 'ti-x'}`}
+                    style={{ fontSize: 14, color: c }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button
+            onClick={onRetake}
+            style={{
+              flex: 1, padding: '14px 0', borderRadius: 12,
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+              cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.7)',
+              fontFamily: 'inherit', transition: 'opacity 0.15s',
+            }}
+          >
+            ↩ Retake
+          </button>
+          <button
+            onClick={onSatisfied}
+            style={{
+              flex: 2, padding: '14px 0', borderRadius: 12,
+              background: '#7c3aed', border: 'none',
+              cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#fff',
+              fontFamily: 'inherit', transition: 'opacity 0.15s',
+            }}
+          >
+            ✓ Satisfied — Continue
+          </button>
+        </div>
+      </div>
+
+      <style>{`@keyframes fadeInLine { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }`}</style>
+    </div>
+  )
+}
+
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 export default function AutoTesting({ userId, templateId, agentName, onBack }: Props) {
-  const [screen, setScreen] = useState<'loading' | 'intro' | 'criteria'>('loading')
+  const [screen, setScreen] = useState<'loading' | 'intro' | 'criteria' | 'cinematic' | 'report'>('loading')
+  const [runId, setRunId] = useState<string | null>(null)
+  const [reportData, setReportData] = useState<{ results: any[]; overallScore: number } | null>(null)
 
   useEffect(() => {
     async function loadState() {
@@ -296,7 +643,7 @@ export default function AutoTesting({ userId, templateId, agentName, onBack }: P
     if (!run) return
 
     // Fire n8n webhook
-    await fetch(AUTO_TEST_WEBHOOK, {
+    fetch(AUTO_TEST_WEBHOOK, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -308,8 +655,13 @@ export default function AutoTesting({ userId, templateId, agentName, onBack }: P
       }),
     })
 
-    // TODO: navigate to cinematic screen (next step)
-    alert(`Auto test started! Run ID: ${run.id}`)
+    setRunId(run.id)
+    setScreen('cinematic')
+  }
+
+  function handleCinematicDone(results: any[], overallScore: number) {
+    setReportData({ results, overallScore })
+    setScreen('report')
   }
 
   if (screen === 'loading') {
@@ -334,6 +686,23 @@ export default function AutoTesting({ userId, templateId, agentName, onBack }: P
           agentName={agentName}
           onStart={handleStart}
           onBack={onBack}
+        />
+      )}
+      {screen === 'cinematic' && runId && (
+        <CinematicScreen
+          runId={runId}
+          userId={userId}
+          agentName={agentName}
+          onDone={handleCinematicDone}
+        />
+      )}
+      {screen === 'report' && reportData && (
+        <ReportScreen
+          results={reportData.results}
+          overallScore={reportData.overallScore}
+          agentName={agentName}
+          onRetake={() => setScreen('criteria')}
+          onSatisfied={onBack}
         />
       )}
     </>
