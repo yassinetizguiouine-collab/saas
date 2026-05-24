@@ -373,78 +373,101 @@ function CinematicScreen({
     }}>
       {/* Header */}
       <div style={{
-        padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '24px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>
+        <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: '#fff' }}>
           LeadflowCode
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'rgba(34,197,94,0.1)',
+          border: '1px solid rgba(34,197,94,0.28)',
+          borderRadius: 999, padding: '7px 18px',
+        }}>
           <div style={{
-            width: 7, height: 7, borderRadius: '50%',
-            background: phase === 'complete' ? '#fff' : 'rgba(255,255,255,0.5)',
-            animation: phase !== 'complete' ? 'pulse 1.4s ease-in-out infinite' : 'none',
+            width: 8, height: 8, borderRadius: '50%',
+            background: '#22c55e',
+            animation: phase !== 'complete' ? 'pulse 1.2s ease-in-out infinite' : 'none',
+            boxShadow: '0 0 8px rgba(34,197,94,0.7)',
+            flexShrink: 0,
           }} />
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#22c55e', letterSpacing: '0.01em' }}>
             {phaseLabel}
           </span>
         </div>
+
+        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', fontVariantNumeric: 'tabular-nums', minWidth: 60, textAlign: 'right' as const }}>
+          {phase === 'simulating' ? `${currentScenario} / ${totalScenarios}` : ''}
+        </span>
       </div>
 
-      {/* Terminal body */}
+      {/* Body */}
       <div style={{
-        flex: 1, overflowY: 'auto', padding: '32px',
-        display: 'flex', flexDirection: 'column', gap: 0,
+        flex: 1, overflowY: 'auto', padding: '44px 64px',
+        display: 'flex', flexDirection: 'column',
       }}>
-        {/* Phase generating */}
         {(phase === 'generating' || lines.length === 0) && (
-          <div style={{ marginBottom: 24 }}>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', marginBottom: 8 }}>
-              <TypingText text={`> Initializing auto test for ${agentName}...`} speed={30} />
+          <div style={{ marginBottom: 32 }}>
+            <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.92)', marginBottom: 14, lineHeight: 1.65 }}>
+              <TypingText text={`Initializing auto test for ${agentName}...`} speed={28} />
             </p>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
-              <TypingText text="> Building realistic scenarios from your criteria..." speed={28} />
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)', lineHeight: 1.65 }}>
+              <TypingText text="Building realistic scenarios from your criteria..." speed={25} />
             </p>
           </div>
         )}
 
-        {/* Conversation lines */}
         {lines.map((line, i) => (
-          <div key={i} style={{ marginBottom: 12, animation: 'fadeInLine 0.3s ease both' }}>
+          <div key={i} style={{ marginBottom: 20, animation: 'fadeInLine 0.35s ease both' }}>
             {line.type === 'system' && (
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: 8, marginTop: 20 }}>
-                ── {line.text} ──
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '28px 0 18px' }}>
+                <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, flexShrink: 0 }}>
+                  {line.text}
+                </span>
+                <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+              </div>
             )}
             {line.type === 'lead' && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 2, flexShrink: 0 }}>LEAD</span>
-                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
-                  <TypingText text={line.text} speed={22} />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, maxWidth: 700 }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+                  color: 'rgba(255,255,255,0.22)', background: 'rgba(255,255,255,0.05)',
+                  borderRadius: 5, padding: '3px 8px', marginTop: 3, flexShrink: 0,
+                }}>LEAD</span>
+                <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
+                  <TypingText text={line.text} speed={20} />
                 </p>
               </div>
             )}
             {line.type === 'agent' && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingLeft: 40 }}>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2, flexShrink: 0 }}>{agentName.toUpperCase()}</span>
-                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6 }}>
-                  <TypingText text={line.text} speed={18} />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, paddingLeft: 52, maxWidth: 750 }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+                  color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.07)',
+                  borderRadius: 5, padding: '3px 8px', marginTop: 3, flexShrink: 0,
+                }}>{agentName.toUpperCase()}</span>
+                <p style={{ fontSize: 17, color: '#fff', lineHeight: 1.7 }}>
+                  <TypingText text={line.text} speed={16} />
                 </p>
               </div>
             )}
           </div>
         ))}
 
-        {/* Judge lines */}
         {judgeLines.length > 0 && (
-          <div style={{ marginTop: 24 }}>
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: 12 }}>
-              ── Judge Results ──
-            </p>
+          <div style={{ marginTop: 36 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>Judge Results</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+            </div>
             {judgeLines.map((line, i) => (
               <p key={i} style={{
-                fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 6,
-                animation: `fadeInLine 0.4s ease ${i * 0.5}s both`,
+                fontSize: 16, color: 'rgba(255,255,255,0.75)', marginBottom: 12, lineHeight: 1.65,
+                animation: `fadeInLine 0.4s ease ${i * 0.4}s both`,
               }}>
                 {line}
               </p>
@@ -456,27 +479,25 @@ function CinematicScreen({
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }}>
+      <div style={{ height: 2, background: 'rgba(255,255,255,0.05)' }}>
         <div style={{
-          height: '100%', background: '#fff',
+          height: '100%',
+          background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 0%, #fff 100%)',
           width: phase === 'generating' ? '15%'
             : phase === 'simulating' ? `${15 + (currentScenario / totalScenarios) * 65}%`
             : phase === 'judging' ? '85%' : '100%',
-          transition: 'width 0.8s ease',
+          transition: 'width 1s cubic-bezier(0.4,0,0.2,1)',
         }} />
       </div>
 
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.8)} }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-        @keyframes fadeInLine { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeInLine { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
     </div>
   )
 }
-
-// ─── REPORT SCREEN ────────────────────────────────────────────────────────────
-
 function ReportScreen({
   results,
   overallScore,
