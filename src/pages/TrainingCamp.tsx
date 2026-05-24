@@ -24,10 +24,9 @@ interface Props {
   userId: string
   templateId: string
   agentName: string
-  onAutoTesting: () => void
 }
 
-type Screen = 'intro' | 'choose' | 'criteria' | 'personas' | 'briefing' | 'chat'
+type Screen = 'intro' | 'criteria' | 'personas' | 'briefing' | 'chat'
 
 const CRITERIA_BY_TEMPLATE: Record<string, { icon: string; label: string; desc: string }[]> = {
   'booking-with-lm': [
@@ -134,104 +133,6 @@ function IntroScreen({ onUnderstood }: { onUnderstood: () => void }) {
         Let's go
         <i className="ti ti-arrow-right" style={{ fontSize: 15 }} />
       </button>
-    </div>
-  )
-}
-
-// ─── CHOOSE SCREEN ───────────────────────────────────────────────────────────
-
-function ChooseScreen({ agentName, onFunTesting, onAutoTesting }: { agentName: string; onFunTesting: () => void; onAutoTesting: () => void }) {
-  const [visible, setVisible] = useState(false)
-  useEffect(() => { setTimeout(() => setVisible(true), 80) }, [])
-
-  const modes = [
-    {
-      id: 'fun', icon: 'ti-mood-happy', name: 'Fun Testing', tag: 'Recommended',
-      tagColor: '#1a8c4e', tagBg: 'rgba(37,211,102,0.09)',
-      description: "Pick your criteria, get 10 real lead personas, and chat as one of them. You'll feel exactly what your leads feel.",
-      highlights: ['10 custom lead personas', 'You play the lead', 'AI grades the result'],
-      border: 'rgba(37,211,102,0.2)', comingSoon: false,
-    },
-    {
-      id: 'auto', icon: 'ti-bolt', name: 'Automatic Testing', tag: 'New',
-      tagColor: '#7c3aed', tagBg: 'rgba(124,58,237,0.09)',
-      description: 'Select criteria and let us run everything automatically. Get a full report card with scores and feedback in minutes.',
-      highlights: ['Full automated run', 'Report card with scores', 'Fix weak points CTA'],
-      border: 'rgba(124,58,237,0.2)', comingSoon: false,
-    },
-  ]
-
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: '48px 24px', maxWidth: 600, margin: '0 auto',
-      opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(16px)',
-      transition: 'opacity 0.5s ease, transform 0.5s ease',
-    }}>
-      <div style={{ textAlign: 'center', marginBottom: 36 }}>
-        <CampBadge />
-        <h2 style={{ fontSize: 26, fontWeight: 800, color: '#111', letterSpacing: '-0.04em', marginBottom: 10 }}>
-          Choose your mode
-        </h2>
-        <p style={{ fontSize: 14, color: '#999', lineHeight: 1.6 }}>How do you want to test {agentName}?</p>
-      </div>
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {modes.map((mode, i) => (
-          <div
-            key={mode.id}
-            onClick={() => { if (!mode.comingSoon) { mode.id === 'fun' ? onFunTesting() : onAutoTesting() } }}
-            style={{
-              borderRadius: 18, padding: '22px 24px',
-              background: mode.id === 'auto' ? 'rgba(124,58,237,0.03)' : 'rgba(255,255,255,0.6)',
-              border: `0.5px solid ${mode.border}`,
-              cursor: mode.comingSoon ? 'default' : 'pointer',
-              opacity: mode.comingSoon ? 0.6 : 1,
-              transition: 'transform 0.15s, box-shadow 0.15s',
-              animation: `fadeUp 0.4s ease ${i * 0.1}s both`,
-            }}
-            onMouseEnter={e => { if (!mode.comingSoon) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' } }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-                background: mode.comingSoon ? 'rgba(0,0,0,0.04)' : mode.id === 'auto' ? 'rgba(124,58,237,0.08)' : 'rgba(37,211,102,0.08)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-              }}><i className={`ti ${mode.icon}`} style={{ fontSize: 22, color: mode.id === 'auto' ? '#7c3aed' : '#25D366' }} /></div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 800, color: '#111', letterSpacing: '-0.02em' }}>{mode.name}</h3>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100,
-                    background: mode.tagBg, color: mode.tagColor,
-                    letterSpacing: '0.04em', textTransform: 'uppercase' as const,
-                  }}>{mode.tag}</span>
-                </div>
-                <p style={{ fontSize: 13, color: '#777', lineHeight: 1.6, marginBottom: 14 }}>{mode.description}</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
-                  {mode.highlights.map((h, j) => (
-                    <span key={j} style={{
-                      fontSize: 11.5, fontWeight: 600, color: '#666',
-                      background: 'rgba(0,0,0,0.04)', borderRadius: 100, padding: '4px 10px',
-                      display: 'flex', alignItems: 'center', gap: 5,
-                    }}>
-                      <i className="ti ti-check" style={{ fontSize: 10, color: '#aaa' }} />{h}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              {!mode.comingSoon && (
-                <div style={{
-                  width: 32, height: 32, borderRadius: 10, flexShrink: 0, background: '#111',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'center',
-                }}>
-                  <i className="ti ti-arrow-right" style={{ fontSize: 14, color: '#fff' }} />
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
@@ -1199,7 +1100,7 @@ function ChatScreen({ persona, userId, templateId, agentName, sessionId, onEnd }
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
-export default function TrainingCamp({ userId, templateId, agentName, onAutoTesting }: Props) {
+export default function TrainingCamp({ userId, templateId, agentName }: Props) {
   const [screen, setScreen] = useState<Screen | null>(null)
   const [selectedCriteria, setSelectedCriteria] = useState<string[]>([])
   const [personas, setPersonas] = useState<any[]>([])
@@ -1242,7 +1143,7 @@ export default function TrainingCamp({ userId, templateId, agentName, onAutoTest
         return
       }
 
-      const savedScreen = (data.current_screen as Screen) || (data.intro_seen ? 'choose' : 'intro')
+      const savedScreen = (data.current_screen as Screen) || (data.intro_seen ? 'criteria' : 'intro')
       setScreen(savedScreen)
     }
     loadState()
@@ -1259,8 +1160,8 @@ export default function TrainingCamp({ userId, templateId, agentName, onAutoTest
   async function handleUnderstood() {
     await supabase
       .from('training_camp_state')
-      .upsert({ user_id: userId, template_id: templateId, intro_seen: true, current_screen: 'choose' }, { onConflict: 'user_id,template_id' })
-    setScreen('choose')
+      .upsert({ user_id: userId, template_id: templateId, intro_seen: true, current_screen: 'criteria' }, { onConflict: 'user_id,template_id' })
+    setScreen('criteria')
   }
 
   async function handleGenerate(criteria: string[]) {
@@ -1436,12 +1337,11 @@ export default function TrainingCamp({ userId, templateId, agentName, onAutoTest
         @keyframes spin { to { transform: rotate(360deg) } }
       `}</style>
       {screen === 'intro' && <IntroScreen onUnderstood={handleUnderstood} />}
-      {screen === 'choose' && <ChooseScreen agentName={agentName} onFunTesting={() => persistScreen('criteria')} onAutoTesting={onAutoTesting} />}
       {screen === 'personas' && (
         <PersonasScreen
           personas={personas}
           agentName={agentName}
-          onBack={() => persistScreen('choose')}
+          onBack={() => persistScreen('criteria')}
           onSelectPersona={handleSelectPersona}
           onRegenerate={handleRegenerate}
           onJudge={handleJudge}
@@ -1470,7 +1370,7 @@ export default function TrainingCamp({ userId, templateId, agentName, onAutoTest
           templateId={templateId}
           userId={userId}
           agentName={agentName}
-          onBack={() => persistScreen('choose')}
+          onBack={() => persistScreen('criteria')}
           onGenerate={handleGenerate}
         />
       )}
