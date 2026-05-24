@@ -370,21 +370,9 @@ function CinematicScreen({
   const [phase, setPhase] = useState<'generating' | 'simulating' | 'judging' | 'complete'>('generating')
   const [currentScenario, setCurrentScenario] = useState(0)
   const [totalScenarios, setTotalScenarios] = useState(10)
-  const [lines, setLines] = useState<{ text: string; type: 'system' | 'agent' | 'lead' | 'judge' }[]>([])
-  const [judgeLines, setJudgeLines] = useState<string[]>([])
-  const bottomRef = useRef<HTMLDivElement>(null)
   const doneRef = useRef(false)
 
-  const addLine = useCallback((text: string, type: 'system' | 'agent' | 'lead' | 'judge') => {
-    setLines(prev => [...prev, { text, type }])
-  }, [])
-
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [lines, judgeLines])
-
-  useEffect(() => {
-    // Subscribe to realtime updates
     const channel = supabase
       .channel(`auto_test_${runId}`)
       .on('postgres_changes', {
@@ -399,39 +387,21 @@ function CinematicScreen({
         setCurrentScenario(data.current_scenario || 0)
         if (data.scenarios?.length) setTotalScenarios(data.scenarios.length)
 
-        if (newPhase === 'simulating' && data.current_scenario > 0) {
-          const scenarios = data.scenarios || []
-          const idx = data.current_scenario - 1
-          const s = scenarios[idx]
-          if (s) {
-            addLine(`Scenario ${data.current_scenario}/${scenarios.length} — ${s.criteria.replace(/_/g, ' ')}`, 'system')
-            addLine(s.trigger_message, 'lead')
-          }
-        }
-
-        if (newPhase === 'judging') {
-          addLine('Sending all responses to judge...', 'system')
-        }
-
         if (newPhase === 'complete' && !doneRef.current) {
           doneRef.current = true
-          const results = data.results || []
-          results.forEach((r: any) => {
-            setJudgeLines(prev => [...prev, `Scenario ${r.scenario_id} · ${r.criteria.replace(/_/g, ' ')} → ${r.score}/100`])
-          })
-          setTimeout(() => onDone(data.results, data.overall_score), results.length * 600 + 1200)
+          setTimeout(() => onDone(data.results, data.overall_score), 1200)
         }
       })
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [runId, addLine, onDone])
+  }, [runId, onDone])
 
   const phaseLabel = {
     generating: 'Generating scenarios...',
     simulating: `Testing scenario ${currentScenario} of ${totalScenarios}`,
-    judging: 'Judge is grading all responses...',
-    complete: 'Complete',
+    judging: 'Judging all responses...',
+    complete: 'Done!',
   }[phase]
 
   return (
@@ -441,113 +411,57 @@ function CinematicScreen({
       fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
       <CinematicDotGrid />
-      {/* Header - no border, badge pinned top-right */}
-      <div style={{ padding: '28px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-        <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: '#fff' }}>
+
+      {/* Header — just LeadflowCode, light weight, no border */}
+      <div style={{ padding: '28px 48px', position: 'relative', zIndex: 1 }}>
+        <span style={{ fontSize: 26, fontWeight: 300, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.9)' }}>
           LeadflowCode
         </span>
-
-        {/* Scenario counter left of badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          {phase === 'simulating' && (
-            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', fontVariantNumeric: 'tabular-nums' }}>
-              {currentScenario} / {totalScenarios}
-            </span>
-          )}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'rgba(34,197,94,0.1)',
-            border: '1px solid rgba(34,197,94,0.28)',
-            borderRadius: 999, padding: '7px 18px',
-          }}>
-            <div style={{
-              width: 8, height: 8, borderRadius: '50%',
-              background: '#22c55e',
-              animation: phase !== 'complete' ? 'pulse 1.2s ease-in-out infinite' : 'none',
-              boxShadow: '0 0 8px rgba(34,197,94,0.7)',
-              flexShrink: 0,
-            }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#22c55e', letterSpacing: '0.01em' }}>
-              {phaseLabel}
-            </span>
-          </div>
-        </div>
       </div>
 
-      {/* Body */}
+      {/* Center — logo bounce + phase label */}
       <div style={{
-        flex: 1, overflowY: 'auto', padding: '44px 64px',
-        display: 'flex', flexDirection: 'column',
-        position: 'relative', zIndex: 1,
+        flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        position: 'relative', zIndex: 1, gap: 0,
       }}>
-        {(phase === 'generating' || lines.length === 0) && (
-          <div style={{ marginBottom: 32 }}>
-            <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.92)', marginBottom: 14, lineHeight: 1.65 }}>
-              <TypingText text={`Initializing auto test for ${agentName}...`} speed={28} />
-            </p>
-            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)', lineHeight: 1.65 }}>
-              <TypingText text="Building realistic scenarios from your criteria..." speed={25} />
-            </p>
-          </div>
-        )}
+        {/* Bouncing logo */}
+        <div style={{ position: 'relative', width: 64, height: 64, margin: 'auto' }}>
+          {/* shadow */}
+          <div style={{
+            position: 'absolute',
+            top: 78, left: 0,
+            width: 64, height: 6,
+            background: 'rgba(255,255,255,0.08)',
+            borderRadius: '50%',
+            animation: 'shadow324 0.5s linear infinite',
+          }} />
+          {/* logo */}
+          <img
+            src="/Création sans titre (25).png"
+            alt="logo"
+            style={{
+              position: 'absolute', top: 0, left: 0,
+              width: '100%', height: '100%',
+              borderRadius: 8,
+              objectFit: 'cover',
+              animation: 'jump7456 0.5s linear infinite',
+            }}
+          />
+        </div>
 
-        {lines.map((line, i) => (
-          <div key={i} style={{ marginBottom: 20, animation: 'fadeInLine 0.35s ease both' }}>
-            {line.type === 'system' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '28px 0 18px' }}>
-                <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, flexShrink: 0 }}>
-                  {line.text}
-                </span>
-                <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-              </div>
-            )}
-            {line.type === 'lead' && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, maxWidth: 700 }}>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-                  color: 'rgba(255,255,255,0.22)', background: 'rgba(255,255,255,0.05)',
-                  borderRadius: 5, padding: '3px 8px', marginTop: 3, flexShrink: 0,
-                }}>LEAD</span>
-                <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
-                  <TypingText text={line.text} speed={20} />
-                </p>
-              </div>
-            )}
-            {line.type === 'agent' && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, paddingLeft: 52, maxWidth: 750 }}>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-                  color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.07)',
-                  borderRadius: 5, padding: '3px 8px', marginTop: 3, flexShrink: 0,
-                }}>{agentName.toUpperCase()}</span>
-                <p style={{ fontSize: 17, color: '#fff', lineHeight: 1.7 }}>
-                  <TypingText text={line.text} speed={16} />
-                </p>
-              </div>
-            )}
-          </div>
-        ))}
-
-        {judgeLines.length > 0 && (
-          <div style={{ marginTop: 36 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>Judge Results</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-            </div>
-            {judgeLines.map((line, i) => (
-              <p key={i} style={{
-                fontSize: 16, color: 'rgba(255,255,255,0.75)', marginBottom: 12, lineHeight: 1.65,
-                animation: `fadeInLine 0.4s ease ${i * 0.4}s both`,
-              }}>
-                {line}
-              </p>
-            ))}
-          </div>
-        )}
-
-        <div ref={bottomRef} />
+        {/* Phase label */}
+        <p style={{
+          marginTop: 64,
+          fontSize: 15,
+          fontWeight: 400,
+          color: 'rgba(255,255,255,0.45)',
+          letterSpacing: '0.02em',
+          textAlign: 'center',
+          animation: 'fadeInLine 0.4s ease both',
+        }}>
+          {phaseLabel}
+        </p>
       </div>
 
       {/* Progress bar */}
@@ -563,9 +477,18 @@ function CinematicScreen({
       </div>
 
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.8)} }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-        @keyframes fadeInLine { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes jump7456 {
+          15% { border-bottom-right-radius: 3px; }
+          25% { transform: translateY(9px) rotate(22.5deg); }
+          50% { transform: translateY(18px) scale(1, .9) rotate(45deg); border-bottom-right-radius: 40px; }
+          75% { transform: translateY(9px) rotate(67.5deg); }
+          100% { transform: translateY(0) rotate(90deg); }
+        }
+        @keyframes shadow324 {
+          0%, 100% { transform: scale(1, 1); }
+          50% { transform: scale(1.2, 1); }
+        }
+        @keyframes fadeInLine { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
     </div>
   )
