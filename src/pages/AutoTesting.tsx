@@ -368,23 +368,23 @@ function CinematicScreen({
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999,
       background: '#000', display: 'flex', flexDirection: 'column',
-      fontFamily: '"SF Mono", "Fira Code", "Cascadia Code", monospace',
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
       {/* Header */}
       <div style={{
         padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
       }}>
-        <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', color: '#fff' }}>
-          Leadflow<span style={{ color: '#7c3aed' }}>Code</span>
+        <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>
+          LeadflowCode
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{
             width: 7, height: 7, borderRadius: '50%',
-            background: phase === 'complete' ? '#25d366' : '#7c3aed',
+            background: phase === 'complete' ? '#fff' : 'rgba(255,255,255,0.5)',
             animation: phase !== 'complete' ? 'pulse 1.4s ease-in-out infinite' : 'none',
           }} />
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em' }}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em' }}>
             {phaseLabel}
           </span>
         </div>
@@ -398,7 +398,7 @@ function CinematicScreen({
         {/* Phase generating */}
         {(phase === 'generating' || lines.length === 0) && (
           <div style={{ marginBottom: 24 }}>
-            <p style={{ fontSize: 13, color: 'rgba(124,58,237,0.8)', marginBottom: 8 }}>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', marginBottom: 8 }}>
               <TypingText text={`> Initializing auto test for ${agentName}...`} speed={30} />
             </p>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
@@ -411,22 +411,22 @@ function CinematicScreen({
         {lines.map((line, i) => (
           <div key={i} style={{ marginBottom: 12, animation: 'fadeInLine 0.3s ease both' }}>
             {line.type === 'system' && (
-              <p style={{ fontSize: 11, color: 'rgba(124,58,237,0.6)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8, marginTop: 20 }}>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: 8, marginTop: 20 }}>
                 ── {line.text} ──
               </p>
             )}
             {line.type === 'lead' && (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 2, flexShrink: 0 }}>LEAD</span>
-                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6 }}>
+                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
                   <TypingText text={line.text} speed={22} />
                 </p>
               </div>
             )}
             {line.type === 'agent' && (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingLeft: 40 }}>
-                <span style={{ fontSize: 11, color: 'rgba(37,211,102,0.5)', marginTop: 2, flexShrink: 0 }}>{agentName.toUpperCase()}</span>
-                <p style={{ fontSize: 13.5, color: 'rgba(37,211,102,0.85)', lineHeight: 1.6 }}>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2, flexShrink: 0 }}>{agentName.toUpperCase()}</span>
+                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6 }}>
                   <TypingText text={line.text} speed={18} />
                 </p>
               </div>
@@ -437,12 +437,12 @@ function CinematicScreen({
         {/* Judge lines */}
         {judgeLines.length > 0 && (
           <div style={{ marginTop: 24 }}>
-            <p style={{ fontSize: 11, color: 'rgba(255,200,0,0.5)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: 12 }}>
               ── Judge Results ──
             </p>
             {judgeLines.map((line, i) => (
               <p key={i} style={{
-                fontSize: 13, color: 'rgba(255,200,0,0.85)', marginBottom: 6,
+                fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 6,
                 animation: `fadeInLine 0.4s ease ${i * 0.5}s both`,
               }}>
                 {line}
@@ -455,9 +455,9 @@ function CinematicScreen({
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 2, background: 'rgba(255,255,255,0.06)' }}>
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }}>
         <div style={{
-          height: '100%', background: '#7c3aed',
+          height: '100%', background: '#fff',
           width: phase === 'generating' ? '15%'
             : phase === 'simulating' ? `${15 + (currentScenario / totalScenarios) * 65}%`
             : phase === 'judging' ? '85%' : '100%',
@@ -492,72 +492,69 @@ function ReportScreen({
   const [visible, setVisible] = useState(false)
   useEffect(() => { setTimeout(() => setVisible(true), 80) }, [])
 
-  const scoreColor = overallScore >= 75 ? '#25d366' : overallScore >= 50 ? '#f59e0b' : '#ef4444'
+  const scoreColor = '#fff'
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999, background: '#000',
-      overflowY: 'auto', fontFamily: '"SF Mono", "Fira Code", monospace',
+      overflowY: 'auto', fontFamily: "'Plus Jakarta Sans', sans-serif",
       opacity: visible ? 1 : 0, transition: 'opacity 0.6s ease',
     }}>
       {/* Header */}
-      <div style={{ padding: '20px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', color: '#fff' }}>
-          Leadflow<span style={{ color: '#7c3aed' }}>Code</span>
+      <div style={{ padding: '20px 32px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>
+          LeadflowCode
         </span>
       </div>
 
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '48px 32px' }}>
         {/* Overall score */}
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 16 }}>
             Overall Score
           </p>
-          <div style={{ fontSize: 88, fontWeight: 800, color: scoreColor, lineHeight: 1, marginBottom: 12 }}>
+          <div style={{ fontSize: 88, fontWeight: 800, color: '#fff', lineHeight: 1, marginBottom: 12 }}>
             {overallScore}
           </div>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>/100 · {results.length} scenarios tested</p>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 16 }}>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginTop: 16 }}>
             {agentName}'s performance report
           </p>
         </div>
 
         {/* Individual results */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 48 }}>
-          {results.map((r: any, i: number) => {
-            const c = r.score >= 75 ? '#25d366' : r.score >= 50 ? '#f59e0b' : '#ef4444'
-            return (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 12, padding: '16px 20px',
-                display: 'flex', alignItems: 'center', gap: 16,
-                animation: `fadeInLine 0.4s ease ${i * 0.06}s both`,
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 48 }}>
+          {results.map((r: any, i: number) => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 12, padding: '16px 20px',
+              display: 'flex', alignItems: 'center', gap: 16,
+              animation: `fadeInLine 0.4s ease ${i * 0.06}s both`,
+            }}>
+              <div style={{
+                fontSize: 22, fontWeight: 800, color: '#fff',
+                minWidth: 48, textAlign: 'center' as const, flexShrink: 0,
               }}>
-                <div style={{
-                  fontSize: 22, fontWeight: 800, color: c,
-                  minWidth: 48, textAlign: 'center', flexShrink: 0,
-                }}>
-                  {r.score}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 4 }}>
-                    {r.criteria.replace(/_/g, ' ')}
-                  </p>
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>
-                    {r.verdict || r.weaknesses || '—'}
-                  </p>
-                </div>
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                  background: `${c}18`, border: `1px solid ${c}40`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <i className={`ti ${r.score >= 75 ? 'ti-check' : r.score >= 50 ? 'ti-minus' : 'ti-x'}`}
-                    style={{ fontSize: 14, color: c }} />
-                </div>
+                {r.score}
               </div>
-            )
-          })}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 700, marginBottom: 4 }}>
+                  {r.criteria.replace(/_/g, ' ')}
+                </p>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>
+                  {r.verdict || r.weaknesses || '—'}
+                </p>
+              </div>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <i className={`ti ${r.score >= 75 ? 'ti-check' : r.score >= 50 ? 'ti-minus' : 'ti-x'}`}
+                  style={{ fontSize: 14, color: '#fff' }} />
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Actions */}
@@ -566,8 +563,8 @@ function ReportScreen({
             onClick={onRetake}
             style={{
               flex: 1, padding: '14px 0', borderRadius: 12,
-              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-              cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.7)',
+              background: 'transparent', border: '1px solid rgba(255,255,255,0.15)',
+              cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.5)',
               fontFamily: 'inherit', transition: 'opacity 0.15s',
             }}
           >
@@ -577,8 +574,8 @@ function ReportScreen({
             onClick={onSatisfied}
             style={{
               flex: 2, padding: '14px 0', borderRadius: 12,
-              background: '#7c3aed', border: 'none',
-              cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#fff',
+              background: '#fff', border: 'none',
+              cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#000',
               fontFamily: 'inherit', transition: 'opacity 0.15s',
             }}
           >
