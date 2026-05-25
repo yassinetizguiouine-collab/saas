@@ -1162,6 +1162,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: userId,
+          template_id: templateId,
           field_id: activeField,
           session_id: sessionId,
           message: text,
@@ -1238,6 +1239,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         user_id: userId,
+        template_id: templateId,
         field_id: activeField,
         session_id: sessionId,
         remark,
