@@ -1268,8 +1268,21 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
   }
 
   async function handleStartTest() {
-    // Load existing messages for this session
-    const msgs = await loadMessages(activeField!)
+    if (!activeField) return
+    const sessionId = `${userId}_${activeField}`
+    const currentStatus = checklist[activeField]
+
+    // If retaking a completed/remarked test, wipe the old session memory first
+    if (currentStatus !== 'not_started') {
+      await supabase.from('checklist_chat_memory').delete().eq('session_id', sessionId)
+      setSessionMessages([])
+      setConvoComplete(false)
+      setScreen('chat')
+      return
+    }
+
+    // First attempt — load any existing messages (e.g. user navigated away mid-test)
+    const msgs = await loadMessages(activeField)
     setSessionMessages(msgs)
     setConvoComplete(false)
     setScreen('chat')
