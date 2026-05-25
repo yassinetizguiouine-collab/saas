@@ -23,7 +23,7 @@ type ChecklistData = {
 }
 
 type FieldId = 'script_flow' | 'off_topic' | 'question_handling' | 'objection_handling' | 'hostile_lead' | 'closing'
-type Screen = 'loading' | 'intro' | 'overview' | 'field' | 'chat' | 'result'
+type Screen = 'loading' | 'intro' | 'overview' | 'field' | 'chat' | 'result' | 'view_convo'
 
 // ─── FIELD DEFINITIONS ────────────────────────────────────────────────────────
 
@@ -67,7 +67,7 @@ const FIELDS: {
     icon: 'ti-help-circle',
     tagline: 'When the lead asks questions, does the agent answer and return to the script?',
     whatToLookFor: [
-      'Answers the lead\'s question clearly and concisely',
+      "Answers the lead's question clearly and concisely",
       'Does not over-explain or go on tangents',
       'Immediately bridges back to the script after answering',
       'Does not lose its place in the conversation',
@@ -115,7 +115,8 @@ const FIELDS: {
   },
 ]
 
-const CHECKLIST_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/aa83d08b-9a28-45fc-b782-562f7ffac7b4'
+const CHECKLIST_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/8885c77b-65c5-462f-9211-1bbf783cb788'
+const REMARKS_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/d60f05e2-520d-4b85-87df-e4003394cbb2'
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -160,6 +161,10 @@ const DEFAULT_CHECKLIST: ChecklistData = {
   closing_remark: null,
 }
 
+// ─── CHAT MESSAGE TYPE ────────────────────────────────────────────────────────
+
+interface ChatMessage { role: 'user' | 'agent'; text: string; ts: number }
+
 // ─── INTRO SCREEN ─────────────────────────────────────────────────────────────
 
 function IntroScreen({ agentName, onUnderstood }: { agentName: string; onUnderstood: () => void }) {
@@ -172,7 +177,6 @@ function IntroScreen({ agentName, onUnderstood }: { agentName: string; onUnderst
       opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(14px)',
       transition: 'opacity 0.45s ease, transform 0.45s ease',
     }}>
-      {/* Badge */}
       <div style={{
         display: 'inline-flex', alignItems: 'center', gap: 7,
         background: 'rgba(0,0,0,0.05)', borderRadius: 100,
@@ -191,7 +195,6 @@ function IntroScreen({ agentName, onUnderstood }: { agentName: string; onUnderst
         This checklist walks you through 6 critical tests. For each one, you'll chat with your agent as a lead and validate it yourself. If something is off, leave a remark and we'll fix it.
       </p>
 
-      {/* Fields list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 40 }}>
         {FIELDS.map((f, i) => (
           <div key={f.id} style={{
@@ -254,7 +257,6 @@ function OverviewScreen({
 
   return (
     <div style={{ maxWidth: 580, margin: '0 auto', padding: '32px 24px' }}>
-      {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -275,7 +277,6 @@ function OverviewScreen({
               {remarkCount > 0 ? `${remarkCount} field${remarkCount > 1 ? 's' : ''} with remarks — we'll fix those` : 'Test each field below and validate your agent'}
             </p>
           </div>
-          {/* Progress ring */}
           <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
             <svg width="52" height="52" style={{ transform: 'rotate(-90deg)' }}>
               <circle cx="26" cy="26" r="21" fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth="3" />
@@ -300,7 +301,6 @@ function OverviewScreen({
         </div>
       </div>
 
-      {/* Field cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
         {FIELDS.map((f, i) => {
           const status = checklist[f.id]
@@ -320,7 +320,6 @@ function OverviewScreen({
               onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.07)' }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
             >
-              {/* Icon */}
               <div style={{
                 width: 38, height: 38, borderRadius: 11, flexShrink: 0,
                 background: statusBg(status),
@@ -328,8 +327,6 @@ function OverviewScreen({
               }}>
                 <i className={`ti ${f.icon}`} style={{ fontSize: 18, color: statusColor(status) }} />
               </div>
-
-              {/* Text */}
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 13.5, fontWeight: 700, color: '#111', marginBottom: 2 }}>{f.label}</p>
                 {remark && status === 'has_remarks' ? (
@@ -341,8 +338,6 @@ function OverviewScreen({
                   <p style={{ fontSize: 12, color: '#bbb' }}>{f.tagline}</p>
                 )}
               </div>
-
-              {/* Status badge */}
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 5,
                 padding: '4px 10px', borderRadius: 100,
@@ -358,7 +353,6 @@ function OverviewScreen({
         })}
       </div>
 
-      {/* Final confirm button */}
       {allDone && (
         <div style={{ animation: 'fadeUp 0.35s ease both' }}>
           {allSatisfied ? (
@@ -407,17 +401,18 @@ function FieldScreen({
   status,
   remark,
   onStartTest,
+  onViewConvo,
   onBack,
 }: {
   field: typeof FIELDS[0]
   status: FieldStatus
   remark: string | null
   onStartTest: () => void
+  onViewConvo: () => void
   onBack: () => void
 }) {
   return (
     <div style={{ maxWidth: 560, margin: '0 auto', padding: '32px 24px' }}>
-      {/* Back */}
       <button
         onClick={onBack}
         style={{
@@ -433,7 +428,6 @@ function FieldScreen({
         Back to checklist
       </button>
 
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
         <div style={{
           width: 48, height: 48, borderRadius: 14, flexShrink: 0,
@@ -458,7 +452,6 @@ function FieldScreen({
         </div>
       </div>
 
-      {/* What to look for */}
       <div style={{
         padding: '18px 20px', borderRadius: 14,
         background: 'rgba(0,0,0,0.03)',
@@ -478,7 +471,6 @@ function FieldScreen({
         </div>
       </div>
 
-      {/* Scenario */}
       <div style={{
         padding: '18px 20px', borderRadius: 14,
         background: 'rgba(0,0,0,0.02)',
@@ -491,7 +483,6 @@ function FieldScreen({
         <p style={{ fontSize: 13, color: '#666', lineHeight: 1.65 }}>{field.scenario}</p>
       </div>
 
-      {/* Remark if exists */}
       {status === 'has_remarks' && remark && (
         <div style={{
           padding: '14px 18px', borderRadius: 12,
@@ -508,49 +499,70 @@ function FieldScreen({
         </div>
       )}
 
-      <button
-        onClick={onStartTest}
-        style={{
-          width: '100%', padding: '14px 0', borderRadius: 14,
-          background: '#111', color: '#fff',
-          border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-          fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          transition: 'opacity 0.15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-      >
-        <i className="ti ti-message-circle" style={{ fontSize: 15 }} />
-        Test {field.label}
-      </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <button
+          onClick={onStartTest}
+          style={{
+            width: '100%', padding: '14px 0', borderRadius: 14,
+            background: '#111', color: '#fff',
+            border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+            fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            transition: 'opacity 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+        >
+          <i className="ti ti-message-circle" style={{ fontSize: 15 }} />
+          {status === 'satisfied' ? 'Retake Test' : `Test ${field.label}`}
+        </button>
+
+        {status === 'satisfied' && (
+          <button
+            onClick={onViewConvo}
+            style={{
+              width: '100%', padding: '13px 0', borderRadius: 14,
+              background: 'transparent', color: '#555',
+              border: '0.5px solid rgba(0,0,0,0.12)', cursor: 'pointer', fontFamily: 'inherit',
+              fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.color = '#111' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#555' }}
+          >
+            <i className="ti ti-history" style={{ fontSize: 15 }} />
+            View Conversation
+          </button>
+        )}
+      </div>
     </div>
   )
 }
 
 // ─── CHAT SCREEN ──────────────────────────────────────────────────────────────
 
-interface ChatMessage { role: 'user' | 'agent'; text: string; ts: number }
-
 function ChatScreen({
   field,
   userId,
   templateId,
   agentName,
+  messages,
+  onSendMessage,
   onEndTest,
 }: {
   field: typeof FIELDS[0]
   userId: string
   templateId: string
   agentName: string
+  messages: ChatMessage[]
+  onSendMessage: (text: string) => Promise<void>
   onEndTest: () => void
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showHint, setShowHint] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const sessionId = `${userId}_${field.id}`
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -560,24 +572,9 @@ function ChatScreen({
     const text = input.trim()
     if (!text || loading) return
     setInput('')
-
-    const userMsg: ChatMessage = { role: 'user', text, ts: Date.now() }
-    setMessages(prev => [...prev, userMsg])
     setLoading(true)
-
-    try {
-      const res = await fetch(CHECKLIST_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId, message: text }),
-      })
-      const reply = (await res.text()).trim() || 'No response'
-      setMessages(prev => [...prev, { role: 'agent', text: reply, ts: Date.now() }])
-    } catch {
-      setMessages(prev => [...prev, { role: 'agent', text: 'Connection error. Check n8n.', ts: Date.now() }])
-    } finally {
-      setLoading(false)
-    }
+    await onSendMessage(text)
+    setLoading(false)
   }
 
   function handleKey(e: React.KeyboardEvent) {
@@ -586,12 +583,10 @@ function ChatScreen({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 560 }}>
-      {/* Top bar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '12px 0 14px',
         borderBottom: '0.5px solid rgba(0,0,0,0.07)',
-        marginBottom: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
@@ -608,7 +603,6 @@ function ChatScreen({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Hint tooltip */}
           <div style={{ position: 'relative' }}>
             <button
               onMouseEnter={() => setShowHint(true)}
@@ -644,7 +638,6 @@ function ChatScreen({
             )}
           </div>
 
-          {/* End test */}
           <button
             onClick={onEndTest}
             style={{
@@ -664,7 +657,6 @@ function ChatScreen({
         </div>
       </div>
 
-      {/* Messages */}
       <div style={{
         flex: 1, overflowY: 'auto', padding: '16px 0',
         display: 'flex', flexDirection: 'column', gap: 12,
@@ -732,7 +724,6 @@ function ChatScreen({
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <div style={{
         display: 'flex', gap: 8, alignItems: 'flex-end',
         padding: '12px 0 0',
@@ -776,6 +767,123 @@ function ChatScreen({
   )
 }
 
+// ─── VIEW CONVO SCREEN (read-only) ────────────────────────────────────────────
+
+function ViewConvoScreen({
+  field,
+  messages,
+  onBack,
+  onRetake,
+}: {
+  field: typeof FIELDS[0]
+  messages: ChatMessage[]
+  onBack: () => void
+  onRetake: () => void
+}) {
+  const bottomRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: 560 }}>
+      {/* Top bar */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 0 14px',
+        borderBottom: '0.5px solid rgba(0,0,0,0.07)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 9,
+            background: 'rgba(37,211,102,0.08)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <i className={`ti ${field.icon}`} style={{ fontSize: 15, color: '#1a8c4e' }} />
+          </div>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{field.label}</p>
+            <p style={{ fontSize: 11, color: '#1a8c4e', fontWeight: 600 }}>Satisfied — read only</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={onRetake}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '7px 14px', borderRadius: 9,
+              background: 'rgba(0,0,0,0.05)', color: '#555',
+              border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              fontSize: 12.5, fontWeight: 600,
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.09)'; e.currentTarget.style.color = '#111' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.05)'; e.currentTarget.style.color = '#555' }}
+          >
+            <i className="ti ti-refresh" style={{ fontSize: 13 }} />
+            Retake
+          </button>
+          <button
+            onClick={onBack}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '7px 14px', borderRadius: 9,
+              background: '#111', color: '#fff',
+              border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              fontSize: 12.5, fontWeight: 700,
+              transition: 'opacity 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            <i className="ti ti-arrow-left" style={{ fontSize: 13 }} />
+            Back to Checklist
+          </button>
+        </div>
+      </div>
+
+      {/* Messages read-only */}
+      <div style={{
+        flex: 1, overflowY: 'auto', padding: '16px 0',
+        display: 'flex', flexDirection: 'column', gap: 12,
+      }}>
+        {messages.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+            <i className="ti ti-message-off" style={{ fontSize: 28, color: '#ddd', display: 'block', marginBottom: 10 }} />
+            <p style={{ fontSize: 13, color: '#bbb' }}>No messages recorded for this session.</p>
+          </div>
+        )}
+        {messages.map((msg, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+          }}>
+            {msg.role === 'agent' && (
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'rgba(37,211,102,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, marginRight: 8, alignSelf: 'flex-end',
+              }}>
+                <i className="ti ti-robot" style={{ fontSize: 14, color: '#25D366' }} />
+              </div>
+            )}
+            <div style={{
+              maxWidth: '72%', padding: '10px 14px',
+              borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+              background: msg.role === 'user' ? '#111' : 'rgba(0,0,0,0.05)',
+              color: msg.role === 'user' ? '#fff' : '#111',
+              fontSize: 13.5, lineHeight: 1.55, fontWeight: 450,
+            }}>
+              {msg.text}
+            </div>
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+    </div>
+  )
+}
+
 // ─── RESULT SCREEN ────────────────────────────────────────────────────────────
 
 function ResultScreen({
@@ -808,7 +916,6 @@ function ResultScreen({
 
   return (
     <div style={{ maxWidth: 520, margin: '0 auto', padding: '32px 24px' }}>
-      {/* Back */}
       <button
         onClick={onBack}
         style={{
@@ -842,7 +949,6 @@ function ResultScreen({
 
       {mode === 'choose' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* Satisfied */}
           <button
             onClick={onSatisfied}
             style={{
@@ -869,7 +975,6 @@ function ResultScreen({
             </div>
           </button>
 
-          {/* Leave remark */}
           <button
             onClick={() => setMode('remark')}
             style={{
@@ -953,34 +1058,6 @@ function ResultScreen({
   )
 }
 
-// ─── UNLOCKED SCREEN ──────────────────────────────────────────────────────────
-
-function UnlockedScreen() {
-  return (
-    <div style={{
-      maxWidth: 480, margin: '0 auto', padding: '60px 24px',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-      animation: 'fadeUp 0.4s ease both',
-    }}>
-      <div style={{
-        width: 72, height: 72, borderRadius: '50%',
-        background: 'rgba(37,211,102,0.10)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 24,
-        border: '0.5px solid rgba(37,211,102,0.2)',
-      }}>
-        <i className="ti ti-rocket" style={{ fontSize: 32, color: '#25D366' }} />
-      </div>
-      <h2 style={{ fontSize: 24, fontWeight: 800, color: '#111', letterSpacing: '-0.04em', marginBottom: 10 }}>
-        Workflow unlocked
-      </h2>
-      <p style={{ fontSize: 14, color: '#888', lineHeight: 1.65, maxWidth: 340 }}>
-        All 6 fields have been validated. Your Full Workflow tab is now active. Head there to complete your launch.
-      </p>
-    </div>
-  )
-}
-
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -994,6 +1071,8 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
   const [screen, setScreen] = useState<Screen>('loading')
   const [checklist, setChecklist] = useState<ChecklistData>(DEFAULT_CHECKLIST)
   const [activeField, setActiveField] = useState<FieldId | null>(null)
+  // messages kept in state — persisted to Supabase on every exchange
+  const [sessionMessages, setSessionMessages] = useState<ChatMessage[]>([])
 
   // ─── LOAD FROM SUPABASE ────────────────────────────────────────────────────
   useEffect(() => {
@@ -1032,7 +1111,23 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
     load()
   }, [userId, templateId])
 
-  // ─── PERSIST ──────────────────────────────────────────────────────────────
+  // ─── LOAD MESSAGES FOR FIELD ───────────────────────────────────────────────
+  async function loadMessages(fieldId: FieldId): Promise<ChatMessage[]> {
+    const sessionId = `${userId}_${fieldId}`
+    const { data } = await supabase
+      .from('checklist_chat_memory')
+      .select('message')
+      .eq('session_id', sessionId)
+      .order('id', { ascending: true })
+
+    if (!data || data.length === 0) return []
+    return data.map((row: any) => {
+      const m = typeof row.message === 'string' ? JSON.parse(row.message) : row.message
+      return { role: m.role, text: m.text, ts: m.ts ?? 0 }
+    })
+  }
+
+  // ─── PERSIST CHECKLIST ────────────────────────────────────────────────────
   async function persist(updates: Partial<ChecklistData>) {
     const merged = { ...checklist, ...updates }
     setChecklist(merged)
@@ -1046,18 +1141,62 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
       }, { onConflict: 'user_id,template_id' })
   }
 
+  // ─── SEND MESSAGE ──────────────────────────────────────────────────────────
+  async function handleSendMessage(text: string) {
+    if (!activeField) return
+    const sessionId = `${userId}_${activeField}`
+
+    const userMsg: ChatMessage = { role: 'user', text, ts: Date.now() }
+    const newMessages = [...sessionMessages, userMsg]
+    setSessionMessages(newMessages)
+
+    // Save user message to Supabase
+    await supabase.from('checklist_chat_memory').insert({
+      session_id: sessionId,
+      message: { role: 'user', text, ts: userMsg.ts },
+    })
+
+    try {
+      const res = await fetch(CHECKLIST_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          field_id: activeField,
+          session_id: sessionId,
+          message: text,
+        }),
+      })
+      const reply = (await res.text()).trim() || 'No response'
+      const agentMsg: ChatMessage = { role: 'agent', text: reply, ts: Date.now() }
+      setSessionMessages(prev => [...prev, agentMsg])
+
+      // Save agent message to Supabase
+      await supabase.from('checklist_chat_memory').insert({
+        session_id: sessionId,
+        message: { role: 'agent', text: reply, ts: agentMsg.ts },
+      })
+    } catch {
+      const errMsg: ChatMessage = { role: 'agent', text: 'Connection error. Check n8n.', ts: Date.now() }
+      setSessionMessages(prev => [...prev, errMsg])
+    }
+  }
+
   // ─── HANDLERS ─────────────────────────────────────────────────────────────
   async function handleIntroUnderstood() {
     await persist({ intro_seen: true })
     setScreen('overview')
   }
 
-  function handleSelectField(id: FieldId) {
+  async function handleSelectField(id: FieldId) {
     setActiveField(id)
     setScreen('field')
   }
 
-  function handleStartTest() {
+  async function handleStartTest() {
+    // Load existing messages for this session
+    const msgs = await loadMessages(activeField!)
+    setSessionMessages(msgs)
     setScreen('chat')
   }
 
@@ -1065,18 +1204,73 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
     setScreen('result')
   }
 
+  async function handleViewConvo() {
+    const msgs = await loadMessages(activeField!)
+    setSessionMessages(msgs)
+    setScreen('view_convo')
+  }
+
   async function handleSatisfied() {
     if (!activeField) return
     await persist({ [activeField]: 'satisfied', [`${activeField}_remark`]: null } as any)
+    setSessionMessages([])
     setScreen('overview')
     setActiveField(null)
   }
 
   async function handleRemark(remark: string) {
     if (!activeField) return
+    const sessionId = `${userId}_${activeField}`
+
+    // Save to history
+    await supabase.from('checklist_remark_history').insert({
+      user_id: userId,
+      template_id: templateId,
+      field_id: activeField,
+      session_id: sessionId,
+      type: 'remark',
+      remark,
+    })
+
+    // Hit remarks webhook
+    fetch(REMARKS_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId,
+        field_id: activeField,
+        session_id: sessionId,
+        remark,
+      }),
+    }).catch(() => {})
+
     await persist({ [activeField]: 'has_remarks', [`${activeField}_remark`]: remark } as any)
+    setSessionMessages([])
     setScreen('overview')
     setActiveField(null)
+  }
+
+  async function handleRetake() {
+    if (!activeField) return
+    const sessionId = `${userId}_${activeField}`
+
+    // Archive to history
+    await supabase.from('checklist_remark_history').insert({
+      user_id: userId,
+      template_id: templateId,
+      field_id: activeField,
+      session_id: sessionId,
+      type: 'retake',
+      remark: null,
+    })
+
+    // Wipe memory for this session
+    await supabase.from('checklist_chat_memory').delete().eq('session_id', sessionId)
+
+    // Reset field status
+    await persist({ [activeField]: 'not_started', [`${activeField}_remark`]: null } as any)
+    setSessionMessages([])
+    setScreen('chat')
   }
 
   async function handleFinalConfirm() {
@@ -1118,6 +1312,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
           status={checklist[currentField.id]}
           remark={checklist[`${currentField.id}_remark` as keyof ChecklistData] as string | null}
           onStartTest={handleStartTest}
+          onViewConvo={handleViewConvo}
           onBack={() => { setScreen('overview'); setActiveField(null) }}
         />
       )}
@@ -1127,7 +1322,17 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
           userId={userId}
           templateId={templateId}
           agentName={agentName}
+          messages={sessionMessages}
+          onSendMessage={handleSendMessage}
           onEndTest={handleEndTest}
+        />
+      )}
+      {screen === 'view_convo' && currentField && (
+        <ViewConvoScreen
+          field={currentField}
+          messages={sessionMessages}
+          onBack={() => { setScreen('overview'); setActiveField(null) }}
+          onRetake={handleRetake}
         />
       )}
       {screen === 'result' && currentField && (
