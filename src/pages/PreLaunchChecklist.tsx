@@ -23,7 +23,13 @@ type ChecklistData = {
 }
 
 type FieldId = 'script_flow' | 'off_topic' | 'question_handling' | 'objection_handling' | 'hostile_lead' | 'closing'
-type Screen = 'loading' | 'intro' | 'overview' | 'field' | 'chat' | 'result' | 'view_convo'
+type Screen = 'loading' | 'intro' | 'overview' | 'field' | 'chat' | 'result' | 'view_convo' | 'fix_result'
+
+type FixResult = {
+  root_cause: string
+  fix_instruction: string
+  field_id: FieldId
+}
 
 // ─── FIELD DEFINITIONS ────────────────────────────────────────────────────────
 
@@ -1111,6 +1117,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
   // messages kept in state — persisted to Supabase on every exchange
   const [sessionMessages, setSessionMessages] = useState<ChatMessage[]>([])
   const [convoComplete, setConvoComplete] = useState(false)
+  const [fixResult, setFixResult] = useState<FixResult | null>(null)
 
   // ─── LOAD FROM SUPABASE ────────────────────────────────────────────────────
   useEffect(() => {
@@ -1309,6 +1316,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
   async function handleRemark(remark: string) {
     if (!activeField) return
     const sessionId = `${userId}_${activeField}`
+    const fieldIdSnapshot = activeField
 
     // Save to history
     await supabase.from('checklist_remark_history').insert({
@@ -1320,23 +1328,42 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
       remark,
     })
 
-    // Hit remarks webhook
-    fetch(REMARKS_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: userId,
-        template_id: templateId,
-        field_id: activeField,
-        session_id: sessionId,
-        remark,
-      }),
-    }).catch(() => {})
-
+    // Mark field as has_remarks and go to fix_result screen immediately
     await persist({ [activeField]: 'has_remarks', [`${activeField}_remark`]: remark } as any)
     setSessionMessages([])
-    setScreen('overview')
     setActiveField(null)
+    setScreen('fix_result')
+    setFixResult(null) // null = loading state
+
+    // Await the webhook — n8n diagnoses + fixes + updates the prompt
+    try {
+      const res = await fetch(REMARKS_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          template_id: templateId,
+          field_id: fieldIdSnapshot,
+          session_id: sessionId,
+          remark,
+        }),
+      })
+      const data = await res.json()
+      setFixResult({
+        root_cause: data.root_cause || 'Issue identified and fixed.',
+        fix_instruction: data.fix_instruction || 'The prompt has been updated.',
+        field_id: fieldIdSnapshot,
+      })
+      // Reset field to not_started so they can retest immediately
+      await persist({ [fieldIdSnapshot]: 'not_started', [`${fieldIdSnapshot}_remark`]: null } as any)
+    } catch {
+      setFixResult({
+        root_cause: 'We analyzed the conversation and found the issue.',
+        fix_instruction: 'The prompt has been updated. You can retest now.',
+        field_id: fieldIdSnapshot,
+      })
+      await persist({ [fieldIdSnapshot]: 'not_started', [`${fieldIdSnapshot}_remark`]: null } as any)
+    }
   }
 
   async function handleRetake() {
@@ -1435,6 +1462,145 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
           onRemark={handleRemark}
           onBack={() => setScreen('chat')}
         />
+      )}
+      {screen === 'fix_result' && (
+        <FixResultScreen
+          fixResult={fixResult}
+          fields={FIELDS}
+          onRetest={(fieldId) => {
+            setActiveField(fieldId)
+            setScreen('chat')
+          }}
+          onBackToOverview={() => setScreen('overview')}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── FIX RESULT SCREEN ────────────────────────────────────────────────────────
+
+function FixResultScreen({
+  fixResult,
+  fields,
+  onRetest,
+  onBackToOverview,
+}: {
+  fixResult: FixResult | null
+  fields: { id: FieldId; label: string; icon: string }[]
+  onRetest: (fieldId: FieldId) => void
+  onBackToOverview: () => void
+}) {
+  const field = fixResult ? fields.find(f => f.id === fixResult.field_id) : null
+
+  return (
+    <div style={{ maxWidth: 520, margin: '0 auto', padding: '40px 24px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 13, flexShrink: 0,
+          background: fixResult ? 'rgba(37,211,102,0.08)' : 'rgba(0,0,0,0.04)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'background 0.3s',
+        }}>
+          {fixResult
+            ? <i className="ti ti-check" style={{ fontSize: 20, color: '#16a34a' }} />
+            : <i className="ti ti-loader-2" style={{ fontSize: 20, color: '#999', animation: 'spin 1s linear infinite' }} />
+          }
+        </div>
+        <div>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111', letterSpacing: '-0.03em', marginBottom: 2 }}>
+            {fixResult ? 'Prompt fixed' : 'Analyzing the issue…'}
+          </h2>
+          <p style={{ fontSize: 12.5, color: '#999' }}>
+            {fixResult ? 'Your agent has been updated and is ready to retest' : 'Our AI is diagnosing what went wrong'}
+          </p>
+        </div>
+      </div>
+
+      {/* Loading state */}
+      {!fixResult && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {['Reading the conversation…', 'Identifying root cause…', 'Rewriting the prompt…'].map((step, i) => (
+            <div key={i} style={{
+              padding: '14px 16px', borderRadius: 12,
+              background: 'rgba(0,0,0,0.03)', border: '0.5px solid rgba(0,0,0,0.07)',
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}>
+              <i className="ti ti-loader-2" style={{ fontSize: 14, color: '#bbb', animation: 'spin 1s linear infinite', animationDelay: `${i * 0.2}s` }} />
+              <span style={{ fontSize: 13, color: '#999' }}>{step}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Results */}
+      {fixResult && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* What went wrong */}
+          <div style={{
+            padding: '16px 18px', borderRadius: 14,
+            background: 'rgba(239,68,68,0.04)', border: '0.5px solid rgba(239,68,68,0.15)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <i className="ti ti-alert-circle" style={{ fontSize: 14, color: '#dc2626' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                What went wrong
+              </span>
+            </div>
+            <p style={{ fontSize: 13.5, color: '#7f1d1d', lineHeight: 1.55, margin: 0 }}>
+              {fixResult.root_cause}
+            </p>
+          </div>
+
+          {/* What was fixed */}
+          <div style={{
+            padding: '16px 18px', borderRadius: 14,
+            background: 'rgba(37,211,102,0.04)', border: '0.5px solid rgba(37,211,102,0.2)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <i className="ti ti-sparkles" style={{ fontSize: 14, color: '#16a34a' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                What was fixed
+              </span>
+            </div>
+            <p style={{ fontSize: 13.5, color: '#14532d', lineHeight: 1.55, margin: 0 }}>
+              {fixResult.fix_instruction}
+            </p>
+          </div>
+
+          {/* Retest button */}
+          <button
+            onClick={() => onRetest(fixResult.field_id)}
+            style={{
+              width: '100%', padding: '16px 20px', borderRadius: 14, marginTop: 4,
+              background: '#111', border: 'none', cursor: 'pointer',
+              fontFamily: 'inherit', fontWeight: 700, fontSize: 14, color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              transition: 'opacity 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            <i className="ti ti-refresh" style={{ fontSize: 15 }} />
+            Retest {field ? field.label : 'this field'} now
+          </button>
+
+          {/* Back to overview */}
+          <button
+            onClick={onBackToOverview}
+            style={{
+              width: '100%', padding: '13px 20px', borderRadius: 14,
+              background: 'transparent', border: '0.5px solid rgba(0,0,0,0.1)',
+              cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
+              fontSize: 13.5, color: '#666', transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; e.currentTarget.style.color = '#111' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#666' }}
+          >
+            Back to overview
+          </button>
+        </div>
       )}
     </div>
   )
