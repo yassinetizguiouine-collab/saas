@@ -1159,24 +1159,48 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
       .order('id', { ascending: true })
 
     if (!data || data.length === 0) return []
-    return data.map((row: any) => {
-      const m = typeof row.message === 'string' ? JSON.parse(row.message) : row.message
-      const isHuman = m.type === 'human'
-      const isAi = m.type === 'ai'
-      let text = m.content ?? ''
-      // n8n AI messages are JSON strings with a reply field
-      if (isAi && typeof text === 'string') {
-        try {
-          const parsed = JSON.parse(text)
-          if (parsed.reply) text = parsed.reply
-        } catch (_) {}
-      }
-      return {
-        role: (isHuman ? 'user' : 'agent') as 'user' | 'agent',
-        text,
-        ts: 0,
-      }
-    })
+
+    const results: ChatMessage[] = []
+
+    for (const row of data) {
+      try {
+        const m = typeof row.message === 'string' ? JSON.parse(row.message) : row.message
+
+        // Format A: LangChain constructor format (what n8n Postgres Chat Memory saves)
+        // { lc: 1, type: "constructor", id: ["langchain_core","messages","HumanMessage"], kwargs: { content: "..." } }
+        if (m?.type === 'constructor' && Array.isArray(m?.id) && m?.kwargs) {
+          const msgClass = m.id[m.id.length - 1] ?? ''
+          const isHuman = msgClass === 'HumanMessage'
+          let text = m.kwargs.content ?? ''
+
+          if (!isHuman && typeof text === 'string') {
+            try {
+              const parsed = JSON.parse(text)
+              if (parsed.reply) text = parsed.reply
+            } catch (_) {}
+          }
+
+          results.push({ role: isHuman ? 'user' : 'agent', text: String(text).trim(), ts: 0 })
+          continue
+        }
+
+        // Format B: Simple format { type: "human"|"ai", content: "..." }
+        if (m?.type === 'human' || m?.type === 'ai') {
+          let text = m.content ?? ''
+          if (m.type === 'ai' && typeof text === 'string') {
+            try {
+              const parsed = JSON.parse(text)
+              if (parsed.reply) text = parsed.reply
+            } catch (_) {}
+          }
+          results.push({ role: m.type === 'human' ? 'user' : 'agent', text: String(text).trim(), ts: 0 })
+          continue
+        }
+
+      } catch (_) {}
+    }
+
+    return results
   }
 
   // ─── PERSIST CHECKLIST ────────────────────────────────────────────────────
