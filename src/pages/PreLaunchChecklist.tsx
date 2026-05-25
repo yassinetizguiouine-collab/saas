@@ -1156,7 +1156,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
       .from('checklist_chat_memory')
       .select('id, message')
       .eq('session_id', sessionId)
-      .order('id', { ascending: true })
+      .order('created_at', { ascending: true })
 
     if (!data || data.length === 0) return []
 
