@@ -1154,14 +1154,28 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
     const sessionId = `${userId}_${fieldId}`
     const { data } = await supabase
       .from('checklist_chat_memory')
-      .select('message')
+      .select('id, message')
       .eq('session_id', sessionId)
       .order('id', { ascending: true })
 
     if (!data || data.length === 0) return []
     return data.map((row: any) => {
       const m = typeof row.message === 'string' ? JSON.parse(row.message) : row.message
-      return { role: m.role, text: m.text, ts: m.ts ?? 0 }
+      const isHuman = m.type === 'human'
+      const isAi = m.type === 'ai'
+      let text = m.content ?? ''
+      // n8n AI messages are JSON strings with a reply field
+      if (isAi && typeof text === 'string') {
+        try {
+          const parsed = JSON.parse(text)
+          if (parsed.reply) text = parsed.reply
+        } catch (_) {}
+      }
+      return {
+        role: (isHuman ? 'user' : 'agent') as 'user' | 'agent',
+        text,
+        ts: 0,
+      }
     })
   }
 
@@ -1185,14 +1199,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
     const sessionId = `${userId}_${activeField}`
 
     const userMsg: ChatMessage = { role: 'user', text, ts: Date.now() }
-    const newMessages = [...sessionMessages, userMsg]
-    setSessionMessages(newMessages)
-
-    // Save user message to Supabase
-    await supabase.from('checklist_chat_memory').insert({
-      session_id: sessionId,
-      message: { role: 'user', text, ts: userMsg.ts },
-    })
+    setSessionMessages(prev => [...prev, userMsg])
 
     try {
       const res = await fetch(CHECKLIST_WEBHOOK, {
@@ -1219,12 +1226,6 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
       const agentMsg: ChatMessage = { role: 'agent', text: replyText || 'No response', ts: Date.now() }
       setSessionMessages(prev => [...prev, agentMsg])
       if (isDone) setConvoComplete(true)
-
-      // Save agent message to Supabase
-      await supabase.from('checklist_chat_memory').insert({
-        session_id: sessionId,
-        message: { role: 'agent', text: replyText, ts: agentMsg.ts },
-      })
     } catch {
       const errMsg: ChatMessage = { role: 'agent', text: 'Connection error. Check n8n.', ts: Date.now() }
       setSessionMessages(prev => [...prev, errMsg])
