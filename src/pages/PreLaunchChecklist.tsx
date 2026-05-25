@@ -550,6 +550,8 @@ function ChatScreen({
   messages,
   onSendMessage,
   onEndTest,
+  convoComplete,
+  onDismissComplete,
 }: {
   field: typeof FIELDS[0]
   userId: string
@@ -558,6 +560,8 @@ function ChatScreen({
   messages: ChatMessage[]
   onSendMessage: (text: string) => Promise<void>
   onEndTest: () => void
+  convoComplete: boolean
+  onDismissComplete: () => void
 }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -723,6 +727,39 @@ function ChatScreen({
         )}
         <div ref={bottomRef} />
       </div>
+
+      {/* Conversation complete banner */}
+      {convoComplete && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 16px', marginBottom: 8,
+          borderRadius: 12,
+          background: 'rgba(37,211,102,0.07)',
+          border: '0.5px solid rgba(37,211,102,0.25)',
+          animation: 'fadeUp 0.3s ease both',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <i className="ti ti-circle-check" style={{ fontSize: 18, color: '#1a8c4e', flexShrink: 0 }} />
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#1a8c4e', marginBottom: 1 }}>Conversation complete</p>
+              <p style={{ fontSize: 12, color: '#6b9e7a' }}>The agent has reached the end of the script. You can end the test now.</p>
+            </div>
+          </div>
+          <button
+            onClick={onDismissComplete}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: 4, color: '#aaa', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = '#555'}
+            onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
+          >
+            <i className="ti ti-x" style={{ fontSize: 14 }} />
+          </button>
+        </div>
+      )}
 
       <div style={{
         display: 'flex', gap: 8, alignItems: 'flex-end',
@@ -1073,6 +1110,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
   const [activeField, setActiveField] = useState<FieldId | null>(null)
   // messages kept in state — persisted to Supabase on every exchange
   const [sessionMessages, setSessionMessages] = useState<ChatMessage[]>([])
+  const [convoComplete, setConvoComplete] = useState(false)
 
   // ─── LOAD FROM SUPABASE ────────────────────────────────────────────────────
   useEffect(() => {
@@ -1168,14 +1206,24 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
           message: text,
         }),
       })
-      const reply = (await res.text()).trim() || 'No response'
-      const agentMsg: ChatMessage = { role: 'agent', text: reply, ts: Date.now() }
+      const raw = (await res.text()).trim()
+      let replyText = raw
+      let isDone = false
+      try {
+        const parsed = JSON.parse(raw)
+        if (parsed.reply) replyText = parsed.reply
+        if (parsed.is_conversation_complete === true) isDone = true
+      } catch (_) {
+        // not JSON, use raw text as-is
+      }
+      const agentMsg: ChatMessage = { role: 'agent', text: replyText || 'No response', ts: Date.now() }
       setSessionMessages(prev => [...prev, agentMsg])
+      if (isDone) setConvoComplete(true)
 
       // Save agent message to Supabase
       await supabase.from('checklist_chat_memory').insert({
         session_id: sessionId,
-        message: { role: 'agent', text: reply, ts: agentMsg.ts },
+        message: { role: 'agent', text: replyText, ts: agentMsg.ts },
       })
     } catch {
       const errMsg: ChatMessage = { role: 'agent', text: 'Connection error. Check n8n.', ts: Date.now() }
@@ -1198,6 +1246,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
     // Load existing messages for this session
     const msgs = await loadMessages(activeField!)
     setSessionMessages(msgs)
+    setConvoComplete(false)
     setScreen('chat')
   }
 
@@ -1327,6 +1376,8 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
           messages={sessionMessages}
           onSendMessage={handleSendMessage}
           onEndTest={handleEndTest}
+          convoComplete={convoComplete}
+          onDismissComplete={() => setConvoComplete(false)}
         />
       )}
       {screen === 'view_convo' && currentField && (
