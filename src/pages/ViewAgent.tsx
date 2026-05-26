@@ -118,7 +118,7 @@ function PromptTab({ prompt }: { prompt: string }) {
 
 // ─── CHAT TAB ────────────────────────────────────────────────────────────────
 
-function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
+function ChatTab({ userId, agentName, templateId }: { userId: string; agentName: string; templateId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -139,7 +139,7 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
       const res = await fetch(CHAT_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, message: text }),
+        body: JSON.stringify({ user_id: userId, message: text, template_id: templateId }),
       })
       const reply = (await res.text()).trim() || 'No response'
       setMessages(prev => [...prev, { role: 'agent', text: reply, ts: Date.now() }])
@@ -937,7 +937,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
               )
           )}
           {tab === 'chat' && (
-            <ChatTab userId={userId} agentName={agent.agent_name} />
+            <ChatTab userId={userId} agentName={agent.agent_name} templateId={templateId} />
           )}
           {tab === 'checklist' && (
             <PreLaunchChecklist
