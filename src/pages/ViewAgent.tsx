@@ -261,6 +261,249 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
   )
 }
 
+// ─── N8N-STYLE WORKFLOW CANVAS (BUILT ABOVE) ─────────────────────────────────
+
+const MAIN_NODES = [
+  {
+    id: 'trigger', label: 'WhatsApp Trigger', icon: '📱', color: '#22c55e', border: '#16a34a',
+    desc: 'Receives incoming WhatsApp messages from leads',
+    config: { type: 'whatsAppTrigger', updates: 'messages', credential: 'WhatsApp OAuth account' },
+  },
+  {
+    id: 'wait1', label: 'Human Delay', icon: '⏳', color: '#f59e0b', border: '#d97706',
+    desc: 'Adds a natural human-like delay before responding',
+    config: { type: 'wait', duration: '2–4 seconds', reason: 'Mimics human typing delay' },
+  },
+  {
+    id: 'typing', label: 'Show Typing + Mark Read', icon: '👁️', color: '#6366f1', border: '#4f46e5',
+    desc: 'Marks message as read and shows typing indicator via Meta API',
+    config: { type: 'httpRequest', url: 'graph.facebook.com/v25.0/{phone_id}/messages', method: 'POST', sets: 'status: read + typing_on' },
+  },
+  {
+    id: 'wait2', label: 'Wait', icon: '⏳', color: '#f59e0b', border: '#d97706',
+    desc: 'Waits while typing animation displays to the lead',
+    config: { type: 'wait', duration: '2 seconds', reason: 'Lets typing indicator show before reply' },
+  },
+  {
+    id: 'agent', label: 'AI Agent', icon: '🤖', color: '#111', border: '#333',
+    desc: 'Processes the message and generates a reply using your system prompt',
+    config: { type: 'agent', model: 'LeadFlow AI', memory: 'LeadFlow Memory', prompt: 'Your generated system prompt from Supabase' },
+    hasSubs: true,
+  },
+  {
+    id: 'parse', label: 'Parse Reply', icon: '{ }', color: '#f97316', border: '#ea580c',
+    desc: 'Extracts the reply text from the AI JSON output',
+    config: { type: 'code', language: 'JavaScript', extracts: 'reply field from agent JSON output' },
+  },
+  {
+    id: 'send', label: 'Send Message', icon: '📱', color: '#22c55e', border: '#16a34a',
+    desc: 'Sends the final reply back to the lead on WhatsApp',
+    config: { type: 'whatsApp', operation: 'send', to: 'Lead phone number', credential: 'WhatsApp account' },
+  },
+]
+
+const SUB_NODES = [
+  { id: 'sub-model', parentId: 'agent', label: 'LeadFlow AI', icon: '◈', color: '#8b5cf6', border: '#7c3aed', desc: 'GPT-4o mini model powering your agent via LeadFlow', config: { provider: 'LeadFlow AI', model: 'gpt-4o-mini', routing: 'OpenRouter' } },
+  { id: 'sub-memory', parentId: 'agent', label: 'LeadFlow Memory', icon: '🗄', color: '#0ea5e9', border: '#0284c7', desc: 'Postgres-backed memory storing full conversation history per lead', config: { type: 'Postgres Chat Memory', table: 'checklist_chat_memory', sessionKey: '{client_id}_{lead_phone}', window: '100 messages' } },
+]
+
+const EDGES_MAIN = ['trigger→wait1', 'wait1→typing', 'typing→wait2', 'wait2→agent', 'agent→parse', 'parse→send']
+
+const NODE_W = 140
+const NODE_H = 72
+const H_GAP = 60
+const CANVAS_TOP = 32
+const ROW_Y = CANVAS_TOP + 20
+
+function N8nCanvas({ onNodeClick }: { onNodeClick: (node: typeof MAIN_NODES[0] | typeof SUB_NODES[0]) => void }) {
+  const totalW = MAIN_NODES.length * (NODE_W + H_GAP) - H_GAP + 80
+  const subY = ROW_Y + NODE_H + 44
+  const canvasH = subY + NODE_H + 48
+
+  function nodeX(i: number) { return 40 + i * (NODE_W + H_GAP) }
+  function nodeCX(i: number) { return nodeX(i) + NODE_W / 2 }
+  function nodeCY() { return ROW_Y + NODE_H / 2 }
+
+  const agentIdx = MAIN_NODES.findIndex(n => n.id === 'agent')
+  const agentCX = nodeCX(agentIdx)
+
+  // Sub node positions: model left, memory right of agent center
+  const subPositions: Record<string, { x: number; y: number }> = {
+    'sub-model': { x: agentCX - NODE_W - 20, y: subY },
+    'sub-memory': { x: agentCX + 20, y: subY },
+  }
+
+  return (
+    <div style={{ overflowX: 'auto', overflowY: 'visible', paddingBottom: 8 }}>
+      <div style={{ position: 'relative', width: totalW, height: canvasH, minWidth: totalW }}>
+        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
+          <defs>
+            <marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <path d="M0,0.5 L0,6.5 L6,3.5 z" fill="rgba(0,0,0,0.2)" />
+            </marker>
+            <marker id="arr-sub" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <path d="M0,0.5 L0,6.5 L6,3.5 z" fill="rgba(0,0,0,0.15)" />
+            </marker>
+          </defs>
+
+          {/* Main edges */}
+          {EDGES_MAIN.map(edge => {
+            const [fromId, toId] = edge.split('→')
+            const fi = MAIN_NODES.findIndex(n => n.id === fromId)
+            const ti = MAIN_NODES.findIndex(n => n.id === toId)
+            const x1 = nodeX(fi) + NODE_W, y1 = ROW_Y + NODE_H / 2
+            const x2 = nodeX(ti), y2 = ROW_Y + NODE_H / 2
+            const mx = (x1 + x2) / 2
+            return (
+              <path key={edge}
+                d={`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`}
+                fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="1.5"
+                markerEnd="url(#arr)"
+              />
+            )
+          })}
+
+          {/* Sub-node dashed connectors */}
+          {SUB_NODES.map(sub => {
+            const pos = subPositions[sub.id]
+            const scx = pos.x + NODE_W / 2
+            const scy = pos.y
+            return (
+              <line key={sub.id}
+                x1={agentCX} y1={ROW_Y + NODE_H}
+                x2={scx} y2={scy}
+                stroke="rgba(0,0,0,0.13)" strokeWidth="1.5" strokeDasharray="5 3"
+                markerEnd="url(#arr-sub)"
+              />
+            )
+          })}
+
+          {/* Sub-node type labels */}
+          <text x={agentCX - NODE_W - 20 + NODE_W / 2} y={subY - 8} textAnchor="middle" fontSize="9" fill="#aaa" fontFamily="inherit" fontWeight="600" letterSpacing="0.04em">MODEL</text>
+          <text x={agentCX + 20 + NODE_W / 2} y={subY - 8} textAnchor="middle" fontSize="9" fill="#aaa" fontFamily="inherit" fontWeight="600" letterSpacing="0.04em">MEMORY</text>
+        </svg>
+
+        {/* Main nodes */}
+        {MAIN_NODES.map((node, i) => (
+          <button key={node.id} onClick={() => onNodeClick(node)}
+            style={{
+              position: 'absolute', left: nodeX(i), top: ROW_Y,
+              width: NODE_W, height: NODE_H,
+              background: '#fff', border: `1.5px solid ${node.border}22`,
+              borderRadius: 14, cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+              boxShadow: '0 2px 10px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05)',
+              transition: 'all 0.15s', fontFamily: 'inherit', padding: '8px 10px',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.boxShadow = `0 6px 24px rgba(0,0,0,0.13), 0 0 0 2px ${node.border}33`
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.borderColor = node.border + '66'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05)'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.borderColor = node.border + '22'
+            }}
+          >
+            <div style={{
+              width: 32, height: 32, borderRadius: 9,
+              background: node.color === '#111' ? 'rgba(0,0,0,0.06)' : `${node.color}18`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              fontSize: node.icon.length > 2 ? 11 : 16,
+              color: node.color, fontWeight: 700, fontFamily: 'monospace',
+            }}>
+              {node.icon}
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#222', textAlign: 'center', lineHeight: 1.25, letterSpacing: '-0.01em' }}>
+              {node.label}
+            </span>
+          </button>
+        ))}
+
+        {/* Sub nodes */}
+        {SUB_NODES.map(sub => {
+          const pos = subPositions[sub.id]
+          return (
+            <button key={sub.id} onClick={() => onNodeClick(sub as any)}
+              style={{
+                position: 'absolute', left: pos.x, top: pos.y,
+                width: NODE_W, height: NODE_H,
+                background: '#fff', border: `1.5px solid ${sub.border}22`,
+                borderRadius: 14, cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                transition: 'all 0.15s', fontFamily: 'inherit', padding: '8px 10px',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = `0 6px 20px rgba(0,0,0,0.11), 0 0 0 2px ${sub.border}33`
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.borderColor = sub.border + '55'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.borderColor = sub.border + '22'
+              }}
+            >
+              <div style={{
+                width: 32, height: 32, borderRadius: 9,
+                background: `${sub.color}18`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                fontSize: 16, color: sub.color,
+              }}>
+                {sub.icon}
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#222', textAlign: 'center', lineHeight: 1.25 }}>
+                {sub.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function NodePanel({ node, onClose }: { node: typeof MAIN_NODES[0]; onClose: () => void }) {
+  const color = (node as any).color || '#111'
+  return (
+    <div style={{
+      position: 'fixed', top: 0, right: 0, bottom: 0, width: 300,
+      background: '#fff', borderLeft: '1px solid rgba(0,0,0,0.07)',
+      boxShadow: '-12px 0 40px rgba(0,0,0,0.07)',
+      zIndex: 200, display: 'flex', flexDirection: 'column',
+      animation: 'slideIn 0.18s ease both',
+    }}>
+      <style>{`@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}`}</style>
+      <div style={{ padding: '18px 18px 14px', borderBottom: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: color === '#111' ? 'rgba(0,0,0,0.06)' : `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: (node as any).icon?.length > 2 ? 11 : 18, color, fontWeight: 700, fontFamily: 'monospace', flexShrink: 0 }}>
+          {(node as any).icon}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>{node.label}</div>
+          <div style={{ fontSize: 10.5, color: '#bbb', marginTop: 1 }}>Node configuration</div>
+        </div>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 16, padding: 2 }}>
+          <i className="ti ti-x" />
+        </button>
+      </div>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <p style={{ fontSize: 12, color: '#777', lineHeight: 1.6, margin: 0 }}>{node.desc}</p>
+      </div>
+      <div style={{ padding: '14px 18px', flex: 1, overflowY: 'auto' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Config</div>
+        {Object.entries(node.config || {}).map(([k, v]) => (
+          <div key={k} style={{ padding: '9px 11px', borderRadius: 9, background: 'rgba(0,0,0,0.025)', marginBottom: 7, border: '1px solid rgba(0,0,0,0.05)' }}>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>{k}</div>
+            <div style={{ fontSize: 12, color: '#333', fontFamily: "'SF Mono', monospace", lineHeight: 1.5 }}>{String(v)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── FULL WORKFLOW TAB (LOCKED) ───────────────────────────────────────────────
 
 function FullWorkflowLocked() {
@@ -292,171 +535,13 @@ function FullWorkflowLocked() {
 
 const DEPLOY_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/0e5c6446-ba5a-4cd0-ba9a-554605c593f3'
 
-// Node definitions for the canvas
-const WORKFLOW_NODES = [
-  { id: 'trigger', x: 60, y: 180, icon: 'ti-brand-whatsapp', label: 'WhatsApp Trigger', color: '#25D366', bg: 'rgba(37,211,102,0.1)', desc: 'Receives incoming WhatsApp messages from leads', config: { type: 'whatsAppTrigger', updates: ['messages'], credential: 'WhatsApp OAuth account' } },
-  { id: 'wait', x: 240, y: 180, icon: 'ti-clock', label: 'Human Delay', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', desc: 'Adds a natural delay before responding', config: { type: 'wait', amount: '2 seconds', reason: 'Mimics human typing delay' } },
-  { id: 'typing', x: 420, y: 180, icon: 'ti-eye', label: 'Mark Read + Typing', color: '#6366f1', bg: 'rgba(99,102,241,0.1)', desc: 'Marks message as read and shows typing indicator', config: { type: 'httpRequest', url: 'graph.facebook.com/v25.0/{phone_id}/messages', action: 'POST — sets status: read + typing_indicator' } },
-  { id: 'wait2', x: 600, y: 180, icon: 'ti-clock', label: 'Typing Delay', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', desc: 'Waits while typing animation shows', config: { type: 'wait', amount: '2 seconds', reason: 'Lets typing indicator show before reply' } },
-  { id: 'agent', x: 780, y: 180, icon: 'ti-robot', label: 'AI Agent', color: '#111', bg: 'rgba(0,0,0,0.07)', desc: 'Processes the message and generates a reply using your system prompt', config: { type: 'agent', model: 'openai/gpt-4o-mini via OpenRouter', memory: 'Postgres Chat Memory (Supabase)', prompt: 'Your generated system prompt' } },
-  { id: 'parse', x: 960, y: 180, icon: 'ti-code', label: 'Parse Reply', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', desc: 'Extracts the reply text from the AI JSON output', config: { type: 'code', language: 'JavaScript', extracts: 'reply field or messages[0]' } },
-  { id: 'send', x: 1140, y: 180, icon: 'ti-send', label: 'Send Message', color: '#25D366', bg: 'rgba(37,211,102,0.1)', desc: 'Sends the reply back to the lead on WhatsApp', config: { type: 'whatsApp', operation: 'send', to: 'lead phone number', credential: 'WhatsApp account' } },
-]
-
-const EDGES = [
-  ['trigger', 'wait'], ['wait', 'typing'], ['typing', 'wait2'],
-  ['wait2', 'agent'], ['agent', 'parse'], ['parse', 'send'],
-]
-
-function WorkflowCanvas({ onNodeClick }: { onNodeClick: (node: typeof WORKFLOW_NODES[0]) => void }) {
-  const nodeW = 130
-  const nodeH = 64
-  const canvasH = 380
-
-  function getNodeCenter(id: string) {
-    const node = WORKFLOW_NODES.find(n => n.id === id)!
-    return { x: node.x + nodeW / 2, y: node.y + nodeH / 2 }
-  }
-
-  return (
-    <div style={{ position: 'relative', width: '100%', overflowX: 'auto', overflowY: 'hidden' }}>
-      <div style={{ position: 'relative', width: 1300, height: canvasH, margin: '0 auto' }}>
-        {/* SVG edges */}
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-          <defs>
-            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L8,3 z" fill="rgba(0,0,0,0.15)" />
-            </marker>
-          </defs>
-          {EDGES.map(([from, to]) => {
-            const s = getNodeCenter(from)
-            const e = getNodeCenter(to)
-            const mx = (s.x + e.x) / 2
-            return (
-              <path
-                key={`${from}-${to}`}
-                d={`M${s.x},${s.y} C${mx},${s.y} ${mx},${e.y} ${e.x},${e.y}`}
-                fill="none"
-                stroke="rgba(0,0,0,0.12)"
-                strokeWidth="2"
-                strokeDasharray="4 3"
-                markerEnd="url(#arrow)"
-              />
-            )
-          })}
-        </svg>
-
-        {/* Nodes */}
-        {WORKFLOW_NODES.map((node) => (
-          <button
-            key={node.id}
-            onClick={() => onNodeClick(node)}
-            style={{
-              position: 'absolute', left: node.x, top: node.y,
-              width: nodeW, height: nodeH,
-              background: '#fff',
-              border: '1px solid rgba(0,0,0,0.09)',
-              borderRadius: 14, cursor: 'pointer',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', gap: 5,
-              boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-              transition: 'all 0.15s', fontFamily: 'inherit',
-              padding: '8px 10px',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.12)'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.borderColor = node.color
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.borderColor = 'rgba(0,0,0,0.09)'
-            }}
-          >
-            <div style={{
-              width: 30, height: 30, borderRadius: 9,
-              background: node.bg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>
-              <i className={`ti ${node.icon}`} style={{ fontSize: 15, color: node.color }} />
-            </div>
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: '#111', textAlign: 'center', lineHeight: 1.3 }}>
-              {node.label}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function NodeDetailPanel({ node, onClose }: { node: typeof WORKFLOW_NODES[0]; onClose: () => void }) {
-  return (
-    <div style={{
-      position: 'fixed', top: 0, right: 0, bottom: 0, width: 320,
-      background: '#fff', borderLeft: '0.5px solid rgba(0,0,0,0.08)',
-      boxShadow: '-8px 0 32px rgba(0,0,0,0.08)',
-      zIndex: 100, display: 'flex', flexDirection: 'column',
-      animation: 'slideIn 0.2s ease both',
-    }}>
-      <style>{`@keyframes slideIn { from { transform: translateX(100%) } to { transform: translateX(0) } }`}</style>
-      {/* Header */}
-      <div style={{
-        padding: '20px 20px 16px',
-        borderBottom: '0.5px solid rgba(0,0,0,0.07)',
-        display: 'flex', alignItems: 'center', gap: 12,
-      }}>
-        <div style={{
-          width: 38, height: 38, borderRadius: 11,
-          background: node.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <i className={`ti ${node.icon}`} style={{ fontSize: 18, color: node.color }} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{node.label}</div>
-          <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>Node config</div>
-        </div>
-        <button onClick={onClose} style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          color: '#bbb', fontSize: 18, padding: 4,
-        }}>
-          <i className="ti ti-x" />
-        </button>
-      </div>
-
-      {/* Description */}
-      <div style={{ padding: '16px 20px', borderBottom: '0.5px solid rgba(0,0,0,0.07)' }}>
-        <p style={{ fontSize: 12.5, color: '#666', lineHeight: 1.6, margin: 0 }}>{node.desc}</p>
-      </div>
-
-      {/* Config */}
-      <div style={{ padding: '16px 20px', flex: 1, overflowY: 'auto' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-          Configuration
-        </div>
-        {Object.entries(node.config).map(([k, v]) => (
-          <div key={k} style={{
-            padding: '10px 12px', borderRadius: 10,
-            background: 'rgba(0,0,0,0.03)', marginBottom: 8,
-            border: '0.5px solid rgba(0,0,0,0.06)',
-          }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>{k}</div>
-            <div style={{ fontSize: 12.5, color: '#333', fontFamily: "'SF Mono', monospace", lineHeight: 1.5 }}>{String(v)}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: string; userId: string; templateId: string }) {
   const [screen, setScreen] = useState<'confirm' | 'deploying' | 'done'>('confirm')
   const [tokens, setTokens] = useState({ clientId: '', clientSecret: '', businessId: '', accessToken: '' })
   const [editing, setEditing] = useState<string | null>(null)
   const [editVal, setEditVal] = useState('')
   const [tokenConfirmed, setTokenConfirmed] = useState(false)
-  const [selectedNode, setSelectedNode] = useState<typeof WORKFLOW_NODES[0] | null>(null)
+  const [selectedNode, setSelectedNode] = useState<typeof MAIN_NODES[0] | null>(null)
   const [flowJson, setFlowJson] = useState<object | null>(null)
 
   useEffect(() => {
@@ -647,13 +732,14 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
 
       {/* Canvas */}
       <div style={{
-        borderRadius: 16, border: '0.5px solid rgba(0,0,0,0.08)',
-        background: 'rgba(0,0,0,0.01)',
-        backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px)',
-        backgroundSize: '24px 24px',
-        padding: '24px 16px', overflow: 'hidden',
+        borderRadius: 16, border: '1px solid rgba(0,0,0,0.07)',
+        background: '#fafafa',
+        backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px)',
+        backgroundSize: '20px 20px',
+        padding: '20px 16px 24px',
+        overflow: 'hidden',
       }}>
-        <WorkflowCanvas onNodeClick={setSelectedNode} />
+        <N8nCanvas onNodeClick={setSelectedNode} />
       </div>
 
       {/* Flow JSON download if available */}
@@ -682,7 +768,7 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
       )}
 
       {/* Node detail panel */}
-      {selectedNode && <NodeDetailPanel node={selectedNode} onClose={() => setSelectedNode(null)} />}
+      {selectedNode && <NodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />}
     </div>
   )
 }
