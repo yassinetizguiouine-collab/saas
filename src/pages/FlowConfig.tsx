@@ -837,8 +837,8 @@ const TEMPLATE_SAVE_LABELS: Record<string, string> = {
 }
 const WEBHOOKS: Record<string, string> = {
   'booking-with-lm': 'https://leadflowai2026.app.n8n.cloud/webhook/059191b2-f3fd-45ae-95bf-ba6a594b2df1',
-  'booking-without-lm': '',
-  'close-in-chat': '',
+  'booking-without-lm': 'https://leadflowai2026.app.n8n.cloud/webhook/booking-without-lm-builder',
+  'close-in-chat': 'https://leadflowai2026.app.n8n.cloud/webhook/close-in-chat-builder',
 }
 
 export default function FlowConfig({ onBack, flowId, templateId, onProvisioningStart }: Props) {
