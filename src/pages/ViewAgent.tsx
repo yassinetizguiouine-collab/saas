@@ -265,46 +265,46 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
 
 const MAIN_NODES = [
   {
-    id: 'trigger', label: 'WhatsApp Trigger', icon: '📱', color: '#22c55e', border: '#16a34a',
+    id: 'trigger', label: 'WhatsApp Trigger', icon: 'ti-brand-whatsapp', color: '#22c55e', border: '#16a34a',
     desc: 'Receives incoming WhatsApp messages from leads',
     config: { type: 'whatsAppTrigger', updates: 'messages', credential: 'WhatsApp OAuth account' },
   },
   {
-    id: 'wait1', label: 'Human Delay', icon: '⏳', color: '#f59e0b', border: '#d97706',
+    id: 'wait1', label: 'Human Delay', icon: 'ti-clock-pause', color: '#f59e0b', border: '#d97706',
     desc: 'Adds a natural human-like delay before responding',
     config: { type: 'wait', duration: '2–4 seconds', reason: 'Mimics human typing delay' },
   },
   {
-    id: 'typing', label: 'Show Typing + Mark Read', icon: '👁️', color: '#6366f1', border: '#4f46e5',
+    id: 'typing', label: 'Show Typing + Mark Read', icon: 'ti-eye-check', color: '#6366f1', border: '#4f46e5',
     desc: 'Marks message as read and shows typing indicator via Meta API',
     config: { type: 'httpRequest', url: 'graph.facebook.com/v25.0/{phone_id}/messages', method: 'POST', sets: 'status: read + typing_on' },
   },
   {
-    id: 'wait2', label: 'Wait', icon: '⏳', color: '#f59e0b', border: '#d97706',
+    id: 'wait2', label: 'Wait', icon: 'ti-clock', color: '#f59e0b', border: '#d97706',
     desc: 'Waits while typing animation displays to the lead',
     config: { type: 'wait', duration: '2 seconds', reason: 'Lets typing indicator show before reply' },
   },
   {
-    id: 'agent', label: 'AI Agent', icon: '🤖', color: '#111', border: '#333',
+    id: 'agent', label: 'AI Agent', icon: 'ti-cpu', color: '#111', border: '#333',
     desc: 'Processes the message and generates a reply using your system prompt',
     config: { type: 'agent', model: 'LeadFlow AI', memory: 'LeadFlow Memory', prompt: 'Your generated system prompt from Supabase' },
     hasSubs: true,
   },
   {
-    id: 'parse', label: 'Parse Reply', icon: '{ }', color: '#f97316', border: '#ea580c',
+    id: 'parse', label: 'Parse Reply', icon: 'ti-code-dots', color: '#f97316', border: '#ea580c',
     desc: 'Extracts the reply text from the AI JSON output',
     config: { type: 'code', language: 'JavaScript', extracts: 'reply field from agent JSON output' },
   },
   {
-    id: 'send', label: 'Send Message', icon: '📱', color: '#22c55e', border: '#16a34a',
+    id: 'send', label: 'Send Message', icon: 'ti-brand-whatsapp', color: '#22c55e', border: '#16a34a',
     desc: 'Sends the final reply back to the lead on WhatsApp',
     config: { type: 'whatsApp', operation: 'send', to: 'Lead phone number', credential: 'WhatsApp account' },
   },
 ]
 
 const SUB_NODES = [
-  { id: 'sub-model', parentId: 'agent', label: 'LeadFlow AI', icon: '◈', color: '#8b5cf6', border: '#7c3aed', desc: 'GPT-4o mini model powering your agent via LeadFlow', config: { provider: 'LeadFlow AI', model: 'gpt-4o-mini', routing: 'OpenRouter' } },
-  { id: 'sub-memory', parentId: 'agent', label: 'LeadFlow Memory', icon: '🗄', color: '#0ea5e9', border: '#0284c7', desc: 'Postgres-backed memory storing full conversation history per lead', config: { type: 'Postgres Chat Memory', table: 'checklist_chat_memory', sessionKey: '{client_id}_{lead_phone}', window: '100 messages' } },
+  { id: 'sub-model', parentId: 'agent', label: 'LeadFlow AI', icon: 'ti-sparkles', color: '#8b5cf6', border: '#7c3aed', desc: 'GPT-4o mini model powering your agent via LeadFlow', config: { provider: 'LeadFlow AI', model: 'gpt-4o-mini', routing: 'OpenRouter' } },
+  { id: 'sub-memory', parentId: 'agent', label: 'LeadFlow Memory', icon: 'ti-database', color: '#0ea5e9', border: '#0284c7', desc: 'Postgres-backed memory storing full conversation history per lead', config: { type: 'Postgres Chat Memory', table: 'checklist_chat_memory', sessionKey: '{client_id}_{lead_phone}', window: '100 messages' } },
 ]
 
 const EDGES_MAIN = ['trigger→wait1', 'wait1→typing', 'typing→wait2', 'wait2→agent', 'agent→parse', 'parse→send']
@@ -410,10 +410,8 @@ function N8nCanvas({ onNodeClick }: { onNodeClick: (node: typeof MAIN_NODES[0] |
               width: 32, height: 32, borderRadius: 9,
               background: node.color === '#111' ? 'rgba(0,0,0,0.06)' : `${node.color}18`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              fontSize: node.icon.length > 2 ? 11 : 16,
-              color: node.color, fontWeight: 700, fontFamily: 'monospace',
             }}>
-              {node.icon}
+              <i className={`ti ${node.icon}`} style={{ fontSize: 16, color: node.color }} />
             </div>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#222', textAlign: 'center', lineHeight: 1.25, letterSpacing: '-0.01em' }}>
               {node.label}
@@ -450,9 +448,8 @@ function N8nCanvas({ onNodeClick }: { onNodeClick: (node: typeof MAIN_NODES[0] |
                 width: 32, height: 32, borderRadius: 9,
                 background: `${sub.color}18`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                fontSize: 16, color: sub.color,
               }}>
-                {sub.icon}
+                <i className={`ti ${sub.icon}`} style={{ fontSize: 16, color: sub.color }} />
               </div>
               <span style={{ fontSize: 10, fontWeight: 700, color: '#222', textAlign: 'center', lineHeight: 1.25 }}>
                 {sub.label}
@@ -477,8 +474,8 @@ function NodePanel({ node, onClose }: { node: typeof MAIN_NODES[0]; onClose: () 
     }}>
       <style>{`@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}`}</style>
       <div style={{ padding: '18px 18px 14px', borderBottom: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: color === '#111' ? 'rgba(0,0,0,0.06)' : `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: (node as any).icon?.length > 2 ? 11 : 18, color, fontWeight: 700, fontFamily: 'monospace', flexShrink: 0 }}>
-          {(node as any).icon}
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: color === '#111' ? 'rgba(0,0,0,0.06)' : `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <i className={`ti ${(node as any).icon}`} style={{ fontSize: 18, color }} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}>{node.label}</div>
