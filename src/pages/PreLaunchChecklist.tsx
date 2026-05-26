@@ -1158,7 +1158,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
 
   // ─── LOAD MESSAGES FOR FIELD ───────────────────────────────────────────────
   async function loadMessages(fieldId: FieldId): Promise<ChatMessage[]> {
-    const sessionId = `${userId}_${fieldId}`
+    const sessionId = `${userId}_${templateId}_${fieldId}`
     const { data } = await supabase
       .from('checklist_chat_memory')
       .select('id, message')
@@ -1227,7 +1227,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
   // ─── SEND MESSAGE ──────────────────────────────────────────────────────────
   async function handleSendMessage(text: string) {
     if (!activeField) return
-    const sessionId = `${userId}_${activeField}`
+    const sessionId = `${userId}_${templateId}_${activeField}`
 
     const userMsg: ChatMessage = { role: 'user', text, ts: Date.now() }
     setSessionMessages(prev => [...prev, userMsg])
@@ -1276,7 +1276,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
 
   async function handleStartTest() {
     if (!activeField) return
-    const sessionId = `${userId}_${activeField}`
+    const sessionId = `${userId}_${templateId}_${activeField}`
     const currentStatus = checklist[activeField]
 
     // If retaking a completed/remarked test, wipe the old session memory first
@@ -1315,7 +1315,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
 
   async function handleRemark(remark: string) {
     if (!activeField) return
-    const sessionId = `${userId}_${activeField}`
+    const sessionId = `${userId}_${templateId}_${activeField}`
     const fieldIdSnapshot = activeField
 
     // Save to history
@@ -1368,7 +1368,7 @@ export default function PreLaunchChecklist({ userId, templateId, agentName, onWo
 
   async function handleRetake() {
     if (!activeField) return
-    const sessionId = `${userId}_${activeField}`
+    const sessionId = `${userId}_${templateId}_${activeField}`
 
     // Archive to history
     await supabase.from('checklist_remark_history').insert({
