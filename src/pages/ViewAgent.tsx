@@ -118,7 +118,7 @@ function PromptTab({ prompt }: { prompt: string }) {
 
 // ─── CHAT TAB ────────────────────────────────────────────────────────────────
 
-function ChatTab({ userId, agentName, templateId }: { userId: string; agentName: string; templateId: string }) {
+function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -139,7 +139,7 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
       const res = await fetch(CHAT_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, message: text, template_id: templateId }),
+        body: JSON.stringify({ user_id: userId, message: text }),
       })
       const reply = (await res.text()).trim() || 'No response'
       setMessages(prev => [...prev, { role: 'agent', text: reply, ts: Date.now() }])
@@ -315,8 +315,41 @@ const H_GAP = 60
 const CANVAS_TOP = 32
 const ROW_Y = CANVAS_TOP + 20
 
-function N8nCanvas({ onNodeClick }: { onNodeClick: (node: typeof MAIN_NODES[0] | typeof SUB_NODES[0]) => void }) {
-  const totalW = MAIN_NODES.length * (NODE_W + H_GAP) - H_GAP + 80
+function N8nCanvas({ onNodeClick, flowJson }: { onNodeClick: (node: typeof MAIN_NODES[0] | typeof SUB_NODES[0]) => void; flowJson?: object | null }) {
+  // Enrich node configs from real workflow JSON if available
+  const enrichedMain = MAIN_NODES.map(node => {
+    if (!flowJson) return node
+    const wf = flowJson as any
+    const wfNodes: any[] = wf.nodes || []
+    if (node.id === 'trigger') {
+      const n = wfNodes.find((n: any) => n.type?.includes('whatsAppTrigger') && n.name?.includes('Trigger2'))
+      if (n) return { ...node, config: { type: n.type, webhookId: n.webhookId || 'configured', credential: n.credentials ? Object.keys(n.credentials)[0] : 'WhatsApp OAuth account' } }
+    }
+    if (node.id === 'agent') {
+      const n = wfNodes.find((n: any) => n.name === 'AI Agent2')
+      if (n) return { ...node, config: { type: 'agent', model: 'LeadFlow AI', memory: 'LeadFlow Memory', prompt: n.parameters?.options?.systemMessage ? n.parameters.options.systemMessage.slice(0, 80) + '\u2026' : 'Your generated system prompt' } }
+    }
+    if (node.id === 'send') {
+      const n = wfNodes.find((n: any) => n.name === 'Send message4')
+      if (n) return { ...node, config: { type: 'whatsApp', operation: 'send', phoneNumberId: n.parameters?.phoneNumberId || 'configured', to: 'Lead phone number' } }
+    }
+    if (node.id === 'typing') {
+      const n = wfNodes.find((n: any) => n.name?.includes('Show typing + mark read1'))
+      if (n) return { ...node, config: { type: 'httpRequest', url: 'graph.facebook.com/v25.0/{phone_id}/messages', method: 'POST', sets: 'status: read + typing_on' } }
+    }
+    return node
+  })
+  const enrichedSubs = SUB_NODES.map(node => {
+    if (!flowJson) return node
+    const wf = flowJson as any
+    const wfNodes: any[] = wf.nodes || []
+    if (node.id === 'sub-memory') {
+      const n = wfNodes.find((n: any) => n.type?.includes('memoryPostgresChat'))
+      if (n) return { ...node, config: { type: 'Postgres Chat Memory', table: n.parameters?.tableName || 'checklist_chat_memory', sessionKey: n.parameters?.sessionKey || '{client_id}_{lead_phone}', window: `${n.parameters?.contextWindowLength || 100} messages` } }
+    }
+    return node
+  })
+  const totalW = enrichedMain.length * (NODE_W + H_GAP) - H_GAP + 80
   const subY = ROW_Y + NODE_H + 44
   const canvasH = subY + NODE_H + 48
 
@@ -324,7 +357,7 @@ function N8nCanvas({ onNodeClick }: { onNodeClick: (node: typeof MAIN_NODES[0] |
   function nodeCX(i: number) { return nodeX(i) + NODE_W / 2 }
   function nodeCY() { return ROW_Y + NODE_H / 2 }
 
-  const agentIdx = MAIN_NODES.findIndex(n => n.id === 'agent')
+  const agentIdx = enrichedMain.findIndex(n => n.id === 'agent')
   const agentCX = nodeCX(agentIdx)
 
   // Sub node positions: model left, memory right of agent center
@@ -349,8 +382,8 @@ function N8nCanvas({ onNodeClick }: { onNodeClick: (node: typeof MAIN_NODES[0] |
           {/* Main edges */}
           {EDGES_MAIN.map(edge => {
             const [fromId, toId] = edge.split('→')
-            const fi = MAIN_NODES.findIndex(n => n.id === fromId)
-            const ti = MAIN_NODES.findIndex(n => n.id === toId)
+            const fi = enrichedMain.findIndex(n => n.id === fromId)
+            const ti = enrichedMain.findIndex(n => n.id === toId)
             const x1 = nodeX(fi) + NODE_W, y1 = ROW_Y + NODE_H / 2
             const x2 = nodeX(ti), y2 = ROW_Y + NODE_H / 2
             const mx = (x1 + x2) / 2
@@ -364,7 +397,7 @@ function N8nCanvas({ onNodeClick }: { onNodeClick: (node: typeof MAIN_NODES[0] |
           })}
 
           {/* Sub-node dashed connectors */}
-          {SUB_NODES.map(sub => {
+          {enrichedSubs.map(sub => {
             const pos = subPositions[sub.id]
             const scx = pos.x + NODE_W / 2
             const scy = pos.y
@@ -384,7 +417,7 @@ function N8nCanvas({ onNodeClick }: { onNodeClick: (node: typeof MAIN_NODES[0] |
         </svg>
 
         {/* Main nodes */}
-        {MAIN_NODES.map((node, i) => (
+        {enrichedMain.map((node, i) => (
           <button key={node.id} onClick={() => onNodeClick(node)}
             style={{
               position: 'absolute', left: nodeX(i), top: ROW_Y,
@@ -420,7 +453,7 @@ function N8nCanvas({ onNodeClick }: { onNodeClick: (node: typeof MAIN_NODES[0] |
         ))}
 
         {/* Sub nodes */}
-        {SUB_NODES.map(sub => {
+        {enrichedSubs.map(sub => {
           const pos = subPositions[sub.id]
           return (
             <button key={sub.id} onClick={() => onNodeClick(sub as any)}
@@ -736,33 +769,9 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
         padding: '20px 16px 24px',
         overflow: 'hidden',
       }}>
-        <N8nCanvas onNodeClick={setSelectedNode} />
+        <N8nCanvas onNodeClick={setSelectedNode} flowJson={flowJson} />
       </div>
 
-      {/* Flow JSON download if available */}
-      {flowJson && (
-        <button
-          onClick={() => {
-            const blob = new Blob([JSON.stringify(flowJson, null, 2)], { type: 'application/json' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url; a.download = `${agentName.toLowerCase().replace(/\s+/g, '-')}-workflow.json`
-            a.click(); URL.revokeObjectURL(url)
-          }}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '12px 16px', borderRadius: 12,
-            background: 'rgba(0,0,0,0.04)', border: '0.5px solid rgba(0,0,0,0.08)',
-            cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, color: '#555',
-            transition: 'all 0.15s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.07)'; e.currentTarget.style.color = '#111' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.color = '#555' }}
-        >
-          <i className="ti ti-download" style={{ fontSize: 15 }} />
-          Download workflow JSON for n8n import
-        </button>
-      )}
 
       {/* Node detail panel */}
       {selectedNode && <NodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />}
@@ -937,7 +946,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
               )
           )}
           {tab === 'chat' && (
-            <ChatTab userId={userId} agentName={agent.agent_name} templateId={templateId} />
+            <ChatTab userId={userId} agentName={agent.agent_name} />
           )}
           {tab === 'checklist' && (
             <PreLaunchChecklist
