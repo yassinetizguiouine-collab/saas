@@ -121,7 +121,6 @@ function ScriptBookingWithLM_S1({ onDataChange }: { onDataChange: (data: Record<
   const [readTime, setReadTime] = useState('4 minutes')
   const [pageTeaser, setPageTeaser] = useState("don't skip page 14…👀")
 
-  // ✅ preview defined BEFORE useEffect
   const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
 
 (Lead replies)
@@ -225,7 +224,6 @@ function ScriptBookingWithLM_S2({ onDataChange }: { onDataChange: (data: Record<
   const [sessions, setSessions] = useState('6pm / 7pm / 8pm / 9pm')
   const [calendarLink, setCalendarLink] = useState('')
 
-  // ✅ preview defined BEFORE useEffect
   const preview = `${greeting}
 Sorry I didn't verify earlier — did the link for the guide work?
 
@@ -407,7 +405,6 @@ function ScriptBookingWithoutLM_S1({ onDataChange }: { onDataChange: (data: Reco
   const [motivation3, setMotivation3] = useState('Support the people around me')
   const [motivation4, setMotivation4] = useState('Finally feel proud of myself')
 
-  // ✅ preview defined BEFORE useEffect
   const preview = `${greeting} 👋 Just to confirm — you came from ${trafficSource} because you want to ${leadGoal}, right?
 
 (Lead replies)
@@ -519,7 +516,6 @@ function ScriptBookingWithoutLM_S2({ onDataChange }: { onDataChange: (data: Reco
   const [sessions, setSessions] = useState('6pm / 7pm / 8pm / 9pm')
   const [calendarLink, setCalendarLink] = useState('')
 
-  // ✅ preview defined BEFORE useEffect
   const preview = `That makes sense 👍
 I can see you're serious about this.
 
@@ -623,7 +619,6 @@ function ScriptCloseInChat_S2({ onDataChange }: { onDataChange: (data: Record<st
   const [condition3, setCondition3] = useState("You leave a review if you feel it's worth it")
   const [paymentLink, setPaymentLink] = useState('')
 
-  // ✅ preview defined BEFORE useEffect
   const preview = `${greeting}
 Sorry I didn't verify earlier — did the link for the ${magnetType} work?
 
@@ -847,7 +842,8 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
   const [sendModal, setSendModal] = useState(false)
   const [receiveConnected, setReceiveConnected] = useState(false)
   const [sendConnected, setSendConnected] = useState(false)
-  const [receiveForm, setReceiveForm] = useState({ clientId: '', clientSecret: '' })
+  // ── PATCH 1: added phoneNumberId ──
+  const [receiveForm, setReceiveForm] = useState({ clientId: '', clientSecret: '', phoneNumberId: '' })
   const [sendForm, setSendForm] = useState({ accessToken: '', businessId: '' })
   const [agentName, setAgentName] = useState('')
   const [agentPersonality, setAgentPersonality] = useState('')
@@ -876,6 +872,7 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
       if (data.agent_tone) setSelectedTone(data.agent_tone)
       if (data.agent_name) setAgentName(data.agent_name)
       if (data.agent_personality) setAgentPersonality(data.agent_personality)
+      // PATCH 2: already works — receiveForm set from data.whatsapp_receive directly (phoneNumberId included)
       if (data.whatsapp_receive) {
         setReceiveForm(data.whatsapp_receive)
         setReceiveConnected(!!(data.whatsapp_receive.clientId))
@@ -941,6 +938,8 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
           script_1: s1Data,
           script_2: s2Data,
           status: 'pending',
+          // ── PATCH 4: phone_number_id as top-level column ──
+          phone_number_id: receiveForm.phoneNumberId || null,
         }, { onConflict: 'user_id,template_id' })
         .select()
         .single()
@@ -1067,6 +1066,8 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Field label="Client ID" placeholder="Your WhatsApp Client ID" value={receiveForm.clientId} onChange={v => setReceiveForm(f => ({ ...f, clientId: v }))} />
             <Field label="Client Secret" placeholder="Your WhatsApp Client Secret" type="password" value={receiveForm.clientSecret} onChange={v => setReceiveForm(f => ({ ...f, clientSecret: v }))} />
+            {/* ── PATCH 3: Phone Number ID field ── */}
+            <Field label="Phone Number ID" placeholder="e.g. 123456789012345" hint="Find this in Meta Developer Portal → WhatsApp → API Setup" value={receiveForm.phoneNumberId} onChange={v => setReceiveForm(f => ({ ...f, phoneNumberId: v }))} />
           </div>
           <button onClick={() => { setReceiveConnected(true); setReceiveModal(false) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Connect</button>
         </Modal>
