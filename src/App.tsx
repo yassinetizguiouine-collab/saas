@@ -12,6 +12,7 @@ import FoundFlow from './pages/FoundFlow'
 import ProvisioningScreen from './pages/ProvisioningScreen'
 import ViewAgent from './pages/ViewAgent'
 import CongratsScreen from './pages/CongratsScreen'
+import CRM from './pages/CRM'
 import NotificationToast from './components/NotificationToast'
 import { useNotifications } from './hooks/useNotifications'
 
@@ -85,7 +86,6 @@ export default function App() {
       if (!obDone) { setAppState('onboarding'); return }
       if (!recDone) { setAppState('recommender'); return }
       setAppState('app')
-      // Restore last page from localStorage, fall back to gallery
       const savedPage = localStorage.getItem('lf_page') as Page | null
       setPage(savedPage || 'gallery')
     } catch (e) {
@@ -256,6 +256,7 @@ export default function App() {
             onProvisioningStart={handleProvisioningStart}
           />
         )}
+        {page === 'crm' && <CRM />}
       </main>
       <NotificationToast toasts={toasts} onDismiss={dismiss} />
     </div>
