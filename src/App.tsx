@@ -143,6 +143,24 @@ export default function App() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      // Check if flow already exists for this template
+      const { data: existing } = await supabase
+        .from('flows')
+        .select('id, template_id')
+        .eq('user_id', user.id)
+        .eq('template_id', templateId)
+        .maybeSingle()
+
+      if (existing) {
+        // Already exists — just navigate to it
+        setActiveFlowId(existing.id)
+        setActiveTemplateId(templateId)
+        setPage('flow-preview')
+        return
+      }
+
+      // Doesn't exist — create it
       const { data } = await supabase.from('flows').insert({
         user_id: user.id, template_id: templateId,
         template_title: templateTitle, status: 'draft', config: {},
