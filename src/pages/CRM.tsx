@@ -432,22 +432,26 @@ export default function CRM({ onBack }: Props) {
       configs?.forEach((c: any) => { configMap[c.template_id] = c.id })
       setFlowConfigs(configMap)
 
-      if (activeFlows.length > 0) setSelectedFlow(activeFlows[0])
+      if (activeFlows.length > 0) {
+        setSelectedFlow(activeFlows[0])
+        await loadLeadsWithConfig(activeFlows[0], user.id, configMap)
+      }
       setLoading(false)
     }
     init()
   }, [])
 
+  // When user switches flow tab — flowConfigs already loaded so safe to call
   useEffect(() => {
-    if (!selectedFlow || !userId) return
-    loadLeads(selectedFlow, userId)
-  }, [selectedFlow, userId])
+    if (!selectedFlow || !userId || Object.keys(flowConfigs).length === 0) return
+    loadLeadsWithConfig(selectedFlow, userId, flowConfigs)
+  }, [selectedFlow])
 
-  async function loadLeads(flow: Flow, uid: string) {
+  async function loadLeadsWithConfig(flow: Flow, uid: string, configMap: Record<string, string>) {
     setLeadsLoading(true)
     setLeads([])
     const table = getTable(flow.template_id)
-    const flowConfigId = flowConfigs[flow.template_id]
+    const flowConfigId = configMap[flow.template_id]
 
     let query = supabase
       .from(table)
@@ -508,7 +512,7 @@ export default function CRM({ onBack }: Props) {
         {flows.length > 0 && (
           <div style={{ display: 'flex', gap: 6 }}>
             {flows.map(f => (
-              <button key={f.id} onClick={() => { setSelectedFlow(f); setStageFilter('all'); setSearch('') }}
+              <button key={f.id} onClick={() => { setSelectedFlow(f); setStageFilter('all'); setSearch(''); loadLeadsWithConfig(f, userId, flowConfigs) }}
                 style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 600, background: selectedFlow?.id === f.id ? '#111' : 'rgba(0,0,0,0.05)', color: selectedFlow?.id === f.id ? '#fff' : '#666', border: 'none', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}>
                 <i className={`ti ${TEMPLATE_ICONS[f.template_id] || 'ti-bolt'}`} style={{ fontSize: 13 }} />
                 {TEMPLATE_LABELS[f.template_id] || f.template_title}
