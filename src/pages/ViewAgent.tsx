@@ -123,77 +123,29 @@ function ChatTab({ userId, agentName }: { userId: string; agentName: string }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const sessionId = `test_${userId}`
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
-  // Load existing messages + subscribe to new ones from test_agent_memory
-  useEffect(() => {
-    if (!userId) return
-
-    // Initial fetch — load existing session history
-    supabase
-      .from('test_agent_memory')
-      .select('id, message, created_at')
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: true })
-      .then(({ data }) => {
-        if (data) {
-          const parsed: ChatMessage[] = data.map(row => {
-            const msg = row.message as { type: string; content: string }
-            return {
-              role: msg.type === 'human' ? 'user' : 'agent',
-              text: msg.content,
-              ts: new Date(row.created_at).getTime(),
-            }
-          })
-          setMessages(parsed)
-        }
-      })
-
-    // Realtime — listen for new INSERTs from n8n
-    const channel = supabase
-      .channel(`test-agent-${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'test_agent_memory',
-          filter: `session_id=eq.${sessionId}`,
-        },
-        (payload) => {
-          const row = payload.new as { message: { type: string; content: string }; created_at: string }
-          const incoming: ChatMessage = {
-            role: row.message.type === 'human' ? 'user' : 'agent',
-            text: row.message.content,
-            ts: new Date(row.created_at).getTime(),
-          }
-          setMessages(prev => [...prev, incoming])
-          if (row.message.type === 'ai') setLoading(false)
-        }
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [userId, sessionId])
-
   async function send() {
     const text = input.trim()
     if (!text || loading) return
     setInput('')
+    const userMsg: ChatMessage = { role: 'user', text, ts: Date.now() }
+    setMessages(prev => [...prev, userMsg])
     setLoading(true)
-    // Fire to n8n — n8n inserts both user + agent messages into test_agent_memory
     try {
-      await fetch(CHAT_WEBHOOK, {
+      const res = await fetch(CHAT_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, session_id: sessionId, message: text }),
+        body: JSON.stringify({ user_id: userId, message: text }),
       })
+      const reply = (await res.text()).trim() || 'No response'
+      setMessages(prev => [...prev, { role: 'agent', text: reply, ts: Date.now() }])
     } catch {
       setMessages(prev => [...prev, { role: 'agent', text: 'Connection error. Check n8n.', ts: Date.now() }])
+    } finally {
       setLoading(false)
     }
   }
