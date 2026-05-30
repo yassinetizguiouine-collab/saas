@@ -32,6 +32,13 @@ interface Lead {
   emotional_state?: string | null
 }
 
+interface ContactStats {
+  total: number
+  today: number
+  thisWeek: number
+  thisMonth: number
+}
+
 interface Props { onBack?: () => void }
 
 const TEMPLATE_LABELS: Record<string, string> = {
@@ -46,25 +53,25 @@ const TEMPLATE_ICONS: Record<string, string> = {
 }
 
 const BOOKING_STAGES = [
-  { key: 'qualification', label: 'Trigger',      sub: 'WhatsApp',  icon: 'ti-bolt',            color: '#7c4dcc' },
-  { key: 'magnet_sent',   label: 'Script 1',     sub: 'Welcome',   icon: 'ti-message-2',       color: '#378ADD' },
-  { key: 'follow_up',     label: 'Lead Magnet',  sub: 'Send PDF',  icon: 'ti-file-download',   color: '#1a8c4e' },
-  { key: 'booked',        label: 'Booking',      sub: 'Schedule',  icon: 'ti-calendar-check',  color: '#7c4dcc' },
-  { key: 'lost',          label: 'Lost',         sub: 'No reply',  icon: 'ti-x',               color: '#e53e3e' },
+  { key: 'qualification', label: 'Trigger',     sub: 'WhatsApp', icon: 'ti-bolt',           color: '#7c4dcc' },
+  { key: 'magnet_sent',   label: 'Script 1',    sub: 'Welcome',  icon: 'ti-message-2',      color: '#378ADD' },
+  { key: 'follow_up',     label: 'Lead Magnet', sub: 'Send PDF', icon: 'ti-file-download',  color: '#1a8c4e' },
+  { key: 'booked',        label: 'Booking',     sub: 'Schedule', icon: 'ti-calendar-check', color: '#7c4dcc' },
+  { key: 'lost',          label: 'Lost',        sub: 'No reply', icon: 'ti-x',              color: '#e53e3e' },
 ]
 const BOOKING_NO_LM_STAGES = [
-  { key: 'qualification', label: 'Trigger',   sub: 'WhatsApp', icon: 'ti-bolt',           color: '#7c4dcc' },
-  { key: 'follow_up',     label: 'Script 1',  sub: 'Welcome',  icon: 'ti-message-2',      color: '#378ADD' },
-  { key: 'booked',        label: 'Booking',   sub: 'Schedule', icon: 'ti-calendar-check', color: '#1a8c4e' },
-  { key: 'lost',          label: 'Lost',      sub: 'No reply', icon: 'ti-x',              color: '#e53e3e' },
+  { key: 'qualification', label: 'Trigger',  sub: 'WhatsApp', icon: 'ti-bolt',           color: '#7c4dcc' },
+  { key: 'follow_up',     label: 'Script 1', sub: 'Welcome',  icon: 'ti-message-2',      color: '#378ADD' },
+  { key: 'booked',        label: 'Booking',  sub: 'Schedule', icon: 'ti-calendar-check', color: '#1a8c4e' },
+  { key: 'lost',          label: 'Lost',     sub: 'No reply', icon: 'ti-x',              color: '#e53e3e' },
 ]
 const CLOSE_STAGES = [
-  { key: 'qualification',  label: 'Trigger',   sub: 'WhatsApp', icon: 'ti-bolt',            color: '#7c4dcc' },
-  { key: 'magnet_sent',    label: 'Script 1',  sub: 'Welcome',  icon: 'ti-message-2',       color: '#378ADD' },
-  { key: 'offer_sent',     label: 'Offer',     sub: 'Sent',     icon: 'ti-tag',             color: '#c47a1a' },
-  { key: 'discount_sent',  label: 'Discount',  sub: 'Sent',     icon: 'ti-percentage',      color: '#dd6b20' },
-  { key: 'paid',           label: 'Paid',      sub: 'Closed',   icon: 'ti-circle-check',    color: '#1a8c4e' },
-  { key: 'lost',           label: 'Lost',      sub: 'No reply', icon: 'ti-x',               color: '#e53e3e' },
+  { key: 'qualification', label: 'Trigger',  sub: 'WhatsApp', icon: 'ti-bolt',         color: '#7c4dcc' },
+  { key: 'magnet_sent',   label: 'Script 1', sub: 'Welcome',  icon: 'ti-message-2',    color: '#378ADD' },
+  { key: 'offer_sent',    label: 'Offer',    sub: 'Sent',     icon: 'ti-tag',          color: '#c47a1a' },
+  { key: 'discount_sent', label: 'Discount', sub: 'Sent',     icon: 'ti-percentage',   color: '#dd6b20' },
+  { key: 'paid',          label: 'Paid',     sub: 'Closed',   icon: 'ti-circle-check', color: '#1a8c4e' },
+  { key: 'lost',          label: 'Lost',     sub: 'No reply', icon: 'ti-x',            color: '#e53e3e' },
 ]
 
 function getStages(templateId: string) {
@@ -140,7 +147,6 @@ function StatCard({ icon, label, value, sub, color = '#7c4dcc' }: {
 function Funnel({ leads, templateId }: { leads: Lead[]; templateId: string }) {
   const stages = getStages(templateId)
   const total = leads.length || 1
-
   return (
     <div className="glass" style={{ borderRadius: 16, padding: '20px 24px', marginBottom: 16 }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 18 }}>
@@ -153,36 +159,16 @@ function Funnel({ leads, templateId }: { leads: Lead[]; templateId: string }) {
           const isLast = i === stages.length - 1
           return (
             <div key={s.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-              <div className="glass" style={{
-                flex: 1, borderRadius: 14, padding: '16px 14px', textAlign: 'center',
-                border: count > 0 ? `1px solid ${s.color}22` : '0.5px solid rgba(0,0,0,0.06)',
-                background: count > 0 ? `${s.color}08` : 'rgba(255,255,255,0.4)',
-                transition: 'all 0.2s',
-              }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 11,
-                  background: count > 0 ? `${s.color}15` : 'rgba(0,0,0,0.04)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 10px',
-                }}>
+              <div className="glass" style={{ flex: 1, borderRadius: 14, padding: '16px 14px', textAlign: 'center', border: count > 0 ? `1px solid ${s.color}22` : '0.5px solid rgba(0,0,0,0.06)', background: count > 0 ? `${s.color}08` : 'rgba(255,255,255,0.4)', transition: 'all 0.2s' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 11, background: count > 0 ? `${s.color}15` : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
                   <i className={`ti ${s.icon}`} style={{ fontSize: 17, color: count > 0 ? s.color : '#ccc' }} />
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: count > 0 ? s.color : '#ddd', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {count}
-                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: count > 0 ? s.color : '#ddd', letterSpacing: '-0.03em', lineHeight: 1 }}>{count}</div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: count > 0 ? '#444' : '#ccc', marginTop: 4 }}>{s.label}</div>
                 <div style={{ fontSize: 10, color: '#bbb', marginTop: 2 }}>{s.sub}</div>
-                {i > 0 && (
-                  <div style={{ fontSize: 10, fontWeight: 600, color: count > 0 ? s.color : '#ddd', marginTop: 6 }}>
-                    {pct}%
-                  </div>
-                )}
+                {i > 0 && <div style={{ fontSize: 10, fontWeight: 600, color: count > 0 ? s.color : '#ddd', marginTop: 6 }}>{pct}%</div>}
               </div>
-              {!isLast && (
-                <div style={{ flexShrink: 0, padding: '0 6px', color: '#ddd', fontSize: 14 }}>
-                  <i className="ti ti-chevron-right" />
-                </div>
-              )}
+              {!isLast && <div style={{ flexShrink: 0, padding: '0 6px', color: '#ddd', fontSize: 14 }}><i className="ti ti-chevron-right" /></div>}
             </div>
           )
         })}
@@ -203,25 +189,31 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
 
   useEffect(() => {
     async function loadMem() {
+      // Session key format: user_id_template_id_phone — matches n8n Postgres Chat Memory node
+      const sessionKey = `${userId}_${templateId}_${lead.phone_number}`
       const { data } = await supabase
-        .from('agent_memory')
-        .select('memory, updated_at')
-        .eq('user_id', userId)
-        .eq('template_id', templateId)
-        .eq('phone_number', lead.phone_number)
-        .maybeSingle()
-      if (data?.memory) {
-        try {
-          const m = data.memory
-          if (Array.isArray(m)) setMessages(m)
-          else if (m.messages) setMessages(m.messages)
-          else if (m.chat_history) setMessages(m.chat_history)
-        } catch {}
+        .from('wa_chat_memory')
+        .select('message, created_at')
+        .eq('session_id', sessionKey)
+        .order('created_at', { ascending: true })
+        .limit(50)
+
+      if (data && data.length > 0) {
+        // n8n Postgres Chat Memory stores each message as { type, data: { content, ... } }
+        const parsed = data.map((row: any) => {
+          const msg = row.message
+          return {
+            role: msg?.type === 'human' ? 'user' : 'assistant',
+            content: msg?.data?.content || msg?.content || msg?.text || '',
+            type: msg?.type,
+          }
+        }).filter((m: any) => m.content)
+        setMessages(parsed)
       }
       setLoadingMem(false)
     }
     loadMem()
-  }, [lead.phone_number])
+  }, [lead.phone_number, userId, templateId])
 
   async function saveNotes() {
     setSavingNotes(true)
@@ -256,7 +248,7 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
           </button>
         </div>
 
-        {/* Journey stepper */}
+        {/* Journey */}
         <div style={{ padding: '18px 22px', borderBottom: '0.5px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 14 }}>Journey</div>
           <div style={{ display: 'flex' }}>
@@ -288,27 +280,34 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
             {lead.offer_sent_at && <DateRow label="Offer sent" value={formatDate(lead.offer_sent_at)} color="#c47a1a" />}
             {lead.discount_sent_at && <DateRow label="Discount sent" value={formatDate(lead.discount_sent_at)} color="#dd6b20" />}
             {lead.paid_at && <DateRow label="Paid ✓" value={formatDate(lead.paid_at)} color="#1a8c4e" />}
-            {lead.emotional_state && <DateRow label="Emotional state" value={lead.emotional_state} color="#888" />}
+            {lead.emotional_state && <DateRow label="Mood" value={lead.emotional_state} color="#888" />}
           </div>
         </div>
 
-        {/* Conversation */}
+        {/* Conversation from wa_chat_memory */}
         <div style={{ padding: '16px 22px', borderBottom: '0.5px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Conversation</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
+            Conversation
+          </div>
           {loadingMem ? (
             <div style={{ color: '#ccc', fontSize: 12 }}>Loading...</div>
           ) : messages.length === 0 ? (
             <div style={{ color: '#ccc', fontSize: 12 }}>No conversation recorded yet.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 240, overflowY: 'auto' }}>
-              {messages.slice(-12).map((msg: any, i: number) => {
-                const isHuman = msg.type === 'human' || msg.role === 'user' || msg.kwargs?.type === 'human'
-                const text = msg.content || msg.text || msg.kwargs?.content || ''
-                if (!text) return null
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 280, overflowY: 'auto' }}>
+              {messages.map((msg: any, i: number) => {
+                const isHuman = msg.role === 'user' || msg.type === 'human'
+                if (!msg.content) return null
                 return (
                   <div key={i} style={{ display: 'flex', justifyContent: isHuman ? 'flex-end' : 'flex-start' }}>
-                    <div style={{ maxWidth: '80%', padding: '8px 12px', borderRadius: isHuman ? '12px 12px 3px 12px' : '12px 12px 12px 3px', background: isHuman ? 'rgba(37,211,102,0.1)' : 'rgba(0,0,0,0.04)', fontSize: 12, color: '#333', lineHeight: 1.5, border: isHuman ? '0.5px solid rgba(37,211,102,0.2)' : '0.5px solid rgba(0,0,0,0.07)' }}>
-                      {text}
+                    <div style={{
+                      maxWidth: '82%', padding: '8px 12px',
+                      borderRadius: isHuman ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
+                      background: isHuman ? 'rgba(37,211,102,0.1)' : 'rgba(0,0,0,0.04)',
+                      fontSize: 12, color: '#333', lineHeight: 1.55,
+                      border: isHuman ? '0.5px solid rgba(37,211,102,0.2)' : '0.5px solid rgba(0,0,0,0.07)',
+                    }}>
+                      {msg.content}
                     </div>
                   </div>
                 )
@@ -398,9 +397,10 @@ function LeadRow({ lead, templateId, index, isSelected, onClick }: { lead: Lead;
 export default function CRM({ onBack }: Props) {
   const [userId, setUserId] = useState('')
   const [flows, setFlows] = useState<Flow[]>([])
-  const [flowConfigs, setFlowConfigs] = useState<Record<string, string>>({}) // template_id → flow_config_id
+  const [flowConfigs, setFlowConfigs] = useState<Record<string, string>>({})
   const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null)
   const [leads, setLeads] = useState<Lead[]>([])
+  const [contactStats, setContactStats] = useState<ContactStats>({ total: 0, today: 0, thisWeek: 0, thisMonth: 0 })
   const [loading, setLoading] = useState(true)
   const [leadsLoading, setLeadsLoading] = useState(false)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
@@ -413,24 +413,22 @@ export default function CRM({ onBack }: Props) {
       if (!user) return
       setUserId(user.id)
 
-      // Get active flows
+      // Active flows
       const { data: flowsData } = await supabase
-        .from('flows')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
+        .from('flows').select('*').eq('user_id', user.id)
+        .eq('status', 'active').order('created_at', { ascending: false })
       const activeFlows = (flowsData as Flow[]) ?? []
       setFlows(activeFlows)
 
-      // Get flow_config ids to filter leads correctly
+      // Flow config ids
       const { data: configs } = await supabase
-        .from('flow_config')
-        .select('id, template_id')
-        .eq('user_id', user.id)
+        .from('flow_config').select('id, template_id').eq('user_id', user.id)
       const configMap: Record<string, string> = {}
       configs?.forEach((c: any) => { configMap[c.template_id] = c.id })
       setFlowConfigs(configMap)
+
+      // Contact stats from contacts table — source of truth for new unique leads
+      await loadContactStats(user.id)
 
       if (activeFlows.length > 0) {
         setSelectedFlow(activeFlows[0])
@@ -441,11 +439,31 @@ export default function CRM({ onBack }: Props) {
     init()
   }, [])
 
-  // When user switches flow tab — flowConfigs already loaded so safe to call
   useEffect(() => {
     if (!selectedFlow || !userId || Object.keys(flowConfigs).length === 0) return
     loadLeadsWithConfig(selectedFlow, userId, flowConfigs)
   }, [selectedFlow])
+
+  async function loadContactStats(uid: string) {
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+    const [total, today, week, month] = await Promise.all([
+      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid),
+      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('first_seen_at', todayStart),
+      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('first_seen_at', weekStart),
+      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('first_seen_at', monthStart),
+    ])
+
+    setContactStats({
+      total: total.count ?? 0,
+      today: today.count ?? 0,
+      thisWeek: week.count ?? 0,
+      thisMonth: month.count ?? 0,
+    })
+  }
 
   async function loadLeadsWithConfig(flow: Flow, uid: string, configMap: Record<string, string>) {
     setLeadsLoading(true)
@@ -453,16 +471,8 @@ export default function CRM({ onBack }: Props) {
     const table = getTable(flow.template_id)
     const flowConfigId = configMap[flow.template_id]
 
-    let query = supabase
-      .from(table)
-      .select('*')
-      .eq('user_id', uid)
-      .eq('template_id', flow.template_id)
-
-    // Filter by flow_config_id if available for precise per-flow data
-    if (flowConfigId) {
-      query = query.eq('flow_config_id', flowConfigId)
-    }
+    let query = supabase.from(table).select('*').eq('user_id', uid).eq('template_id', flow.template_id)
+    if (flowConfigId) query = query.eq('flow_config_id', flowConfigId)
 
     const { data } = await query.order('updated_at', { ascending: false })
     setLeads((data as Lead[]) ?? [])
@@ -476,13 +486,8 @@ export default function CRM({ onBack }: Props) {
     return matchStage && matchSearch
   })
 
-  const totalLeads = leads.length
   const winLeads = selectedFlow ? leads.filter(l => getWinField(selectedFlow.template_id, l)).length : 0
-  const convRate = totalLeads > 0 ? Math.round((winLeads / totalLeads) * 100) : 0
-  const todayLeads = leads.filter(l => {
-    const d = new Date(l.created_at), now = new Date()
-    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth()
-  }).length
+  const convRate = contactStats.total > 0 ? Math.round((winLeads / contactStats.total) * 100) : 0
 
   if (loading) return (
     <div style={{ padding: '80px 40px', textAlign: 'center', color: '#ccc' }}>
@@ -524,12 +529,12 @@ export default function CRM({ onBack }: Props) {
 
       {flows.length === 0 ? <EmptyState hasFlows={false} /> : (
         <>
-          {/* Stats */}
+          {/* Stats — now from contacts table */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 20, animation: 'crm-up 0.4s ease 0.05s both' }}>
-            <StatCard icon="ti-users" label="Total leads" value={totalLeads} color="#7c4dcc" />
-            <StatCard icon="ti-chart-bar" label="Conversion rate" value={`${convRate}%`} sub={`${winLeads} wins`} color="#1a8c4e" />
-            <StatCard icon="ti-calendar-event" label="Today" value={todayLeads} sub="new leads" color="#c47a1a" />
-            <StatCard icon={selectedFlow?.template_id === 'close-in-chat' ? 'ti-cash' : 'ti-calendar-check'} label={selectedFlow?.template_id === 'close-in-chat' ? 'Paid' : 'Booked'} value={winLeads} color="#25D366" />
+            <StatCard icon="ti-users" label="Total leads" value={contactStats.total} sub="all time" color="#7c4dcc" />
+            <StatCard icon="ti-calendar-event" label="Today" value={contactStats.today} sub="new leads" color="#c47a1a" />
+            <StatCard icon="ti-chart-bar" label="This week" value={contactStats.thisWeek} sub="new leads" color="#378ADD" />
+            <StatCard icon={selectedFlow?.template_id === 'close-in-chat' ? 'ti-cash' : 'ti-calendar-check'} label={selectedFlow?.template_id === 'close-in-chat' ? 'Paid' : 'Booked'} value={winLeads} sub={`${convRate}% conv.`} color="#1a8c4e" />
           </div>
 
           {/* Funnel */}
