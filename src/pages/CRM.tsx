@@ -21,14 +21,10 @@ interface Lead {
   magnet_sent_at?: string | null
   followup_sent_at?: string | null
   booked_at?: string | null
-  calendar_link?: string | null
-  session_time?: string | null
   notes?: string | null
   offer_sent_at?: string | null
   discount_sent_at?: string | null
   paid_at?: string | null
-  payment_link?: string | null
-  objections?: any[]
   emotional_state?: string | null
 }
 
@@ -36,7 +32,6 @@ interface ContactStats {
   total: number
   today: number
   thisWeek: number
-  thisMonth: number
 }
 
 interface Props { onBack?: () => void }
@@ -52,39 +47,47 @@ const TEMPLATE_ICONS: Record<string, string> = {
   'close-in-chat': 'ti-message-2-check',
 }
 
-const BOOKING_STAGES = [
-  { key: 'qualification', label: 'Trigger',     sub: 'WhatsApp', icon: 'ti-bolt',           color: '#7c4dcc' },
-  { key: 'magnet_sent',   label: 'Script 1',    sub: 'Welcome',  icon: 'ti-message-2',      color: '#378ADD' },
-  { key: 'follow_up',     label: 'Lead Magnet', sub: 'Send PDF', icon: 'ti-file-download',  color: '#1a8c4e' },
-  { key: 'booked',        label: 'Booking',     sub: 'Schedule', icon: 'ti-calendar-check', color: '#7c4dcc' },
-  { key: 'lost',          label: 'Lost',        sub: 'No reply', icon: 'ti-x',              color: '#e53e3e' },
+const BOOKING_WITH_LM_STAGES = [
+  { key: 'came_in',       label: 'Came in',      sub: 'Contacted',   icon: 'ti-messages',       color: '#7c4dcc', virtual: true  },
+  { key: 'qualification', label: 'Qualification', sub: 'Script 1',    icon: 'ti-user-check',     color: '#378ADD', virtual: false },
+  { key: 'magnet_sent',   label: 'Lead Magnet',   sub: 'Guide sent',  icon: 'ti-file-download',  color: '#c47a1a', virtual: false },
+  { key: 'follow_up',     label: 'Follow Up',     sub: 'Script 2',    icon: 'ti-repeat',         color: '#dd6b20', virtual: false },
+  { key: 'booked',        label: 'Booked',        sub: 'Call set',    icon: 'ti-calendar-check', color: '#1a8c4e', virtual: false },
+  { key: 'lost',          label: 'Lost',          sub: 'No reply',    icon: 'ti-x',              color: '#e53e3e', virtual: false },
 ]
+
 const BOOKING_NO_LM_STAGES = [
-  { key: 'qualification', label: 'Trigger',  sub: 'WhatsApp', icon: 'ti-bolt',           color: '#7c4dcc' },
-  { key: 'follow_up',     label: 'Script 1', sub: 'Welcome',  icon: 'ti-message-2',      color: '#378ADD' },
-  { key: 'booked',        label: 'Booking',  sub: 'Schedule', icon: 'ti-calendar-check', color: '#1a8c4e' },
-  { key: 'lost',          label: 'Lost',     sub: 'No reply', icon: 'ti-x',              color: '#e53e3e' },
+  { key: 'came_in',       label: 'Came in',      sub: 'Contacted',   icon: 'ti-messages',       color: '#7c4dcc', virtual: true  },
+  { key: 'qualification', label: 'Qualification', sub: 'Script 1',    icon: 'ti-user-check',     color: '#378ADD', virtual: false },
+  { key: 'follow_up',     label: 'Follow Up',     sub: 'Script 2',    icon: 'ti-repeat',         color: '#dd6b20', virtual: false },
+  { key: 'booked',        label: 'Booked',        sub: 'Call set',    icon: 'ti-calendar-check', color: '#1a8c4e', virtual: false },
+  { key: 'lost',          label: 'Lost',          sub: 'No reply',    icon: 'ti-x',              color: '#e53e3e', virtual: false },
 ]
-const CLOSE_STAGES = [
-  { key: 'qualification', label: 'Trigger',  sub: 'WhatsApp', icon: 'ti-bolt',         color: '#7c4dcc' },
-  { key: 'magnet_sent',   label: 'Script 1', sub: 'Welcome',  icon: 'ti-message-2',    color: '#378ADD' },
-  { key: 'offer_sent',    label: 'Offer',    sub: 'Sent',     icon: 'ti-tag',          color: '#c47a1a' },
-  { key: 'discount_sent', label: 'Discount', sub: 'Sent',     icon: 'ti-percentage',   color: '#dd6b20' },
-  { key: 'paid',          label: 'Paid',     sub: 'Closed',   icon: 'ti-circle-check', color: '#1a8c4e' },
-  { key: 'lost',          label: 'Lost',     sub: 'No reply', icon: 'ti-x',            color: '#e53e3e' },
+
+const CLOSE_IN_CHAT_STAGES = [
+  { key: 'came_in',       label: 'Came in',      sub: 'Contacted',   icon: 'ti-messages',       color: '#7c4dcc', virtual: true  },
+  { key: 'qualification', label: 'Qualification', sub: 'Script 1',    icon: 'ti-user-check',     color: '#378ADD', virtual: false },
+  { key: 'magnet_sent',   label: 'Lead Magnet',   sub: 'Guide sent',  icon: 'ti-file-download',  color: '#c47a1a', virtual: false },
+  { key: 'offer_sent',    label: 'Offer',         sub: 'Script 2',    icon: 'ti-tag',            color: '#dd6b20', virtual: false },
+  { key: 'discount_sent', label: 'Discount',      sub: 'Sent',        icon: 'ti-percentage',     color: '#e08c00', virtual: false },
+  { key: 'paid',          label: 'Paid',          sub: 'Closed',      icon: 'ti-circle-check',   color: '#1a8c4e', virtual: false },
+  { key: 'lost',          label: 'Lost',          sub: 'No reply',    icon: 'ti-x',              color: '#e53e3e', virtual: false },
 ]
 
 function getStages(templateId: string) {
-  if (templateId === 'close-in-chat') return CLOSE_STAGES
+  if (templateId === 'close-in-chat') return CLOSE_IN_CHAT_STAGES
   if (templateId === 'booking-without-lm') return BOOKING_NO_LM_STAGES
-  return BOOKING_STAGES
+  return BOOKING_WITH_LM_STAGES
 }
+
 function getWinField(templateId: string, lead: Lead) {
   return templateId === 'close-in-chat' ? !!lead.paid_at : !!lead.booked_at
 }
+
 function getTable(templateId: string) {
   return templateId === 'close-in-chat' ? 'close_in_chat_leads' : 'booking_leads'
 }
+
 function timeAgo(ts: string) {
   const diff = Date.now() - new Date(ts).getTime()
   const mins = Math.floor(diff / 60000)
@@ -95,10 +98,12 @@ function timeAgo(ts: string) {
   const days = Math.floor(hrs / 24)
   return days < 7 ? `${days}d ago` : new Date(ts).toLocaleDateString()
 }
+
 function formatDate(ts: string | null | undefined) {
   if (!ts) return '—'
   return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
+
 function initials(name: string | null, phone: string) {
   if (name) {
     const p = name.trim().split(' ')
@@ -107,7 +112,6 @@ function initials(name: string | null, phone: string) {
   return phone.slice(-2)
 }
 
-// ─── STAGE PILL ───────────────────────────────────────────────
 function StagePill({ stage, templateId }: { stage: string; templateId: string }) {
   const stages = getStages(templateId)
   const s = stages.find(x => x.key === stage) || { label: stage, color: '#888' }
@@ -125,7 +129,6 @@ function StagePill({ stage, templateId }: { stage: string; templateId: string })
   )
 }
 
-// ─── STAT CARD ────────────────────────────────────────────────
 function StatCard({ icon, label, value, sub, color = '#7c4dcc' }: {
   icon: string; label: string; value: string | number; sub?: string; color?: string
 }) {
@@ -143,32 +146,42 @@ function StatCard({ icon, label, value, sub, color = '#7c4dcc' }: {
   )
 }
 
-// ─── FUNNEL ───────────────────────────────────────────────────
-function Funnel({ leads, templateId }: { leads: Lead[]; templateId: string }) {
+function Funnel({ leads, templateId, cameInCount }: { leads: Lead[]; templateId: string; cameInCount: number }) {
   const stages = getStages(templateId)
-  const total = leads.length || 1
   return (
     <div className="glass" style={{ borderRadius: 16, padding: '20px 24px', marginBottom: 16 }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 18 }}>
         Conversion funnel
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         {stages.map((s, i) => {
-          const count = leads.filter(l => l.stage === s.key).length
-          const pct = Math.round((count / total) * 100)
+          const count = s.virtual ? cameInCount : leads.filter(l => l.stage === s.key).length
+          const prevCount = i === 0 ? cameInCount : (stages[i - 1].virtual ? cameInCount : leads.filter(l => l.stage === stages[i - 1].key).length)
+          const pct = i > 0 && prevCount > 0 ? Math.round((count / prevCount) * 100) : null
           const isLast = i === stages.length - 1
           return (
             <div key={s.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-              <div className="glass" style={{ flex: 1, borderRadius: 14, padding: '16px 14px', textAlign: 'center', border: count > 0 ? `1px solid ${s.color}22` : '0.5px solid rgba(0,0,0,0.06)', background: count > 0 ? `${s.color}08` : 'rgba(255,255,255,0.4)', transition: 'all 0.2s' }}>
-                <div style={{ width: 36, height: 36, borderRadius: 11, background: count > 0 ? `${s.color}15` : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-                  <i className={`ti ${s.icon}`} style={{ fontSize: 17, color: count > 0 ? s.color : '#ccc' }} />
+              <div className="glass" style={{
+                flex: 1, borderRadius: 14, padding: '16px 10px', textAlign: 'center',
+                border: count > 0 ? `1px solid ${s.color}22` : '0.5px solid rgba(0,0,0,0.06)',
+                background: count > 0 ? `${s.color}08` : 'rgba(255,255,255,0.4)',
+                transition: 'all 0.2s',
+              }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: count > 0 ? `${s.color}15` : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+                  <i className={`ti ${s.icon}`} style={{ fontSize: 16, color: count > 0 ? s.color : '#ccc' }} />
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: count > 0 ? s.color : '#ddd', letterSpacing: '-0.03em', lineHeight: 1 }}>{count}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: count > 0 ? '#444' : '#ccc', marginTop: 4 }}>{s.label}</div>
-                <div style={{ fontSize: 10, color: '#bbb', marginTop: 2 }}>{s.sub}</div>
-                {i > 0 && <div style={{ fontSize: 10, fontWeight: 600, color: count > 0 ? s.color : '#ddd', marginTop: 6 }}>{pct}%</div>}
+                <div style={{ fontSize: 20, fontWeight: 800, color: count > 0 ? s.color : '#ddd', letterSpacing: '-0.03em', lineHeight: 1 }}>{count}</div>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: count > 0 ? '#444' : '#ccc', marginTop: 4 }}>{s.label}</div>
+                <div style={{ fontSize: 9.5, color: '#bbb', marginTop: 2 }}>{s.sub}</div>
+                {pct !== null && (
+                  <div style={{ fontSize: 9.5, fontWeight: 700, color: count > 0 ? s.color : '#ddd', marginTop: 5 }}>{pct}%</div>
+                )}
               </div>
-              {!isLast && <div style={{ flexShrink: 0, padding: '0 6px', color: '#ddd', fontSize: 14 }}><i className="ti ti-chevron-right" /></div>}
+              {!isLast && (
+                <div style={{ flexShrink: 0, padding: '0 4px', color: '#ddd', fontSize: 13 }}>
+                  <i className="ti ti-chevron-right" />
+                </div>
+              )}
             </div>
           )
         })}
@@ -177,7 +190,6 @@ function Funnel({ leads, templateId }: { leads: Lead[]; templateId: string }) {
   )
 }
 
-// ─── LEAD PANEL ───────────────────────────────────────────────
 function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
   lead: Lead; templateId: string; userId: string; onClose: () => void; onUpdate: (l: Lead) => void
 }) {
@@ -189,7 +201,6 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
 
   useEffect(() => {
     async function loadMem() {
-      // Session key format: user_id_template_id_phone — matches n8n Postgres Chat Memory node
       const sessionKey = `${userId}_${templateId}_${lead.phone_number}`
       const { data } = await supabase
         .from('wa_chat_memory')
@@ -197,9 +208,7 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
         .eq('session_id', sessionKey)
         .order('created_at', { ascending: true })
         .limit(50)
-
       if (data && data.length > 0) {
-        // n8n Postgres Chat Memory stores each message as { type, data: { content, ... } }
         const parsed = data.map((row: any) => {
           const msg = row.message
           return {
@@ -224,7 +233,7 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
     setTimeout(() => setNotesSaved(false), 2000)
   }
 
-  const stages = getStages(templateId)
+  const stages = getStages(templateId).filter(s => !s.virtual)
   const isWin = getWinField(templateId, lead)
   const stageIdx = stages.findIndex(x => x.key === lead.stage)
 
@@ -232,8 +241,6 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
     <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 440, zIndex: 100 }}>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.12)', zIndex: -1 }} />
       <div className="glass-strong" style={{ height: '100%', display: 'flex', flexDirection: 'column', borderLeft: '0.5px solid rgba(255,255,255,0.9)', overflowY: 'auto' }}>
-
-        {/* Header */}
         <div style={{ padding: '20px 22px 18px', borderBottom: '0.5px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
           <div style={{ width: 44, height: 44, borderRadius: 14, background: isWin ? 'rgba(37,211,102,0.12)' : 'rgba(124,77,204,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: isWin ? '#1a8c4e' : '#7c4dcc', flexShrink: 0 }}>
             {initials(lead.lead_name, lead.phone_number)}
@@ -248,7 +255,6 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
           </button>
         </div>
 
-        {/* Journey */}
         <div style={{ padding: '18px 22px', borderBottom: '0.5px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 14 }}>Journey</div>
           <div style={{ display: 'flex' }}>
@@ -269,26 +275,22 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
           </div>
         </div>
 
-        {/* Activity */}
         <div style={{ padding: '16px 22px', borderBottom: '0.5px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Activity</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             <DateRow label="Lead created" value={formatDate(lead.created_at)} />
-            {lead.magnet_sent_at && <DateRow label="LM sent" value={formatDate(lead.magnet_sent_at)} color="#7c4dcc" />}
-            {lead.followup_sent_at && <DateRow label="Follow-up sent" value={formatDate(lead.followup_sent_at)} color="#c47a1a" />}
+            {lead.magnet_sent_at && <DateRow label="Lead magnet sent" value={formatDate(lead.magnet_sent_at)} color="#c47a1a" />}
+            {lead.followup_sent_at && <DateRow label="Follow-up sent" value={formatDate(lead.followup_sent_at)} color="#dd6b20" />}
             {lead.booked_at && <DateRow label="Booked ✓" value={formatDate(lead.booked_at)} color="#1a8c4e" />}
-            {lead.offer_sent_at && <DateRow label="Offer sent" value={formatDate(lead.offer_sent_at)} color="#c47a1a" />}
-            {lead.discount_sent_at && <DateRow label="Discount sent" value={formatDate(lead.discount_sent_at)} color="#dd6b20" />}
+            {lead.offer_sent_at && <DateRow label="Offer sent" value={formatDate(lead.offer_sent_at)} color="#dd6b20" />}
+            {lead.discount_sent_at && <DateRow label="Discount sent" value={formatDate(lead.discount_sent_at)} color="#e08c00" />}
             {lead.paid_at && <DateRow label="Paid ✓" value={formatDate(lead.paid_at)} color="#1a8c4e" />}
             {lead.emotional_state && <DateRow label="Mood" value={lead.emotional_state} color="#888" />}
           </div>
         </div>
 
-        {/* Conversation from wa_chat_memory */}
         <div style={{ padding: '16px 22px', borderBottom: '0.5px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
-            Conversation
-          </div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Conversation</div>
           {loadingMem ? (
             <div style={{ color: '#ccc', fontSize: 12 }}>Loading...</div>
           ) : messages.length === 0 ? (
@@ -316,7 +318,6 @@ function LeadPanel({ lead, templateId, userId, onClose, onUpdate }: {
           )}
         </div>
 
-        {/* Notes */}
         <div style={{ padding: '16px 22px', flex: 1 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Notes</div>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add notes about this lead..." rows={4}
@@ -393,14 +394,13 @@ function LeadRow({ lead, templateId, index, isSelected, onClick }: { lead: Lead;
   )
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────
 export default function CRM({ onBack }: Props) {
   const [userId, setUserId] = useState('')
   const [flows, setFlows] = useState<Flow[]>([])
   const [flowConfigs, setFlowConfigs] = useState<Record<string, string>>({})
   const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null)
   const [leads, setLeads] = useState<Lead[]>([])
-  const [contactStats, setContactStats] = useState<ContactStats>({ total: 0, today: 0, thisWeek: 0, thisMonth: 0 })
+  const [contactStats, setContactStats] = useState<ContactStats>({ total: 0, today: 0, thisWeek: 0 })
   const [loading, setLoading] = useState(true)
   const [leadsLoading, setLeadsLoading] = useState(false)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
@@ -413,21 +413,18 @@ export default function CRM({ onBack }: Props) {
       if (!user) return
       setUserId(user.id)
 
-      // Active flows
       const { data: flowsData } = await supabase
         .from('flows').select('*').eq('user_id', user.id)
         .eq('status', 'active').order('created_at', { ascending: false })
       const activeFlows = (flowsData as Flow[]) ?? []
       setFlows(activeFlows)
 
-      // Flow config ids
       const { data: configs } = await supabase
         .from('flow_config').select('id, template_id').eq('user_id', user.id)
       const configMap: Record<string, string> = {}
       configs?.forEach((c: any) => { configMap[c.template_id] = c.id })
       setFlowConfigs(configMap)
 
-      // Contact stats from contacts table — source of truth for new unique leads
       await loadContactStats(user.id)
 
       if (activeFlows.length > 0) {
@@ -448,21 +445,14 @@ export default function CRM({ onBack }: Props) {
     const now = new Date()
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
     const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-    const [total, today, week, month] = await Promise.all([
+    const [total, today, week] = await Promise.all([
       supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid),
       supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('first_seen_at', todayStart),
       supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('first_seen_at', weekStart),
-      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('first_seen_at', monthStart),
     ])
 
-    setContactStats({
-      total: total.count ?? 0,
-      today: today.count ?? 0,
-      thisWeek: week.count ?? 0,
-      thisMonth: month.count ?? 0,
-    })
+    setContactStats({ total: total.count ?? 0, today: today.count ?? 0, thisWeek: week.count ?? 0 })
   }
 
   async function loadLeadsWithConfig(flow: Flow, uid: string, configMap: Record<string, string>) {
@@ -480,6 +470,8 @@ export default function CRM({ onBack }: Props) {
   }
 
   const stages = selectedFlow ? getStages(selectedFlow.template_id) : []
+  const nonVirtualStages = stages.filter(s => !s.virtual)
+
   const filteredLeads = leads.filter(l => {
     const matchStage = stageFilter === 'all' || l.stage === stageFilter
     const matchSearch = !search || (l.lead_name?.toLowerCase().includes(search.toLowerCase())) || l.phone_number.includes(search)
@@ -497,13 +489,12 @@ export default function CRM({ onBack }: Props) {
   )
 
   return (
-    <div style={{ padding: '48px 40px 80px', maxWidth: 1000, margin: '0 auto', fontFamily: 'inherit' }}>
+    <div style={{ padding: '48px 40px 80px', maxWidth: 1060, margin: '0 auto', fontFamily: 'inherit' }}>
       <style>{`
         @keyframes crm-up { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
         @keyframes spin { to { transform: rotate(360deg) } }
       `}</style>
 
-      {/* Header */}
       <div style={{ marginBottom: 32, animation: 'crm-up 0.4s ease both', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 40, height: 40, borderRadius: 13, background: 'rgba(124,77,204,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -529,35 +520,39 @@ export default function CRM({ onBack }: Props) {
 
       {flows.length === 0 ? <EmptyState hasFlows={false} /> : (
         <>
-          {/* Stats — now from contacts table */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 20, animation: 'crm-up 0.4s ease 0.05s both' }}>
-            <StatCard icon="ti-users" label="Total leads" value={contactStats.total} sub="all time" color="#7c4dcc" />
+            <StatCard icon="ti-messages" label="Came in" value={contactStats.total} sub="all time" color="#7c4dcc" />
             <StatCard icon="ti-calendar-event" label="Today" value={contactStats.today} sub="new leads" color="#c47a1a" />
             <StatCard icon="ti-chart-bar" label="This week" value={contactStats.thisWeek} sub="new leads" color="#378ADD" />
-            <StatCard icon={selectedFlow?.template_id === 'close-in-chat' ? 'ti-cash' : 'ti-calendar-check'} label={selectedFlow?.template_id === 'close-in-chat' ? 'Paid' : 'Booked'} value={winLeads} sub={`${convRate}% conv.`} color="#1a8c4e" />
+            <StatCard
+              icon={selectedFlow?.template_id === 'close-in-chat' ? 'ti-cash' : 'ti-calendar-check'}
+              label={selectedFlow?.template_id === 'close-in-chat' ? 'Paid' : 'Booked'}
+              value={winLeads}
+              sub={`${convRate}% conv.`}
+              color="#1a8c4e"
+            />
           </div>
 
-          {/* Funnel */}
-          {leads.length > 0 && selectedFlow && (
+          {selectedFlow && (
             <div style={{ animation: 'crm-up 0.4s ease 0.1s both' }}>
-              <Funnel leads={leads} templateId={selectedFlow.template_id} />
+              <Funnel leads={leads} templateId={selectedFlow.template_id} cameInCount={contactStats.total} />
             </div>
           )}
 
-          {/* Filters */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 14, animation: 'crm-up 0.4s ease 0.15s both', alignItems: 'center' }}>
             <div style={{ position: 'relative', flex: 1 }}>
               <i className="ti ti-search" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#ccc', pointerEvents: 'none' }} />
               <input type="text" placeholder="Search by name or phone..." value={search} onChange={e => setSearch(e.target.value)}
                 style={{ width: '100%', paddingLeft: 34, paddingRight: 12, paddingTop: 9, paddingBottom: 9, background: 'rgba(255,255,255,0.7)', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10, fontSize: 13, color: '#111', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
               <StageFilterBtn label="All" active={stageFilter === 'all'} onClick={() => setStageFilter('all')} />
-              {stages.map(s => <StageFilterBtn key={s.key} label={s.label} active={stageFilter === s.key} color={s.color} onClick={() => setStageFilter(s.key)} />)}
+              {nonVirtualStages.map(s => (
+                <StageFilterBtn key={s.key} label={s.label} active={stageFilter === s.key} color={s.color} onClick={() => setStageFilter(s.key)} />
+              ))}
             </div>
           </div>
 
-          {/* Table */}
           <div className="glass" style={{ borderRadius: 18, overflow: 'hidden', animation: 'crm-up 0.4s ease 0.2s both' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 1fr 80px', padding: '10px 20px', borderBottom: '0.5px solid rgba(0,0,0,0.07)', background: 'rgba(255,255,255,0.4)' }}>
               {['Lead', 'Stage', 'Source', 'Last activity', ''].map(h => (
