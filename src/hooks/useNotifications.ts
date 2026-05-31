@@ -32,19 +32,15 @@ export function useNotifications() {
             ...row,
             toastId: `${row.id ?? ''}-${Date.now()}`,
           }
-          setToasts(prev => [...prev, toast])
-
-          // Auto-dismiss after 5s
+          setToasts(prev => prev.some(t => t.id === row.id) ? prev : [...prev, toast])
           setTimeout(() => {
             setToasts(prev => prev.filter(t => t.toastId !== toast.toastId))
-          }, 5000)
+          }, 8000)
         }
       )
       .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
   return { toasts, dismiss }
