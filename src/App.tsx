@@ -94,8 +94,9 @@ export default function App() {
         await supabase.from('notif').insert({
           user_id: userId,
           title: 'Complete your setup',
-          message: "Don't forget to go through your onboarding checklist on the Home page to launch your agent.",
+          html: "Don't forget to go through your onboarding checklist on the Home page to launch your agent.",
           type: 'info',
+          read: false,
         })
       }
 
