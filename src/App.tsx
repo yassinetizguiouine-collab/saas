@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import Home from './pages/Home'
 import Sidebar, { Page } from './components/Sidebar'
 import AuthPage from './pages/AuthPage'
 import Onboarding from './pages/Onboarding'
@@ -21,7 +22,7 @@ type AppState = 'loading' | 'auth' | 'onboarding' | 'recommender' | 'found' | 'a
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading')
   const [page, setPage] = useState<Page>(() => {
-    return (localStorage.getItem('lf_page') as Page) || 'gallery'
+    return (localStorage.getItem('lf_page') as Page) || 'home'
   })
   const [activeFlowId, setActiveFlowId] = useState<string | null>(() => {
     return localStorage.getItem('lf_flow_id')
@@ -87,7 +88,7 @@ export default function App() {
       if (!recDone) { setAppState('recommender'); return }
       setAppState('app')
       const savedPage = localStorage.getItem('lf_page') as Page | null
-      setPage(savedPage || 'gallery')
+      setPage(savedPage || 'home')
     } catch (e) {
       console.error('checkUserProgress error:', e)
       setAppState('auth')
@@ -245,6 +246,15 @@ export default function App() {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <Sidebar activePage={page} onNavigate={setPage} onSignOut={handleSignOut} />
       <main style={{ flex: 1, overflowY: 'auto' }}>
+        {page === 'home' && (
+          <Home
+            onNavigate={setPage}
+            onOpenFlowConfig={() => {
+              if (activeFlowId && activeTemplateId) setPage('flow-config')
+              else setPage('my-flows')
+            }}
+          />
+        )}
         {page === 'gallery' && (
           <TemplatesGallery
             onUseTemplate={handleUseTemplate}
