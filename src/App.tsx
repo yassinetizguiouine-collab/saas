@@ -87,19 +87,6 @@ export default function App() {
       if (!obDone) { setAppState('onboarding'); return }
       if (!recDone) { setAppState('recommender'); return }
 
-      // Fire home checklist notification once after onboarding is freshly completed
-      const notifKey = `lf_home_notif_${userId}`
-      if (!localStorage.getItem(notifKey)) {
-        localStorage.setItem(notifKey, '1')
-        await supabase.from('notif').insert({
-          user_id: userId,
-          title: 'Complete your setup',
-          html: "Don't forget to go through your onboarding checklist on the Home page to launch your agent.",
-          type: 'info',
-          read: false,
-        })
-      }
-
       setAppState('app')
       const savedPage = localStorage.getItem('lf_page') as Page | null
       setPage(savedPage || 'home')
@@ -300,7 +287,7 @@ export default function App() {
         )}
         {page === 'crm' && <CRM />}
       </main>
-      <NotificationToast toasts={toasts} onDismiss={dismiss} />
+      <NotificationToast toasts={toasts} onDismiss={dismiss} onNavigate={setPage} />
     </div>
   )
 }
