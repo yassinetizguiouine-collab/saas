@@ -50,16 +50,16 @@ function Toast({ toast, onDismiss }: { toast: ToastNotification; onDismiss: () =
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         {toast.title && (
-          <div style={{ fontSize: 13.5, fontWeight: 600, color: '#111', marginBottom: toast.message ? 2 : 0 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: '#111', marginBottom: toast.html ? 2 : 0 }}>
             {toast.title}
           </div>
         )}
-        {toast.message && (
+        {toast.html && (
           <div style={{ fontSize: 13, color: '#555', lineHeight: 1.4 }}>
-            {toast.message}
+            {toast.html}
           </div>
         )}
-        {!toast.title && !toast.message && (
+        {!toast.title && !toast.html && (
           <div style={{ fontSize: 13, color: '#555' }}>New notification</div>
         )}
       </div>
