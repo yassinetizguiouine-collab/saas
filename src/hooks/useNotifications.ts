@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 export interface Notification {
   id: string
   title?: string
-  message?: string
+  html?: string
   type?: 'success' | 'error' | 'info' | 'warning'
   created_at?: string
 }
