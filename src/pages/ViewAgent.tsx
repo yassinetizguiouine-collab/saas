@@ -139,9 +139,13 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
         if (data) {
           const parsed: ChatMessage[] = data.map(row => {
             const msg = row.message as { type: string; content: string }
+            let text = msg.content
+            if (msg.type === 'ai') {
+              try { const p = JSON.parse(msg.content); if (p.reply) text = p.reply } catch {}
+            }
             return {
               role: msg.type === 'human' ? 'user' : 'agent',
-              text: msg.content,
+              text,
               ts: new Date(row.created_at).getTime(),
             }
           })
@@ -165,9 +169,11 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
           const row = payload.new as { message: { type: string; content: string }; created_at: string }
           // Skip human messages — already added optimistically on send
           if (row.message.type !== 'ai') return
+          let replyText = row.message.content
+          try { const p = JSON.parse(row.message.content); if (p.reply) replyText = p.reply } catch {}
           setMessages(prev => [...prev, {
             role: 'agent',
-            text: row.message.content,
+            text: replyText,
             ts: new Date(row.created_at).getTime(),
           }])
           setLoading(false)
