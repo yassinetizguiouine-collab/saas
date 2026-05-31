@@ -425,10 +425,9 @@ export default function CRM({ onBack }: Props) {
       configs?.forEach((c: any) => { configMap[c.template_id] = c.id })
       setFlowConfigs(configMap)
 
-      await loadContactStats(user.id)
-
       if (activeFlows.length > 0) {
         setSelectedFlow(activeFlows[0])
+        await loadContactStats(user.id, activeFlows[0].template_id)
         await loadLeadsWithConfig(activeFlows[0], user.id, configMap)
       }
       setLoading(false)
@@ -438,18 +437,19 @@ export default function CRM({ onBack }: Props) {
 
   useEffect(() => {
     if (!selectedFlow || !userId || Object.keys(flowConfigs).length === 0) return
+    loadContactStats(userId, selectedFlow.template_id)
     loadLeadsWithConfig(selectedFlow, userId, flowConfigs)
   }, [selectedFlow])
 
-  async function loadContactStats(uid: string) {
+  async function loadContactStats(uid: string, templateId: string) {
     const now = new Date()
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
     const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
     const [total, today, week] = await Promise.all([
-      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid),
-      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('first_seen_at', todayStart),
-      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('first_seen_at', weekStart),
+      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('template_id', templateId),
+      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('template_id', templateId).gte('first_seen_at', todayStart),
+      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('template_id', templateId).gte('first_seen_at', weekStart),
     ])
 
     setContactStats({ total: total.count ?? 0, today: today.count ?? 0, thisWeek: week.count ?? 0 })
