@@ -30,8 +30,6 @@ const TONE_LABELS: Record<string, string> = {
   warm: 'Warm',
 }
 
-// ─── TAB BUTTON ──────────────────────────────────────────────────────────────
-
 function Tab({
   label, icon, active, onClick, locked,
 }: {
@@ -58,8 +56,6 @@ function Tab({
     </button>
   )
 }
-
-// ─── PROMPT TAB ──────────────────────────────────────────────────────────────
 
 function PromptTab({ prompt }: { prompt: string }) {
   const [copied, setCopied] = useState(false)
@@ -122,6 +118,7 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [historyLoaded, setHistoryLoaded] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const sessionId = `test_${userId}_${templateId}`
 
@@ -129,11 +126,10 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
-  // Load existing messages + subscribe to new ones from test_agent_memory
   useEffect(() => {
     if (!userId) return
 
-    // Initial fetch — load existing session history
+    // 1. Load full history from memory table
     supabase
       .from('test_agent_memory')
       .select('id, message, created_at')
@@ -151,11 +147,12 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
           })
           setMessages(parsed)
         }
+        setHistoryLoaded(true)
       })
 
-    // Realtime — listen for new INSERTs from n8n
+    // 2. Realtime — only append AI replies (human already shown optimistically)
     const channel = supabase
-      .channel(`test-agent-${userId}`)
+      .channel(`test-agent-${userId}-${templateId}`)
       .on(
         'postgres_changes',
         {
@@ -166,13 +163,14 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
         },
         (payload) => {
           const row = payload.new as { message: { type: string; content: string }; created_at: string }
-          const incoming: ChatMessage = {
-            role: row.message.type === 'human' ? 'user' : 'agent',
+          // Skip human messages — already added optimistically on send
+          if (row.message.type !== 'ai') return
+          setMessages(prev => [...prev, {
+            role: 'agent',
             text: row.message.content,
             ts: new Date(row.created_at).getTime(),
-          }
-          setMessages(prev => [...prev, incoming])
-          if (row.message.type === 'ai') setLoading(false)
+          }])
+          setLoading(false)
         }
       )
       .subscribe()
@@ -185,7 +183,10 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
     if (!text || loading) return
     setInput('')
     setLoading(true)
-    // Fire to n8n — n8n inserts both user + agent messages into test_agent_memory
+
+    // Show user message immediately — don't wait for n8n/Realtime
+    setMessages(prev => [...prev, { role: 'user', text, ts: Date.now() }])
+
     try {
       await fetch(CHAT_WEBHOOK, {
         method: 'POST',
@@ -208,7 +209,7 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
         flex: 1, overflowY: 'auto', padding: '20px 0',
         display: 'flex', flexDirection: 'column', gap: 12,
       }}>
-        {messages.length === 0 && (
+        {historyLoaded && messages.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: '#ccc' }}>
             <i className="ti ti-brand-whatsapp" style={{ fontSize: 36, display: 'block', marginBottom: 12, color: '#25D366', opacity: 0.4 }} />
             <p style={{ fontSize: 13, fontWeight: 500 }}>Send a message to test {agentName || 'your agent'}</p>
@@ -309,8 +310,6 @@ function ChatTab({ userId, agentName, templateId }: { userId: string; agentName:
   )
 }
 
-// ─── N8N-STYLE WORKFLOW CANVAS (BUILT ABOVE) ─────────────────────────────────
-
 const MAIN_NODES = [
   {
     id: 'trigger', label: 'WhatsApp Trigger', icon: 'ti-brand-whatsapp', color: '#22c55e', border: '#16a34a',
@@ -364,7 +363,6 @@ const CANVAS_TOP = 32
 const ROW_Y = CANVAS_TOP + 20
 
 function N8nCanvas({ onNodeClick, flowJson }: { onNodeClick: (node: typeof MAIN_NODES[0] | typeof SUB_NODES[0]) => void; flowJson?: object | null }) {
-  // Enrich node configs from real workflow JSON if available
   const enrichedMain = MAIN_NODES.map(node => {
     if (!flowJson) return node
     const wf = flowJson as any
@@ -403,12 +401,10 @@ function N8nCanvas({ onNodeClick, flowJson }: { onNodeClick: (node: typeof MAIN_
 
   function nodeX(i: number) { return 40 + i * (NODE_W + H_GAP) }
   function nodeCX(i: number) { return nodeX(i) + NODE_W / 2 }
-  function nodeCY() { return ROW_Y + NODE_H / 2 }
 
   const agentIdx = enrichedMain.findIndex(n => n.id === 'agent')
   const agentCX = nodeCX(agentIdx)
 
-  // Sub node positions: model left, memory right of agent center
   const subPositions: Record<string, { x: number; y: number }> = {
     'sub-model': { x: agentCX - NODE_W - 20, y: subY },
     'sub-memory': { x: agentCX + 20, y: subY },
@@ -426,8 +422,6 @@ function N8nCanvas({ onNodeClick, flowJson }: { onNodeClick: (node: typeof MAIN_
               <path d="M0,0.5 L0,6.5 L6,3.5 z" fill="rgba(0,0,0,0.15)" />
             </marker>
           </defs>
-
-          {/* Main edges */}
           {EDGES_MAIN.map(edge => {
             const [fromId, toId] = edge.split('→')
             const fi = enrichedMain.findIndex(n => n.id === fromId)
@@ -443,8 +437,6 @@ function N8nCanvas({ onNodeClick, flowJson }: { onNodeClick: (node: typeof MAIN_
               />
             )
           })}
-
-          {/* Sub-node dashed connectors */}
           {enrichedSubs.map(sub => {
             const pos = subPositions[sub.id]
             const scx = pos.x + NODE_W / 2
@@ -458,13 +450,9 @@ function N8nCanvas({ onNodeClick, flowJson }: { onNodeClick: (node: typeof MAIN_
               />
             )
           })}
-
-          {/* Sub-node type labels */}
           <text x={agentCX - NODE_W - 20 + NODE_W / 2} y={subY - 8} textAnchor="middle" fontSize="9" fill="#aaa" fontFamily="inherit" fontWeight="600" letterSpacing="0.04em">MODEL</text>
           <text x={agentCX + 20 + NODE_W / 2} y={subY - 8} textAnchor="middle" fontSize="9" fill="#aaa" fontFamily="inherit" fontWeight="600" letterSpacing="0.04em">MEMORY</text>
         </svg>
-
-        {/* Main nodes */}
         {enrichedMain.map((node, i) => (
           <button key={node.id} onClick={() => onNodeClick(node)}
             style={{
@@ -499,8 +487,6 @@ function N8nCanvas({ onNodeClick, flowJson }: { onNodeClick: (node: typeof MAIN_
             </span>
           </button>
         ))}
-
-        {/* Sub nodes */}
         {enrichedSubs.map(sub => {
           const pos = subPositions[sub.id]
           return (
@@ -582,8 +568,6 @@ function NodePanel({ node, onClose }: { node: typeof MAIN_NODES[0]; onClose: () 
   )
 }
 
-// ─── FULL WORKFLOW TAB (LOCKED) ───────────────────────────────────────────────
-
 function FullWorkflowLocked() {
   return (
     <div style={{
@@ -609,8 +593,6 @@ function FullWorkflowLocked() {
   )
 }
 
-// ─── FULL WORKFLOW TAB (UNLOCKED) ────────────────────────────────────────────
-
 const DEPLOY_WEBHOOK = 'https://leadflowai2026.app.n8n.cloud/webhook/0e5c6446-ba5a-4cd0-ba9a-554605c593f3'
 
 function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: string; userId: string; templateId: string }) {
@@ -624,11 +606,9 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
 
   useEffect(() => {
     async function load() {
-      // Check if already confirmed
       const { data: conf } = await supabase.from('token_confirmation').select('id').eq('user_id', userId).maybeSingle()
       if (conf) { setTokenConfirmed(true); loadFlowJson(); return }
 
-      // Load tokens from flow_config
       const { data } = await supabase.from('flow_config')
         .select('whatsapp_receive, whatsapp_send')
         .eq('user_id', userId).eq('template_id', templateId).maybeSingle()
@@ -693,7 +673,6 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
     { key: 'accessToken', label: 'Access Token', icon: 'ti-shield-lock', section: 'WhatsApp Send' },
   ]
 
-  // ── CONFIRM SCREEN ──
   if (screen === 'confirm') return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeUp 0.3s ease both' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -705,8 +684,6 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
           <div style={{ fontSize: 12, color: '#aaa', marginTop: 1 }}>Review and edit before deploying — this shows once</div>
         </div>
       </div>
-
-      {/* Group by section */}
       {['WhatsApp Receive', 'WhatsApp Send'].map(section => (
         <div key={section}>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>{section}</div>
@@ -755,7 +732,6 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
           </div>
         </div>
       ))}
-
       <button
         onClick={handleConfirmDeploy}
         style={{
@@ -774,7 +750,6 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
     </div>
   )
 
-  // ── DEPLOYING SCREEN ──
   if (screen === 'deploying') return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 16, animation: 'fadeUp 0.3s ease both' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
@@ -794,10 +769,8 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
     </div>
   )
 
-  // ── DONE SCREEN — CANVAS ──
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeUp 0.3s ease both' }}>
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 44, height: 44, borderRadius: 13, background: 'rgba(37,211,102,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <i className="ti ti-check" style={{ fontSize: 20, color: '#25D366' }} />
@@ -807,8 +780,6 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
           <div style={{ fontSize: 12, color: '#aaa', marginTop: 1 }}>Click any node to see its configuration</div>
         </div>
       </div>
-
-      {/* Canvas */}
       <div style={{
         borderRadius: 16, border: '1px solid rgba(0,0,0,0.07)',
         background: '#fafafa',
@@ -819,15 +790,10 @@ function FullWorkflowUnlocked({ agentName, userId, templateId }: { agentName: st
       }}>
         <N8nCanvas onNodeClick={setSelectedNode} flowJson={flowJson} />
       </div>
-
-
-      {/* Node detail panel */}
       {selectedNode && <NodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />}
     </div>
   )
 }
-
-// ─── MAIN ────────────────────────────────────────────────────────────────────
 
 export default function ViewAgent({ flowId, templateId, onBack }: Props) {
   const [agent, setAgent] = useState<AgentData | null>(null)
@@ -843,24 +809,9 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
       setUserId(user.id)
 
       const [{ data: config }, { data: prompt }, { data: checklist }] = await Promise.all([
-        supabase
-          .from('flow_config')
-          .select('agent_name, agent_tone, agent_personality')
-          .eq('user_id', user.id)
-          .eq('template_id', templateId)
-          .maybeSingle(),
-        supabase
-          .from('generated_prompts')
-          .select('system_prompt')
-          .eq('user_id', user.id)
-          .eq('template_id', templateId)
-          .maybeSingle(),
-        supabase
-          .from('pre_launch_checklist')
-          .select('workflow_unlocked')
-          .eq('user_id', user.id)
-          .eq('template_id', templateId)
-          .maybeSingle(),
+        supabase.from('flow_config').select('agent_name, agent_tone, agent_personality').eq('user_id', user.id).eq('template_id', templateId).maybeSingle(),
+        supabase.from('generated_prompts').select('system_prompt').eq('user_id', user.id).eq('template_id', templateId).maybeSingle(),
+        supabase.from('pre_launch_checklist').select('workflow_unlocked').eq('user_id', user.id).eq('template_id', templateId).maybeSingle(),
       ])
 
       setAgent({
@@ -875,9 +826,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
     load()
   }, [flowId, templateId])
 
-  function handleWorkflowUnlocked() {
-    setWorkflowUnlocked(true)
-  }
+  function handleWorkflowUnlocked() { setWorkflowUnlocked(true) }
 
   if (loading) return (
     <div style={{ padding: '80px 40px', textAlign: 'center', color: '#ccc' }}>
@@ -891,18 +840,11 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
   return (
     <div style={{ padding: '48px 40px 80px', maxWidth: 860, margin: '0 auto', fontFamily: 'inherit' }}>
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.3); }
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
-      {/* Back */}
       <button
         onClick={onBack}
         style={{
@@ -918,7 +860,6 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
         My Flows
       </button>
 
-      {/* Header */}
       <div style={{ marginBottom: 32, animation: 'fadeUp 0.4s ease both' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
           <div style={{
@@ -934,17 +875,11 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
               {agent.agent_name}
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
-                fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 100,
-                background: 'rgba(37,211,102,0.09)', color: '#1a8c4e',
-              }}>● Active</span>
-              <span style={{ fontSize: 12, color: '#bbb' }}>
-                {TONE_LABELS[agent.agent_tone] || agent.agent_tone}
-              </span>
+              <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 100, background: 'rgba(37,211,102,0.09)', color: '#1a8c4e' }}>● Active</span>
+              <span style={{ fontSize: 12, color: '#bbb' }}>{TONE_LABELS[agent.agent_tone] || agent.agent_tone}</span>
             </div>
           </div>
         </div>
-
         {agent.agent_personality && (
           <p style={{
             fontSize: 13.5, color: '#777', lineHeight: 1.65,
@@ -957,12 +892,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
         )}
       </div>
 
-      {/* Main card */}
-      <div
-        className="glass"
-        style={{ borderRadius: 20, overflow: 'hidden', animation: 'fadeUp 0.4s ease 0.1s both' }}
-      >
-        {/* Tabs */}
+      <div className="glass" style={{ borderRadius: 20, overflow: 'hidden', animation: 'fadeUp 0.4s ease 0.1s both' }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 4,
           padding: '14px 18px',
@@ -981,7 +911,6 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
           />
         </div>
 
-        {/* Content */}
         <div style={{ padding: '24px 24px' }}>
           {tab === 'prompt' && (
             agent.system_prompt
@@ -993,9 +922,7 @@ export default function ViewAgent({ flowId, templateId, onBack }: Props) {
                 </div>
               )
           )}
-          {tab === 'chat' && (
-            <ChatTab userId={userId} agentName={agent.agent_name} templateId={templateId} />
-          )}
+          {tab === 'chat' && <ChatTab userId={userId} agentName={agent.agent_name} templateId={templateId} />}
           {tab === 'checklist' && (
             <PreLaunchChecklist
               userId={userId}
