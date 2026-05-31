@@ -254,6 +254,7 @@ export default function App() {
               if (activeFlowId && activeTemplateId) setPage('flow-config')
               else setPage('my-flows')
             }}
+            onOpenChecklist={() => setPage('pre-launch-checklist')}
           />
         )}
         {page === 'gallery' && (
