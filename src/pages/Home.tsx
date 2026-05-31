@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 
 interface Step {
   id: string
-  icon: string
+  icon: string // tabler icon class e.g. 'ti-rocket'
   title: string
   description: string
   cta: string
@@ -56,8 +56,9 @@ function GoalBanner({
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100,
               background: 'rgba(37,211,102,0.12)', color: '#1a8c4e',
+              display: 'flex', alignItems: 'center', gap: 4,
             }}>
-              🎉 Reached!
+              <i className="ti ti-circle-check" style={{ fontSize: 10 }} /> Reached
             </span>
           )}
         </div>
@@ -82,7 +83,8 @@ function GoalBanner({
         background: hit ? 'rgba(37,211,102,0.1)' : 'rgba(124,77,204,0.08)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <span style={{ fontSize: 28 }}>{hit ? '🏆' : goalType === 'bookings' ? '📅' : '💬'}</span>
+        <i className={`ti ${hit ? 'ti-trophy' : goalType === 'bookings' ? 'ti-calendar-check' : 'ti-message-2-check'}`}
+          style={{ fontSize: 26, color: hit ? '#1a8c4e' : '#7c4dcc' }} />
       </div>
     </div>
   )
@@ -145,7 +147,7 @@ function StepCard({
         {step.done ? (
           <i className="ti ti-circle-check" style={{ fontSize: 20, color: '#1a8c4e' }} />
         ) : (
-          <span style={{ fontSize: 18 }}>{step.icon}</span>
+          <i className={`ti ${step.icon}`} style={{ fontSize: 19, color: isActive ? '#7c4dcc' : '#bbb' }} />
         )}
       </div>
 
@@ -209,13 +211,18 @@ function GoalCelebration({ goalType, goalTarget, onSetNew }: {
         borderRadius: 28, padding: '48px 40px', maxWidth: 420, width: '90%',
         textAlign: 'center', animation: 'hm-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both',
       }}>
-        <div style={{ fontSize: 56, marginBottom: 20 }}>🏆</div>
+        <div style={{
+          width: 72, height: 72, borderRadius: 22, background: 'rgba(124,77,204,0.09)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px',
+        }}>
+          <i className="ti ti-trophy" style={{ fontSize: 34, color: '#7c4dcc' }} />
+        </div>
         <h2 style={{ fontSize: 26, fontWeight: 800, color: '#111', letterSpacing: '-0.04em', marginBottom: 10 }}>
           Goal reached!
         </h2>
         <p style={{ fontSize: 14, color: '#888', lineHeight: 1.65, marginBottom: 32 }}>
           You hit <strong>{goalTarget} {goalType === 'bookings' ? 'bookings' : 'deals'}</strong> this month.
-          Time to aim higher. 🚀
+          Time to aim higher.
         </p>
         <button
           onClick={onSetNew}
@@ -229,7 +236,7 @@ function GoalCelebration({ goalType, goalTarget, onSetNew }: {
           onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
           onMouseLeave={e => e.currentTarget.style.opacity = '1'}
         >
-          Set new goal 🎯
+          Set new goal
         </button>
       </div>
     </div>
@@ -380,7 +387,7 @@ export default function Home({ onNavigate, onOpenFlowConfig }: Props) {
       setSteps([
         {
           id: 'connect',
-          icon: '🔌',
+          icon: 'ti-plug-connected',
           title: 'Connect WhatsApp',
           description: 'Enter your phone number ID and token to connect your WhatsApp account.',
           cta: 'Connect',
@@ -388,7 +395,7 @@ export default function Home({ onNavigate, onOpenFlowConfig }: Props) {
         },
         {
           id: 'configure',
-          icon: '🤖',
+          icon: 'ti-robot',
           title: 'Configure your agent',
           description: 'Set your agent name, tone, and personality so it speaks your brand.',
           cta: 'Configure',
@@ -396,7 +403,7 @@ export default function Home({ onNavigate, onOpenFlowConfig }: Props) {
         },
         {
           id: 'test',
-          icon: '🧪',
+          icon: 'ti-flask',
           title: 'Test your agent',
           description: 'Run through 6 critical scenarios to make sure your agent is ready.',
           cta: 'Start testing',
@@ -404,7 +411,7 @@ export default function Home({ onNavigate, onOpenFlowConfig }: Props) {
         },
         {
           id: 'deploy',
-          icon: '🚀',
+          icon: 'ti-rocket',
           title: 'Deploy your flow',
           description: 'Go live and let your agent start handling leads automatically.',
           cta: 'Deploy',
@@ -412,7 +419,7 @@ export default function Home({ onNavigate, onOpenFlowConfig }: Props) {
         },
         {
           id: 'live',
-          icon: '🎯',
+          icon: 'ti-chart-bar',
           title: 'Watch leads come in',
           description: 'Your agent is live. Check your CRM to see leads and track progress.',
           cta: 'View CRM',
@@ -470,7 +477,7 @@ export default function Home({ onNavigate, onOpenFlowConfig }: Props) {
       {/* Header */}
       <div style={{ marginBottom: 32, animation: 'hm-up 0.4s ease both' }}>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: '#111', letterSpacing: '-0.04em', marginBottom: 6 }}>
-          {allDone ? `You're live 🎉` : `Let's get you to your first result`}
+          {allDone ? `You're live` : `Let's get you to your first result`}
         </h1>
         <p style={{ fontSize: 14, color: '#aaa' }}>
           {allDone
