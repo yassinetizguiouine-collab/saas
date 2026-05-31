@@ -122,7 +122,7 @@ const STEPS: Step[] = [
   {
     id: 'goal_type',
     question: 'What is your goal with LeadFlow?',
-    sub: 'This will be your north star — we'll track your progress toward it.',
+    sub: "This will be your north star — we'll track your progress toward it.",
     type: 'chips',
     options: [
       { label: '📅 Get more bookings', value: 'bookings' },
