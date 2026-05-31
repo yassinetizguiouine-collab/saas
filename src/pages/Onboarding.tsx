@@ -120,6 +120,28 @@ const STEPS: Step[] = [
     ],
   },
   {
+    id: 'goal_type',
+    question: 'What is your goal with LeadFlow?',
+    sub: 'This will be your north star — we'll track your progress toward it.',
+    type: 'chips',
+    options: [
+      { label: '📅 Get more bookings', value: 'bookings' },
+      { label: '💬 Close more in chat', value: 'close-in-chat' },
+    ],
+  },
+  {
+    id: 'goal_target',
+    question: 'How many per month are you targeting?',
+    sub: 'Pick a realistic first goal — you can always raise it later.',
+    type: 'chips',
+    options: [
+      { label: '🎯 10', value: '10' },
+      { label: '🚀 20', value: '20' },
+      { label: '⚡ 50', value: '50' },
+      { label: '🏆 100+', value: '100' },
+    ],
+  },
+  {
     id: 'closing_method',
     question: 'How do you close your clients?',
     sub: 'How does a lead become a paying customer?',
@@ -449,6 +471,8 @@ export default function Onboarding({ onComplete }: Props) {
       traffic_source: answers.traffic_source,
       closing_method: answers.closing_method,
       has_lead_magnet: hasLeadMagnet,
+      goal_type: answers.goal_type,
+      goal_target: answers.goal_target ? parseInt(answers.goal_target) : null,
       completed: true,
     }, { onConflict: 'user_id' })
     setSaving(false)
