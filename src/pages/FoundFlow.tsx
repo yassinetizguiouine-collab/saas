@@ -193,7 +193,20 @@ export default function FoundFlow({ templateId, onContinue }: Props) {
 
         {/* CTA */}
         <button
-          onClick={onContinue}
+          onClick={async () => {
+            onContinue()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+            setTimeout(async () => {
+              await supabase.from('notif').insert({
+                user_id: user.id,
+                title: 'Complete your setup',
+                html: "Don't forget to go through your onboarding checklist on the Home page to launch your agent.",
+                type: 'info',
+                read: false,
+              })
+            }, 2000)
+          }}
           style={{
             width: '100%', background: '#111', color: '#fff', border: 'none',
             borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 600,
