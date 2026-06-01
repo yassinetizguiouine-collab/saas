@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 interface Props {
@@ -857,6 +857,30 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
   const subtitle = TEMPLATE_SUBTITLES[key] || TEMPLATE_SUBTITLES['booking-with-lm']
   const saveLabel = TEMPLATE_SAVE_LABELS[key] || TEMPLATE_SAVE_LABELS['booking-with-lm']
 
+  // ─── AUTO-SAVE (debounced, no n8n call) ────────────────────────────────────
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+
+  const autoSave = useCallback(async (patch: Record<string, any>) => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    setAutoSaveStatus('saving')
+    autoSaveTimer.current = setTimeout(async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        await supabase.from('flow_config').upsert({
+          user_id: user.id,
+          template_id: key,
+          ...patch,
+        }, { onConflict: 'user_id,template_id' })
+        setAutoSaveStatus('saved')
+        setTimeout(() => setAutoSaveStatus('idle'), 2000)
+      } catch {
+        setAutoSaveStatus('idle')
+      }
+    }, 800)
+  }, [key])
+
   // ─── LOAD SAVED CONFIG ON MOUNT ─────────────────────────────────────────
   useEffect(() => {
     async function loadConfig() {
@@ -1013,7 +1037,7 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
           <p style={{ fontSize: 12, color: '#999', marginTop: 14, marginBottom: 14 }}>Choose how your agent speaks to leads.</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {TONES.map(tone => (
-              <div key={tone.id} onClick={() => setSelectedTone(tone.id)}
+              <div key={tone.id} onClick={() => { setSelectedTone(tone.id); autoSave({ agent_tone: tone.id, agent_name: agentName, agent_personality: agentPersonality }) }}
                 style={{ background: 'rgba(255,255,255,0.6)', border: selectedTone === tone.id ? '1.5px solid #111' : '0.5px solid rgba(0,0,0,0.10)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#111', marginBottom: 5 }}>{tone.name}</div>
                 <div style={{ fontSize: 11, color: '#888', lineHeight: 1.5 }}>{tone.preview}</div>
@@ -1024,32 +1048,44 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
 
         <GlassSection icon="ti-user-circle" title="AI Agent Personality" defaultOpen={false}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 }}>
-            <Field label="Agent name" placeholder="e.g. Sofia, Max, Alex..." value={agentName} onChange={setAgentName} />
-            <Field label="Personality description" placeholder="e.g. Energetic, empathetic, speaks simply and directly. Never salesy." type="textarea" hint="Describe how your agent should behave and feel to leads." value={agentPersonality} onChange={setAgentPersonality} />
+            <Field label="Agent name" placeholder="e.g. Sofia, Max, Alex..." value={agentName} onChange={v => { setAgentName(v); autoSave({ agent_name: v, agent_tone: selectedTone, agent_personality: agentPersonality }) }} />
+            <Field label="Personality description" placeholder="e.g. Energetic, empathetic, speaks simply and directly. Never salesy." type="textarea" hint="Describe how your agent should behave and feel to leads." value={agentPersonality} onChange={v => { setAgentPersonality(v); autoSave({ agent_name: agentName, agent_tone: selectedTone, agent_personality: v }) }} />
           </div>
         </GlassSection>
 
         {key === 'booking-with-lm' && (
           <>
-            <ScriptBookingWithLM_S1 onDataChange={setS1Data} />
-            <WaitTimeSelector selected={waitTime} onChange={setWaitTime} />
-            <ScriptBookingWithLM_S2 onDataChange={setS2Data} />
+            <ScriptBookingWithLM_S1 onDataChange={v => { setS1Data(v); autoSave({ script_1: v }) }} />
+            <WaitTimeSelector selected={waitTime} onChange={v => { setWaitTime(v); autoSave({ wait_time: v }) }} />
+            <ScriptBookingWithLM_S2 onDataChange={v => { setS2Data(v); autoSave({ script_2: v }) }} />
           </>
         )}
         {key === 'booking-without-lm' && (
           <>
-            <ScriptBookingWithoutLM_S1 onDataChange={setS1Data} />
-            <ScriptBookingWithoutLM_S2 onDataChange={setS2Data} />
+            <ScriptBookingWithoutLM_S1 onDataChange={v => { setS1Data(v); autoSave({ script_1: v }) }} />
+            <ScriptBookingWithoutLM_S2 onDataChange={v => { setS2Data(v); autoSave({ script_2: v }) }} />
           </>
         )}
         {key === 'close-in-chat' && (
           <>
-            <ScriptBookingWithLM_S1 onDataChange={setS1Data} />
-            <WaitTimeSelector selected={waitTime} onChange={setWaitTime} />
-            <ScriptCloseInChat_S2 onDataChange={setS2Data} />
+            <ScriptBookingWithLM_S1 onDataChange={v => { setS1Data(v); autoSave({ script_1: v }) }} />
+            <WaitTimeSelector selected={waitTime} onChange={v => { setWaitTime(v); autoSave({ wait_time: v }) }} />
+            <ScriptCloseInChat_S2 onDataChange={v => { setS2Data(v); autoSave({ script_2: v }) }} />
           </>
         )}
 
+        {/* Auto-save status */}
+        {autoSaveStatus !== 'idle' && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center',
+            fontSize: 12, color: autoSaveStatus === 'saved' ? '#1a8c4e' : '#aaa',
+            marginBottom: 4, transition: 'color 0.3s',
+          }}>
+            <i className={`ti ${autoSaveStatus === 'saving' ? 'ti-loader-2' : 'ti-circle-check'}`}
+              style={{ fontSize: 13, animation: autoSaveStatus === 'saving' ? 'spin 1s linear infinite' : 'none' }} />
+            {autoSaveStatus === 'saving' ? 'Saving...' : 'Saved'}
+          </div>
+        )}
         <button onClick={handleSave} disabled={isSaving}
           style={{ width: '100%', background: '#111', color: '#fff', border: 'none', borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 600, cursor: isSaving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.15s', opacity: isSaving ? 0.6 : 1 }}
           onMouseEnter={e => { if (!isSaving) (e.currentTarget.style.opacity = '0.82') }}
@@ -1069,7 +1105,7 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
             {/* ── PATCH 3: Phone Number ID field ── */}
             <Field label="Phone Number ID" placeholder="e.g. 123456789012345" hint="Find this in Meta Developer Portal → WhatsApp → API Setup" value={receiveForm.phoneNumberId} onChange={v => setReceiveForm(f => ({ ...f, phoneNumberId: v }))} />
           </div>
-          <button onClick={() => { setReceiveConnected(true); setReceiveModal(false) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Connect</button>
+          <button onClick={() => { setReceiveConnected(true); setReceiveModal(false); autoSave({ whatsapp_receive: receiveForm, phone_number_id: receiveForm.phoneNumberId || null }) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Connect</button>
         </Modal>
       )}
 
@@ -1081,7 +1117,7 @@ export default function FlowConfig({ onBack, flowId, templateId, onProvisioningS
             <Field label="Access Token" placeholder="Your WhatsApp Access Token" type="password" value={sendForm.accessToken} onChange={v => setSendForm(f => ({ ...f, accessToken: v }))} />
             <Field label="Business Account ID" placeholder="Your Business Account ID" value={sendForm.businessId} onChange={v => setSendForm(f => ({ ...f, businessId: v }))} />
           </div>
-          <button onClick={() => { setSendConnected(true); setSendModal(false) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Connect</button>
+          <button onClick={() => { setSendConnected(true); setSendModal(false); autoSave({ whatsapp_send: sendForm }) }} style={{ width: '100%', marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Connect</button>
         </Modal>
       )}
 
