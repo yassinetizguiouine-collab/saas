@@ -1,4 +1,4 @@
-export type Page = 'home' | 'gallery' | 'my-flows' | 'flow-config' | 'flow-preview' | 'view-agent' | 'crm'
+export type Page = 'home' | 'gallery' | 'my-flows' | 'flow-config' | 'flow-preview' | 'view-agent' | 'crm' | 'settings'
 
 interface SidebarProps {
   activePage: Page
@@ -37,7 +37,7 @@ export default function Sidebar({ activePage, onNavigate, onSignOut }: SidebarPr
       </nav>
 
       <div style={{ marginTop: 'auto', borderTop: '0.5px solid rgba(0,0,0,.07)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <NavItem icon="ti-settings" label="Settings" active={false} onClick={() => {}} />
+        <NavItem icon="ti-settings" label="Settings" active={activePage === 'settings'} onClick={() => onNavigate('settings')} />
         <NavItem icon="ti-logout" label="Sign out" active={false} onClick={onSignOut} />
       </div>
     </aside>
