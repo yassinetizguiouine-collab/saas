@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import Settings from './pages/Settings'
 import Home from './pages/Home'
 import Sidebar, { Page } from './components/Sidebar'
 import AuthPage from './pages/AuthPage'
@@ -287,6 +288,7 @@ export default function App() {
           />
         )}
         {page === 'crm' && <CRM />}
+        {page === 'settings' && <Settings />}
       </main>
       <NotificationToast toasts={toasts} onDismiss={dismiss} onNavigate={setPage} />
     </div>
